@@ -2,8 +2,15 @@
 .venv/
 venv/
 env/
+.env
 
 # Archivos de Python compilados
 __pycache__/
 *.pyc
 *.pyo
+
+db.sqlite3
+
+# Django migrations
+*/migrations/
+!*/migrations/__init__.py
