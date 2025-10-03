@@ -1,0 +1,354 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ingresar{% endblock %}
+
+{% block content %}
+<div class="min-vh-100 bg-light py-4 py-md-5">
+  <div class="container-fluid px-3 px-md-4 px-lg-5">
+    <div class="row justify-content-center">
+      <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-4">
+        <div class="card shadow-lg border-0">
+          <div class="card-body p-4">
+            <h4 class="card-title text-center mb-3 fw-bold">Iniciar Sesión</h4>
+
+            <!-- INDICADOR DEL ROL SELECCIONADO -->
+            <div class="alert alert-info text-center mb-3" role="alert">
+              <i class="bi bi-person-check me-2"></i>
+              <span id="rol-seleccionado">Selecciona tu rol</span>
+              <button type="button" class="btn btn-sm btn-outline-info ms-2" data-bs-toggle="modal" data-bs-target="#rolModal">
+                Cambiar
+              </button>
+            </div>
+
+            <!-- FORMULARIO -->
+            <form method="post" action="{% url 'login' %}">
+              {% csrf_token %}
+              
+              <!-- Campo oculto para el rol -->
+              <input type="hidden" name="rol" id="id_rol" value="" required>
+              
+              <div class="mb-3">
+                <label for="id_username" class="form-label fw-semibold">Usuario</label>
+                <input type="text" class="form-control" id="id_username" name="username" required placeholder="Nombre de usuario">
+              </div>
+
+              <div class="mb-3">
+                <label for="id_password" class="form-label fw-semibold">Contraseña</label>
+                <input type="password" class="form-control" id="id_password" name="password" required placeholder="Contraseña">
+              </div>
+
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" value="on" id="remember" name="remember">
+                <label class="form-check-label" for="remember">Recordarme</label>
+              </div>
+
+              <div class="d-grid">
+                <button type="submit" class="btn btn-primary btn-lg" id="submit-btn" disabled>
+                  Selecciona tu rol para continuar
+                </button>
+              </div>
+            </form>
+
+            <!-- ENLACES ADICIONALES -->
+            <div class="mt-4 text-center">
+              <div class="mb-2">
+                <a href="#" class="text-decoration-none small">¿Olvidaste tu contraseña?</a>
+              </div>
+              <div class="border-top pt-3">
+                <span class="text-muted small">¿No tienes cuenta? </span>
+                <a href="{% url 'registro' %}" class="text-decoration-none fw-semibold small">Regístrate aquí</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DE SELECCIÓN DE ROL -->
+<div class="modal fade" id="rolModal" tabindex="-1" aria-labelledby="rolModalLabel" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title fw-bold" id="rolModalLabel">
+          <i class="bi bi-person-badge me-2"></i>Selecciona tu rol
+        </h5>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted mb-4 text-center">¿Cómo quieres acceder a la plataforma?</p>
+        
+        <div class="row g-3">
+          <!-- OPCIÓN ESTUDIANTE -->
+          <div class="col-12">
+            <div class="card border-0 shadow-sm h-100 rol-option" data-rol="estudiante">
+              <div class="card-body text-center p-4">
+                <div class="mb-3">
+                  <i class="bi bi-mortarboard-fill text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title fw-bold">Estudiante</h5>
+                <p class="card-text text-muted small">
+                  Busca tutores, toma clases y mejora tu aprendizaje
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- OPCIÓN PROFESOR -->
+          <div class="col-12">
+            <div class="card border-0 shadow-sm h-100 rol-option" data-rol="profesor">
+              <div class="card-body text-center p-4">
+                <div class="mb-3">
+                  <i class="bi bi-person-check-fill text-success" style="font-size: 3rem;"></i>
+                </div>
+                <h5 class="card-title fw-bold">Profesor/Tutor</h5>
+                <p class="card-text text-muted small">
+                  Comparte tu conocimiento y ayuda a otros estudiantes
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- OPCIÓN DE REGISTRO EN EL MODAL -->
+        <div class="text-center mt-4 pt-3 border-top">
+          <span class="text-muted small">¿No tienes cuenta? </span>
+          <a href="{% url 'registro' %}" class="text-decoration-none fw-semibold small" onclick="cerrarModal()">
+            Regístrate aquí
+          </a>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <small class="text-muted">Podrás cambiar esta configuración más tarde</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ESTILOS RESPONSIVE MEJORADOS -->
+<style>
+.min-vh-100 {
+  min-height: 100vh;
+}
+
+.bg-light {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%) !important;
+}
+
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.shadow-lg {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+.rol-option {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.rol-option:hover {
+  transform: translateY(-5px);
+  border-color: #007bff;
+}
+
+.rol-option.selected {
+  border-color: #007bff;
+  background-color: #f8f9fa;
+}
+
+.rol-option[data-rol="profesor"]:hover,
+.rol-option[data-rol="profesor"].selected {
+  border-color: #28a745;
+}
+
+/* MEJORAS PARA MÓVILES */
+@media (max-width: 576px) {
+  .container-fluid {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  
+  .card-body {
+    padding: 1.5rem !important;
+  }
+  
+  .btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+  
+  .modal-dialog {
+    margin: 1rem;
+  }
+  
+  .rol-option .card-body {
+    padding: 1.5rem !important;
+  }
+}
+
+/* MEJORAS PARA TABLETS */
+@media (max-width: 768px) {
+  .col-sm-10 {
+    max-width: 100%;
+  }
+  
+  .modal-dialog {
+    max-width: 95%;
+  }
+}
+
+/* MEJORAS PARA DESKTOP */
+@media (min-width: 992px) {
+  .col-lg-6 {
+    max-width: 400px;
+  }
+}
+
+/* EFECTOS HOVER Y FOCUS */
+.form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.btn-primary {
+  transition: all 0.3s ease-in-out;
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+  border: none;
+  font-weight: 600;
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(13, 110, 253, 0.4);
+  background: linear-gradient(135deg, #0a58ca 0%, #084298 100%);
+}
+
+.btn-primary:disabled {
+  background: #6c757d;
+  border-color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* MODAL MEJORADO */
+.modal-content {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+  border-radius: 12px 12px 0 0;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  background-color: #f8f9fa;
+  border-radius: 0 0 12px 12px;
+}
+
+/* ENLACES MEJORADOS */
+a.text-decoration-none {
+  color: #0d6efd;
+  transition: color 0.2s ease;
+}
+
+a.text-decoration-none:hover {
+  color: #084298;
+  text-decoration: underline !important;
+}
+
+/* ALERTAS MEJORADAS */
+.alert {
+  border: none;
+  border-left: 4px solid #0dcaf0;
+  border-radius: 8px;
+}
+</style>
+
+<!-- SCRIPT MEJORADO -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const rolModal = new bootstrap.Modal(document.getElementById('rolModal'));
+  
+  // Mostrar modal automáticamente al cargar
+  rolModal.show();
+
+  const rolOptions = document.querySelectorAll('.rol-option');
+  const rolInput = document.getElementById('id_rol');
+  const rolSeleccionado = document.getElementById('rol-seleccionado');
+  const submitBtn = document.getElementById('submit-btn');
+
+  // Función para cerrar modal al hacer clic en registro
+  window.cerrarModal = function() {
+    rolModal.hide();
+  };
+
+  rolOptions.forEach(option => {
+    option.addEventListener('click', function() {
+      // Remover selección anterior
+      rolOptions.forEach(opt => opt.classList.remove('selected'));
+      
+      // Agregar selección actual
+      this.classList.add('selected');
+
+      const rol = this.getAttribute('data-rol');
+      rolInput.value = rol;
+
+      // Actualizar texto del rol seleccionado
+      rolSeleccionado.innerHTML = rol === 'estudiante'
+        ? '🎓 Iniciando sesión como <strong>Estudiante</strong>'
+        : '👨‍🏫 Iniciando sesión como <strong>Profesor/Tutor</strong>';
+
+      // Habilitar botón de enviar
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Ingresar';
+
+      // Cerrar modal después de un tiempo
+      setTimeout(() => {
+        rolModal.hide();
+      }, 800);
+    });
+  });
+
+  // Prevenir que el modal se cierre sin seleccionar rol
+  document.getElementById('rolModal').addEventListener('hide.bs.modal', function(event) {
+    if (!rolInput.value && !event.target.closest('a')) {
+      event.preventDefault();
+      event.stopPropagation();
+      return false;
+    }
+  });
+
+  // Efectos hover mejorados para las opciones de rol
+  rolOptions.forEach(option => {
+    option.addEventListener('mouseenter', function() {
+      if (!this.classList.contains('selected')) {
+        this.style.transform = 'translateY(-3px)';
+        this.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+      }
+    });
+    
+    option.addEventListener('mouseleave', function() {
+      if (!this.classList.contains('selected')) {
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

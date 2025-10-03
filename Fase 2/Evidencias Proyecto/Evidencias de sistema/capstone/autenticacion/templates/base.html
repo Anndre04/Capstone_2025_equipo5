@@ -1,0 +1,490 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+
+<head>
+    <!-- Estilos -->
+    <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/custom.css' %}"> 
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <script src="{% static 'js/bootstrap.bundle.min.js' %}"></script>
+    
+    <!-- jQuery para funcionalidades mejoradas -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}TúToría - Plataforma de Tutorías{% endblock %}</title>
+
+    <style>
+        /* ESTILOS MEJORADOS PARA NAVBARS */
+        .navbar-primary {
+            min-height: 50px !important;
+            padding-top: 0.25rem;
+            padding-bottom: 0.25rem;
+        }
+        
+        .navbar-primary .navbar-nav .nav-link {
+            padding: 0.4rem 0.7rem;
+            font-size: 0.9rem;
+        }
+        
+        .navbar-primary .navbar-brand {
+            font-size: 1.1rem;
+            padding: 0.3rem 0;
+        }
+        
+        .navbar-secondary {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-bottom: 2px solid #dee2e6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-height: 52px;
+        }
+        
+        .navbar-secondary .nav-link {
+            padding: 0.6rem 1.2rem;
+            font-weight: 500;
+            color: #495057;
+            border-radius: 6px;
+            margin: 0 0.1rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .navbar-secondary .nav-link:hover {
+            background-color: #e9ecef;
+            color: #0d6efd;
+            transform: translateY(-1px);
+        }
+        
+        .navbar-secondary .nav-link.active {
+            background-color: #0d6efd;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .navbar-secondary .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 2px;
+            background: #0d6efd;
+        }
+        
+        /* NOTIFICACIONES MEJORADAS */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        /* INDICADOR DE ROL */
+        .role-indicator {
+            background: linear-gradient(45deg, #6f42c1, #e83e8c);
+            color: white;
+            padding: 0.2rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 1rem;
+        }
+        
+        /* EFECTOS SMOOTH */
+        .smooth-transition {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        /* SCROLL SUAVE */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* RESPONSIVE MEJORADO */
+        @media (max-width: 991.98px) {
+            .navbar-secondary {
+                overflow-x: auto;
+                white-space: nowrap;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .navbar-secondary .nav {
+                flex-wrap: nowrap;
+                padding-bottom: 0.5rem;
+            }
+            
+            .navbar-secondary .nav-link {
+                padding: 0.5rem 0.8rem;
+                font-size: 0.85rem;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .navbar-primary .navbar-nav .nav-link {
+                padding: 0.3rem 0.5rem;
+                font-size: 0.85rem;
+            }
+            
+            .role-indicator {
+                font-size: 0.7rem;
+                padding: 0.15rem 0.6rem;
+                margin-left: 0.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+
+  <!-- NAVBAR PRINCIPAL COMPACTO -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark navbar-primary">
+    <div class="container">
+      <a class="navbar-brand fw-bold smooth-transition" href="/">
+        <i class="bi bi-rocket-takeoff me-2"></i>TúToría
+      </a>
+      
+      <!-- INDICADOR DE ROL -->
+      <span class="role-indicator d-none d-sm-inline" id="current-role">
+        🎓 Estudiante
+      </span>
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      
+      <div class="collapse navbar-collapse" id="menu">
+        <ul class="navbar-nav ms-auto">
+          
+          <!-- NOTIFICACIONES MEJORADAS -->
+          <li class="nav-item position-relative">
+            <a class="nav-link position-relative smooth-transition" href="#" id="notifications-btn" style="opacity: 0.9;">
+              <i class="bi bi-bell"></i>
+              <span class="notification-badge" id="notification-count">3</span>
+            </a>
+          </li>
+
+          <!-- INICIO -->
+          <li class="nav-item">
+            <a class="nav-link smooth-transition {% if request.path == '/' %}active{% endif %}" href="/" data-bs-toggle="tooltip" title="Inicio">
+              <i class="bi bi-house-door"></i>
+              <span class="d-lg-none ms-2">Inicio</span>
+            </a>
+          </li>
+
+          <!-- PERFIL -->
+          <li class="nav-item">
+            <a class="nav-link smooth-transition {% if request.path == '/perfil/' %}active{% endif %}" href="{% url 'perfil' %}" data-bs-toggle="tooltip" title="Perfil">
+              <i class="bi bi-person-circle"></i>
+              <span class="d-lg-none ms-2">Perfil</span>
+            </a>
+          </li>
+
+          <!-- LOGIN / LOGOUT -->
+          {% if user.is_authenticated %}
+            <li class="nav-item">
+              <form method="post" action="{% url 'logout' %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-link nav-link smooth-transition" style="padding:0; border:none; background:none;" data-bs-toggle="tooltip" title="Cerrar Sesión">
+                  <i class="bi bi-box-arrow-right"></i>
+                  <span class="d-lg-none ms-2">Salir</span>
+                </button>
+              </form>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link smooth-transition {% if request.path == '/login/' %}active{% endif %}" 
+                 href="{% url 'login' %}{% if request.path != '/login/' %}?next={{ request.path }}{% endif %}" data-bs-toggle="tooltip" title="Iniciar Sesión">
+                <i class="bi bi-box-arrow-in-right"></i>
+                <span class="d-lg-none ms-2">Ingresar</span>
+              </a>
+            </li>
+          {% endif %}
+          
+          <!-- SELECTOR DE ROL EN MÓVIL -->
+          <li class="nav-item d-lg-none">
+            <a class="nav-link smooth-transition" href="#" id="mobile-role-toggle">
+              <i class="bi bi-person-badge"></i>
+              <span class="ms-2">Cambiar Rol</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- NAVBAR SECUNDARIO MEJORADO -->
+  {% if user_rol != 'profesor' and request.path != '/login/' %}
+  <nav class="navbar navbar-secondary d-none d-lg-block sticky-top" id="secondary-navbar">
+    <div class="container">
+      <ul class="nav">
+        <li class="nav-item">
+          <a class="nav-link smooth-transition {% if request.path == '/' %}active{% endif %}" href="/">
+            <i class="bi bi-search me-1"></i>Buscar curso
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link smooth-transition {% if request.path == '/mis-tutorias/' %}active{% endif %}" href="{% url 'mistutorias' %}">
+            <i class="bi bi-journal-bookmark me-1"></i>Mis cursos
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link smooth-transition {% if request.path == '/solicitudes/' %}active{% endif %}" href="{% url 'solicitudes' %}">
+            <i class="bi bi-clipboard-check me-1"></i>Mis solicitudes
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link smooth-transition {% if request.path == '/historial/' %}active{% endif %}" href="{% url 'historial' %}">
+            <i class="bi bi-graph-up me-1"></i>Historial
+          </a>
+        </li>
+
+        <!-- MENSAJES -->
+        <li class="nav-item">
+          <a class="nav-link smooth-transition {% if request.path == '/chat/' %}active{% endif %}" href="{% url 'chat' 1 %}">
+            <i class="bi bi-chat-dots me-1"></i>Mensajes
+          </a>
+        </li>
+
+        <!-- OPCIONES DE PROFESOR (VISIBLES PARA TESTING) -->
+        <li class="nav-item">
+          <a class="nav-link smooth-transition {% if request.path == '/panelprofesor/' %}active{% endif %}" href="{% url 'panelprofesor' %}">
+            <i class="bi bi-speedometer2 me-1"></i>Panel Profesor
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link smooth-transition {% if request.path == '/mistutoriasprof/' %}active{% endif %}" href="{% url 'mistutoriasprof' %}">
+            <i class="bi bi-journal-text me-1"></i>Mis Tutorías
+          </a>
+        </li>
+
+        <li class="nav-item">
+          <a class="nav-link smooth-transition {% if request.path == '/estudiantes/' %}active{% endif %}" href="{% url 'estudiantes' %}">
+            <i class="bi bi-people me-1"></i>Mis Estudiantes
+          </a>
+        </li>
+      </ul>
+      
+      
+    </div>
+  </nav>
+  {% endif %}
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main class="flex-grow-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- FOOTER MEJORADO -->
+  <footer class="bg-dark text-light py-4 mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6">
+          <h5 class="fw-bold">
+            <i class="bi bi-rocket-takeoff me-2"></i>TúToría
+          </h5>
+          <p class="mb-2">Plataforma de tutorías profesionales</p>
+          <small class="text-muted">Conectando estudiantes y tutores</small>
+        </div>
+        <div class="col-md-6 text-md-end">
+          <p class="mb-1">&copy; 2025 TúToría. Todos los derechos reservados.</p>
+          <small class="text-muted">
+            <i class="bi bi-heart-fill text-danger"></i> 
+            Hecho con pasión por la educación
+          </small>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- SCRIPT JQUERY MEJORADO -->
+  <script>
+  $(document).ready(function() {
+      console.log('✅ jQuery cargado - Navbars profesionales activos');
+      
+      // 1. INICIALIZACIÓN DE TOOLTIPS
+      $('[data-bs-toggle="tooltip"]').tooltip();
+      
+      // 2. MANEJO DE ROLES CON JQUERY
+      function actualizarRol(rol) {
+          localStorage.setItem('user_rol', rol);
+          
+          // Actualizar indicador visual
+          const rolText = rol === 'profesor' ? '👨‍🏫 Profesor' : '🎓 Estudiante';
+          $('#current-role').text(rolText);
+          $('#role-selector').val(rol);
+          
+          // Mostrar notificación de cambio
+          mostrarNotificacion(`Rol cambiado a: ${rolText}`, 'success');
+          
+          // Recargar para aplicar cambios (en producción sería una petición AJAX)
+          setTimeout(() => {
+              window.location.reload();
+          }, 1000);
+      }
+      
+      // Selector de rol desktop
+      $('#role-selector').change(function() {
+          actualizarRol($(this).val());
+      });
+      
+      // Selector de rol móvil
+      $('#mobile-role-toggle').click(function(e) {
+          e.preventDefault();
+          const nuevoRol = localStorage.getItem('user_rol') === 'profesor' ? 'estudiante' : 'profesor';
+          actualizarRol(nuevoRol);
+      });
+      
+      // 3. NOTIFICACIONES INTERACTIVAS
+      $('#notifications-btn').click(function(e) {
+          e.preventDefault();
+          
+          // Simular marcado como leído
+          $('#notification-count').fadeOut(300, function() {
+              $(this).text('0').fadeIn(300);
+          });
+          
+          // Mostrar panel de notificaciones (simulado)
+          mostrarNotificacion('Notificaciones marcadas como leídas', 'info');
+      });
+      
+      // 4. EFECTO SMOOTH SCROLL PARA NAVEGACIÓN
+      $('.nav-link[href^="#"]').on('click', function(e) {
+          if (this.hash !== "") {
+              e.preventDefault();
+              const hash = this.hash;
+              
+              $('html, body').animate({
+                  scrollTop: $(hash).offset().top - 70
+              }, 800, 'swing');
+          }
+      });
+      
+      // 5. ANIMACIÓN DE NAVBAR SECUNDARIO AL SCROLL
+      let lastScrollTop = 0;
+      $(window).scroll(function() {
+          const st = $(this).scrollTop();
+          const navbar = $('#secondary-navbar');
+          
+          if (navbar.length) {
+              if (st > lastScrollTop && st > 100) {
+                  // Scroll hacia abajo
+                  navbar.css('transform', 'translateY(-100%)');
+              } else {
+                  // Scroll hacia arriba
+                  navbar.css('transform', 'translateY(0)');
+              }
+              lastScrollTop = st;
+          }
+      });
+      
+      // 6. INDICADOR DE PÁGINA ACTIVA MEJORADO
+      function resaltarEnlaceActivo() {
+          const currentPath = window.location.pathname;
+          $('.navbar-secondary .nav-link').each(function() {
+              const linkPath = $(this).attr('href');
+              if (linkPath === currentPath || 
+                  (currentPath.startsWith(linkPath) && linkPath !== '/')) {
+                  $(this).addClass('active');
+              } else {
+                  $(this).removeClass('active');
+              }
+          });
+      }
+      
+      // 7. FUNCIÓN DE NOTIFICACIONES
+      function mostrarNotificacion(mensaje, tipo = 'info') {
+          const tipos = {
+              'success': 'alert-success',
+              'error': 'alert-danger',
+              'warning': 'alert-warning',
+              'info': 'alert-info'
+          };
+          
+          const $notificacion = $(
+              `<div class="alert ${tipos[tipo]} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3" style="z-index: 9999; min-width: 300px;">
+                  <i class="bi bi-${tipo === 'success' ? 'check-circle' : 'info-circle'} me-2"></i>
+                  ${mensaje}
+                  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+              </div>`
+          );
+          
+          $('body').append($notificacion);
+          
+          setTimeout(() => {
+              $notificacion.alert('close');
+          }, 4000);
+      }
+      
+      // 8. INICIALIZACIÓN DE ROL
+      function inicializarRol() {
+          let rol = localStorage.getItem('user_rol');
+          if (!rol) {
+              rol = 'estudiante';
+              localStorage.setItem('user_rol', rol);
+          }
+          
+          const rolText = rol === 'profesor' ? '👨‍🏫 Profesor' : '🎓 Estudiante';
+          $('#current-role').text(rolText);
+          $('#role-selector').val(rol);
+          
+          console.log(`Rol inicializado: ${rolText}`);
+      }
+      
+      // 9. EFECTO HOVER MEJORADO PARA NAV LINKS
+      $('.nav-link').hover(
+          function() {
+              $(this).css('transform', 'translateY(-2px)');
+          },
+          function() {
+              $(this).css('transform', 'translateY(0)');
+          }
+      );
+      
+      // 10. DETECCIÓN DE DISPOSITIVO Y AJUSTES
+      function detectarDispositivo() {
+          if ($(window).width() < 992) {
+              $('body').addClass('mobile-device');
+          } else {
+              $('body').removeClass('mobile-device');
+          }
+      }
+      
+      // INICIALIZACIÓN
+      inicializarRol();
+      resaltarEnlaceActivo();
+      detectarDispositivo();
+      
+      $(window).resize(detectarDispositivo);
+      
+      console.log('🎯 Navbars profesionales inicializados correctamente');
+  });
+  
+  // Script legacy para compatibilidad
+  document.addEventListener('DOMContentLoaded', function() {
+      if (!localStorage.getItem('user_rol')) {
+          localStorage.setItem('user_rol', 'estudiante');
+      }
+  });
+  </script>
+</body>
+</html>
