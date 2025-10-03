@@ -1,0 +1,10 @@
+django
+python-decouple
+daphne
+channels
+channels_redis
+pillow
+redis
+psycopg2-binary
+cloudinary
+requests
