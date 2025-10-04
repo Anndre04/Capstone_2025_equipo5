@@ -81,7 +81,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     region = models.ForeignKey(to=Region, on_delete=models.PROTECT, null=True, blank=True)
     comuna = models.ForeignKey(to=Comuna, on_delete=models.PROTECT, null=True, blank=True)
     fecha_nac = models.DateField(null=True, blank=True)
-    ocupacion = models.ManyToManyField(to=Ocupacion)    
+    ocupacion = models.ManyToManyField(to=Ocupacion)
     institucion = models.ForeignKey(to=Institucion, on_delete=models.PROTECT, null=True, blank=True)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
