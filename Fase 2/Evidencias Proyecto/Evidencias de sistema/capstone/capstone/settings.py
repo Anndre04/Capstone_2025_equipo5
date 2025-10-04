@@ -28,7 +28,8 @@ DEBUG = config("DEBUG")
 
 ALLOWED_HOSTS = []
 
-AUTH_USER_MODEL = "autenticacion.Usuario"
+
+
 
 
 # Application definition
@@ -42,6 +43,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'autenticacion',
 ]
+
+
+AUTH_USER_MODEL = "autenticacion.Usuario"
+
+LOGIN_REDIRECT_URL = '/login/'
+LOGOUT_REDIRECT_URL = '/home/'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

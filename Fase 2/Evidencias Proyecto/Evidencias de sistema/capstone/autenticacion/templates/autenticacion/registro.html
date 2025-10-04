@@ -1,0 +1,216 @@
+{% extends 'autenticacion/base.html' %}
+{% load static %}
+
+{% block title %}Registro - Tutorías Online{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-3 p-md-4">
+          <!-- HEADER RESPONSIVOOO -->
+          <div class="text-center mb-4">
+            <h4 class="card-title mb-2 fw-bold">Crear Cuenta</h4>
+            <p class="text-muted mb-0 small">Completa tus datos para registrarte</p>
+          </div>
+
+          {% if messages %}
+            {% for message in messages %}
+              <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-3" role="alert">
+                <div class="d-flex align-items-center">
+                  <span class="flex-grow-1">{{ message }}</span>
+                  <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+              </div>
+            {% endfor %}
+          {% endif %}
+
+          <form method="post" action="{% url 'registro' %}" id="registroForm">
+            {% csrf_token %}
+            
+            <!-- CORREO -->
+            <div class="mb-3">
+              <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold small">Correo Electrónico</label>
+              {{ form.email }}
+              {% if form.email.errors %}
+                <div class="text-danger small">{{ form.email.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- NOMBRE Y APELLIDOS -->
+            <div class="row g-2 g-md-3">
+              <div class="col-12 col-sm-6">
+                <div class="mb-3">
+                  <label for="{{ form.nombre.id_for_label }}" class="form-label fw-semibold small">Nombre</label>
+                  {{ form.nombre }}
+                  {% if form.nombre.errors %}
+                    <div class="text-danger small">{{ form.nombre.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-12 col-sm-6">
+                <div class="mb-3">
+                  <label for="{{ form.p_apellido.id_for_label }}" class="form-label fw-semibold small">Primer Apellido</label>
+                  {{ form.p_apellido }}
+                  {% if form.p_apellido.errors %}
+                    <div class="text-danger small">{{ form.p_apellido.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- SEGUNDO APELLIDO -->
+            <div class="mb-3">
+              <label for="{{ form.s_apellido.id_for_label }}" class="form-label fw-semibold small">Segundo Apellido (Opcional)</label>
+              {{ form.s_apellido }}
+              <!-- ALERTA SEGUNDO APELLIDO -->
+              {% if form.s_apellido.errors %}
+                <div class="text-danger small">{{ form.s_apellido.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- RUN Y FECHA DE NACIMIENTO -->
+            <div class="row g-2 g-md-3">
+              <div class="col-12 col-sm-6">
+                <div class="mb-3">
+                  <label for="{{ form.run.id_for_label }}" class="form-label fw-semibold small">RUN (Opcional)</label>
+                  {{ form.run }}
+                  <!-- ALERTA RUT -->
+                  {% if form.run.errors %}
+                    <div class="text-danger small">{{ form.run.errors }}</div>
+                  {% endif %}
+                  <div class="form-text small">Máximo 18 caracteres (números, puntos, guiones y K)</div>
+                </div>
+              </div>
+              <div class="col-12 col-sm-6">
+                <div class="mb-3">
+                  <label for="{{ form.fecha_nac.id_for_label }}" class="form-label fw-semibold small">Fecha de Nacimiento</label>
+                  {{ form.fecha_nac }}
+                  <!-- ALERTA EDADS -->
+                  <div class="form-text small">Debes tener al menos 13 años</div>
+                  {% if form.fecha_nac.errors %}
+                    <div class="text-danger small">{{ form.fecha_nac.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- UBCCIACION -->
+            <div class="row g-2 g-md-3">
+              <div class="col-12 col-sm-4">
+                <div class="mb-3">
+                  <label for="{{ form.pais.id_for_label }}" class="form-label fw-semibold small">País</label>
+                  {{ form.pais }}
+                </div>
+              </div>
+              <div class="col-12 col-sm-4">
+                <div class="mb-3">
+                  <label for="{{ form.region.id_for_label }}" class="form-label fw-semibold small">Región</label>
+                  {{ form.region }}
+                </div>
+              </div>
+              <div class="col-12 col-sm-4">
+                <div class="mb-3">
+                  <label for="{{ form.comuna.id_for_label }}" class="form-label fw-semibold small">Comuna</label>
+                  {{ form.comuna }}
+                </div>
+              </div>
+            </div>
+
+            <!-- OCPCION -->
+            <div class="mb-3">
+              <label for="{{ form.ocupacion.id_for_label }}" class="form-label fw-semibold small">Ocupación (Puedes seleccionar varias)</label>
+              {{ form.ocupacion }}
+            </div>
+
+            <!-- AREAS DE INTERES -->
+            <div class="mb-3">
+              <label for="{{ form.areas_interes.id_for_label }}" class="form-label fw-semibold small">Áreas de Interés (Puedes seleccionar varias)</label>
+              {{ form.areas_interes }}
+              <div class="form-text small">Mantén presionado Ctrl (o Cmd en Mac) para seleccionar múltiples opciones</div>
+            </div>
+
+            <!-- CONTRASEÑAS -->
+            <div class="row g-2 g-md-3">
+              <div class="col-12 col-sm-6">
+                <div class="mb-3">
+                  <label for="{{ form.password1.id_for_label }}" class="form-label fw-semibold small">Contraseña</label>
+                  {{ form.password1 }}
+                  {% if form.password1.errors %}
+                    <div class="text-danger small">{{ form.password1.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="col-12 col-sm-6">
+                <div class="mb-3">
+                  <label for="{{ form.password2.id_for_label }}" class="form-label fw-semibold small">Confirmar Contraseña</label>
+                  {{ form.password2 }}
+                  {% if form.password2.errors %}
+                    <div class="text-danger small">{{ form.password2.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- BOTÓN ENVIAR -->
+            <div class="d-grid mt-4">
+              <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                Crear Cuenta
+              </button>
+            </div>
+
+            <!-- ENLACE LOGIN -->
+            <div class="text-center mt-3">
+              <small class="text-muted">
+                ¿Ya tienes cuenta? 
+                <a href="#" class="text-decoration-none">Inicia sesión aquí</a>
+              </small>
+            </div>
+
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* Estilos para mejorar la apariencia de los selects múltiples */
+.form-select[multiple] {
+  min-height: 100px;
+}
+
+/* Mejorar la apariencia de los campos */
+.form-control, .form-select {
+  border-radius: 0.375rem;
+  border: 1px solid #dee2e6;
+  padding: 0.5rem 0.75rem;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .card-body {
+    padding: 1rem !important;
+  }
+  
+  .btn-lg {
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+  }
+}
+</style>
+
+
+{% endblock %}
+
+
+
+
+

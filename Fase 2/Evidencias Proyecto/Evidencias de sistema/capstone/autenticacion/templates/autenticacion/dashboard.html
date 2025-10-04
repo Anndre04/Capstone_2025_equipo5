@@ -1,0 +1,235 @@
+{% extends 'autenticacion/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Tutorías Online{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
+  <div class="row">
+    <div class="col-12">
+      <!-- HEADER DEL DASHBOARD -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 mb-1">Dashboard</h1>
+          <p class="text-muted mb-0">Bienvenido a tu panel de control</p>
+        </div>
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            {{ user.nombre }} {{ user.p_apellido }}
+          </button>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="#">Mi Perfil</a></li>
+            <li><a class="dropdown-item" href="#">Configuración</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item" href="{% url 'logout' %}">Cerrar Sesión</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- TARJETAS -->
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                  <h6 class="card-title text-muted mb-1">Estado</h6>
+                  <h4 class="mb-0 text-success">{{ user.estado }}</h4>
+                </div>
+                <div class="flex-shrink-0">
+                  <i class="bi bi-person-check fs-4 text-success"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                  <h6 class="card-title text-muted mb-1">Roles</h6>
+                  <h4 class="mb-0 text-primary">
+                    {% for rol in user.roles.all %}
+                      {{ rol.nombre }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                  </h4>
+                </div>
+                <div class="flex-shrink-0">
+                  <i class="bi bi-shield-check fs-4 text-primary"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-12 col-sm-6 col-lg-3">
+          <div class="card border-0 shadow-sm">
+            <div class="card-body">
+              <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                  <h6 class="card-title text-muted mb-1">Email</h6>
+                  <h6 class="mb-0 text-info">{{ user.email }}</h6>
+                </div>
+                <div class="flex-shrink-0">
+                  <i class="bi bi-envelope fs-4 text-info"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INFO USUARIOO -->
+      <div class="row">
+        <div class="col-12 col-lg-8">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+              <h5 class="card-title mb-0">Información de tu Cuenta</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-12 col-sm-6">
+                  <p><strong>Nombre completo:</strong><br>
+                  {{ user.nombre }} {{ user.p_apellido }} {{ user.s_apellido|default:"" }}</p>
+                  
+                  <p><strong>RUN:</strong><br>
+                  {{ user.run|default:"No especificado" }}</p>
+                  
+                  <p><strong>Fecha de nacimiento:</strong><br>
+                  {{ user.fecha_nac|date:"d/m/Y"|default:"No especificada" }}</p>
+                </div>
+                
+                <div class="col-12 col-sm-6">
+                  <p><strong>Ubicación:</strong><br>
+                  {% if user.comuna %}
+                    {{ user.comuna.nombre }}, {{ user.region.nombre }}, {{ user.pais.nombre }}
+                  {% else %}
+                    No especificada
+                  {% endif %}</p>
+                  
+                  <p><strong>Ocupaciones:</strong><br>
+                  {% for ocupacion in user.ocupacion.all %}
+                    {{ ocupacion.nombre }}{% if not forloop.last %}, {% endif %}
+                  {% empty %}
+                    No especificadas
+                  {% endfor %}</p>
+                  
+                  <p><strong>Áreas de interés:</strong><br>
+                  {% for area in user.areas_interes.all %}
+                    {{ area.nombre }}{% if not forloop.last %}, {% endif %}
+                  {% empty %}
+                    No especificadas
+                  {% endfor %}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- SECCIN ACCIONES  -->
+        <div class="col-12 col-lg-4 mt-3 mt-lg-0">
+          <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white">
+              <h5 class="card-title mb-0">Acciones Rápidas</h5>
+            </div>
+            <div class="card-body">
+              <div class="d-grid gap-2">
+                <!-- CREAR PUBLICACIÓN -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalCrearPublicacion">
+                  <i class="bi bi-plus-circle me-2"></i>Crear Publicación
+                </button>
+                <a href="#" class="btn btn-outline-primary">Editar Perfil</a>
+                <a href="#" class="btn btn-outline-secondary">Buscar Tutorías</a>
+                <a href="{% url 'logout' %}" class="btn btn-outline-danger">Cerrar Sesión</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CREAR PUBLICCIONN-->
+<div class="modal fade" id="modalCrearPublicacion" tabindex="-1" aria-labelledby="modalCrearPublicacionLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCrearPublicacionLabel">Crear Publicación de Tutoría</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formCrearPublicacion">
+          <div class="mb-3">
+            <label for="detallesTutoria" class="form-label">Escribir detalles de la tutoría</label>
+            <textarea class="form-control" id="detallesTutoria" rows="5" placeholder="Describe los detalles de la tutoría que quieres ofrecer..."></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnPublicar">Publicar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Agregar Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+
+<style>
+.card {
+  border-radius: 0.5rem;
+}
+
+.card-header {
+  border-bottom: 1px solid #e3e6f0;
+  padding: 1rem 1.35rem;
+}
+
+.btn {
+  border-radius: 0.375rem;
+}
+
+@media (max-width: 768px) {
+  .d-flex.justify-content-between {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .dropdown {
+    align-self: flex-end;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Manejar el botón de publicar
+  const btnPublicar = document.getElementById('btnPublicar');
+  const detallesTutoria = document.getElementById('detallesTutoria');
+  
+  btnPublicar.addEventListener('click', function() {
+    const detalles = detallesTutoria.value.trim();
+    
+    if (detalles === '') {
+      alert('Por favor, escribe los detalles de la tutoría');
+      return;
+    }
+    
+    // Por ahora solo muestra un mensaje (maqueta)
+    alert('Publicación creada exitosamente (esto es una maqueta, no se guardará en la base de datos)');
+    console.log('Detalles de la tutoría:', detalles);
+    
+    // Cerrar el modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('modalCrearPublicacion'));
+    modal.hide();
+    
+    // Limpiar el textarea
+    detallesTutoria.value = '';
+  });
+});
+</script>
+{% endblock %}
