@@ -1,6 +1,7 @@
-from django.urls import path
-from .consumer import ChatConsumer
+from django.urls import path, re_path
+from .consumer import ChatConsumer, NotificacionConsumer
 
 websocket_urlpatterns = [
-    path('ws/chat/<chat_id>/', ChatConsumer.as_asgi(), )
+    path('ws/chat/<chat_id>/', ChatConsumer.as_asgi()),
+    path('ws/notificaciones/', NotificacionConsumer.as_asgi()),
 ]

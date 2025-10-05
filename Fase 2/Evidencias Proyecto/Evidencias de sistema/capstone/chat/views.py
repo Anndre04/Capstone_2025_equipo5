@@ -1,7 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from .models import Chat, Mensaje
+from autenticacion.models import Usuario
 
 def chat(request):
     user = request.user  # Usuario logeado
@@ -20,11 +22,14 @@ def chat(request):
         ultimo_mensaje = chat.mensaje_set.order_by('-timestamp').first()
         ultimo_texto = ultimo_mensaje.mensaje if ultimo_mensaje else ''
 
+        no_leidos = chat.mensaje_set.filter(leido=False).exclude(user=user).count()
+
         
         chat_data.append({
             'id': chat.id,
             'contacto': str(contacto),
-            'ultimo_mensaje': ultimo_texto,  # <-- esto permite mostrarlo en el template
+            'ultimo_mensaje': ultimo_texto,
+            'no_leidos': no_leidos
         })
 
         # Si hay chats, cargar la primera conversación
@@ -57,3 +62,43 @@ def mensajes_view(request, chat_id):
 
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
+    
+def crear_chat(request, user_id):
+    user = request.user
+    otro_usuario = get_object_or_404(Usuario, id=user_id)
+
+    # Buscar si ya existe un chat 1:1 entre ambos
+    chat_existente = Chat.objects.filter(users=user).filter(users=otro_usuario).first()
+
+    if chat_existente:
+        chat = chat_existente
+    else:
+        # Crear un nuevo chat solo si no existe
+        chat = Chat.objects.create()
+        chat.users.add(user, otro_usuario)
+        chat.save()
+
+    return redirect('chat') 
+
+@login_required
+def marcar_leidos(request, chat_id):
+    print("💡 Llamada a marcar_leidos:", request.method, "Usuario:", request.user)
+
+    if request.method == 'POST' and request.user.is_authenticated:
+        try:
+            chat = Chat.objects.get(id=chat_id)
+            print("💡 Chat encontrado:", chat.id)
+
+            mensajes_no_leidos = chat.mensaje_set.filter(leido=False).exclude(user=request.user)
+            print(f"💡 Mensajes no leídos encontrados: {mensajes_no_leidos.count()}")
+
+            updated_count = mensajes_no_leidos.update(leido=True)
+            print(f"💡 Mensajes marcados como leídos: {updated_count}")
+
+            return JsonResponse({'status': 'ok', 'marcados': updated_count})
+        except Chat.DoesNotExist:
+            print("❌ Chat no encontrado")
+            return JsonResponse({'status': 'error', 'message': 'Chat no encontrado'}, status=404)
+
+    print("❌ Método no permitido o usuario no autenticado")
+    return JsonResponse({'status': 'error', 'message': 'Método no permitido'}, status=405)

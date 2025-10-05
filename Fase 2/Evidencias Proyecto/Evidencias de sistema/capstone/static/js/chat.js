@@ -1,4 +1,9 @@
-document.addEventListener('DOMContentLoaded', function() {
+let chatSocket = null;
+let notificacionSocket = null;
+let chatIdActual = null;
+
+document.addEventListener('DOMContentLoaded', function () {
+
     // ==========================
     // REFERENCIAS GLOBALES
     // ==========================
@@ -6,223 +11,254 @@ document.addEventListener('DOMContentLoaded', function() {
     const nombre = document.getElementById('chat-contact-name');
     const status = document.getElementById('chat-status');
     const mensajesDiv = document.getElementById('chat-messages');
-    const buscador = document.getElementById('buscador-conversaciones');
-    const toggleBtn = document.getElementById('toggleConversations');
+    const chatContainer = document.getElementById('chat-container');
+    const user = chatContainer ? chatContainer.dataset.user : null;
+    const primeraChatId = chatContainer ? chatContainer.dataset.chatId : null;
+    const contadorGlobal = document.getElementById('contador-conversaciones');
     const $input = $('#message-input');
     const $btn = $('#btn-enviar');
 
-    const chatContainer = $('#chat-container');
-    const user = chatContainer.data('user');
-
-    let chatSocket = null;
-    let chatIdActual = null;
-
     // ==========================
-    // 1. BÚSQUEDA EN TIEMPO REAL
+    // FUNCIONES AUXILIARES
     // ==========================
-    if (buscador) {
-        buscador.addEventListener('input', function() {
-            const busqueda = this.value.toLowerCase().trim();
-            const conversaciones = document.querySelectorAll('.conversation-item');
-            let visibles = 0;
-
-            conversaciones.forEach(conv => {
-                const nombreConv = conv.dataset.contacto.toLowerCase();
-                const mensaje = conv.querySelector('.conversation-last-msg').textContent.toLowerCase();
-                const coincide = nombreConv.includes(busqueda) || mensaje.includes(busqueda);
-                if (coincide || busqueda === '') {
-                    conv.classList.remove('oculta');
-                    visibles++;
-                } else {
-                    conv.classList.add('oculta');
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            document.cookie.split(';').forEach(c => {
+                const cookie = c.trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
                 }
             });
-
-            const contador = document.getElementById('contador-conversaciones');
-            if (contador) contador.textContent = visibles;
-        });
+        }
+        return cookieValue;
     }
 
-    // ==========================
-    // 2. BOTONES RÁPIDOS
-    // ==========================
-    document.querySelectorAll('.quick-msg').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const mensaje = this.dataset.msg;
-            $input.val(mensaje).focus();
-        });
-    });
-
-    // ==========================
-    // 3. PANEL MÓVIL
-    // ==========================
-    let mobilePanelCreado = false;
-
-    function cerrarPanelMovil() {
-        const panel = document.getElementById('mobile-conversations');
-        const overlay = document.getElementById('mobile-overlay');
-        if (panel) panel.classList.remove('show');
-        if (overlay) overlay.classList.remove('show');
+    function appendMessage(msg, esMio, datetime) {
+        if (!mensajesDiv) return;
+        const div = document.createElement('div');
+        div.className = `d-flex mb-4 ${esMio ? 'justify-content-end' : ''}`;
+        div.innerHTML = `
+            <div class="flex-grow-1 me-3" style="max-width: 85%;">
+                <div class="${esMio ? 'bg-primary text-white' : 'bg-light'} rounded p-3">
+                    <p class="mb-1">${msg}</p>
+                    <small class="text-muted">${datetime}</small>
+                </div>
+            </div>`;
+        mensajesDiv.appendChild(div);
+        mensajesDiv.scrollTop = mensajesDiv.scrollHeight;
     }
 
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', function() {
-            let panelLateral = document.getElementById('mobile-conversations');
-            let overlay = document.getElementById('mobile-overlay');
-
-            if (!mobilePanelCreado) {
-                panelLateral = document.querySelector('.col-md-5 .card').cloneNode(true);
-                panelLateral.id = 'mobile-conversations';
-                panelLateral.classList.add('mobile-conversations');
-
-                const header = panelLateral.querySelector('.card-header');
-                header.innerHTML = `
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0 fw-bold">💬 Conversaciones</h5>
-                        <button type="button" class="btn-close" id="close-mobile-conversations"></button>
-                    </div>
-                `;
-
-                document.body.appendChild(panelLateral);
-
-                overlay = document.createElement('div');
-                overlay.id = 'mobile-overlay';
-                overlay.className = 'overlay';
-                document.body.appendChild(overlay);
-
-                document.getElementById('close-mobile-conversations').addEventListener('click', cerrarPanelMovil);
-                overlay.addEventListener('click', cerrarPanelMovil);
-
-                const mobileChats = panelLateral.querySelectorAll('.conversation-item');
-                mobileChats.forEach(item => {
-                    item.addEventListener('click', function(event) {
-                        event.stopPropagation();
-                        seleccionarChat(this.dataset.id, this.dataset.contacto);
-                        cerrarPanelMovil();
-                    });
-                });
-
-                mobilePanelCreado = true;
+    function marcarLeidos(chatId) {
+        fetch(`/chat/marcar_leidos/${chatId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({})
+        })
+        .then(resp => resp.json())
+        .then(() => {
+            const chatElem = document.querySelector(`.conversation-item[data-id="${chatId}"]`);
+            if (chatElem) {
+                const badge = chatElem.querySelector('.badge');
+                if (badge) badge.remove();
             }
-
-            panelLateral.classList.add('show');
-            overlay.classList.add('show');
-        });
+        })
+        .catch(err => console.error('❌ Error al marcar como leídos:', err));
     }
 
     // ==========================
-    // 4. FUNCIONES DE CHAT
+    // CHAT SOCKET
     // ==========================
     function abrirWebSocket(chatId) {
-        if(chatSocket) chatSocket.close();
+        if (chatSocket) chatSocket.close();
         chatIdActual = chatId;
 
         const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
         const url = `${ws_scheme}://${window.location.host}/ws/chat/${chatId}/`;
-
         chatSocket = new WebSocket(url);
-        console.log('Conectando WebSocket a:', url);
 
-        chatSocket.onopen = () => console.log('WEBSOCKET ABIERTO');
-        chatSocket.onclose = () => console.log('WEBSOCKET CERRADO');
+        chatSocket.onopen = () => console.log(`💬 Conectado al chat ${chatId}`);
+        chatSocket.onclose = () => console.log(`💬 Desconectado del chat ${chatId}`);
 
-        chatSocket.onmessage = function(e) {
+        chatSocket.onmessage = function (e) {
             const data = JSON.parse(e.data);
-
-            // Determinar si el mensaje es tuyo
-            const esMio = data.username === user;
-
-            const msgHTML = `
-                <div class="d-flex mb-4 ${esMio ? 'justify-content-end' : ''}">
-                    <div class="flex-grow-1 me-3" style="max-width: 85%;">
-                        <div class="${esMio ? 'bg-primary text-white' : 'bg-light'} rounded p-3">
-                            <p class="mb-1">${data.message}</p>
-                            <small class="text-muted">${data.datetime}</small>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            $('#chat-messages').append(msgHTML);
-            $('#chat-messages')[0].scrollTop = $('#chat-messages')[0].scrollHeight;
+            appendMessage(data.message, data.username === user, data.datetime);
         };
     }
 
-    function sendMessage() {
-        const text = $input.val().trim();
-        if (!text || !chatSocket) return;
-
-        // Mostrar mensaje local
-        const localHTML = `
-        <div class="d-flex mb-4 justify-content-end">
-            <div class="flex-grow-1 me-3" style="max-width: 85%;">
-                <div class="bg-primary text-white rounded p-3">
-                    <p class="mb-1">${text}</p>
-                    <small class="text-muted">${new Date().toLocaleString()}</small>
-                </div>
-            </div>
-        </div>`;
-        $('#chat-messages').append(localHTML);
-        $('#chat-messages')[0].scrollTop = $('#chat-messages')[0].scrollHeight;
-
-        // Enviar al WebSocket
-        chatSocket.send(JSON.stringify({ message: text }));
-        $input.val('');
-    }
-    $btn.on('click', sendMessage);
-    $input.on('keypress', function(e) {
-        if(e.which === 13) sendMessage();
-    });
-
     function cargarMensajes(chatId) {
         fetch(`/chat/mensajes/${chatId}/`)
-        .then(resp => resp.json())
-        .then(data => {
-            if (!mensajesDiv) return;
-            mensajesDiv.innerHTML = '';
-
-            data.mensajes.forEach(msg => {
-                const div = document.createElement('div');
-                div.className = msg.es_mio ? 'd-flex mb-4 justify-content-end' : 'd-flex mb-4';
-                div.innerHTML = `
-                    <div class="flex-grow-1 me-3" style="max-width: 85%;">
-                        <div class="${msg.es_mio ? 'bg-primary text-white' : 'bg-light'} rounded p-3">
-                            <p class="mb-1">${msg.contenido}</p>
-                            <small class="text-muted">${msg.fecha}</small>
-                        </div>
-                    </div>`;
-                mensajesDiv.appendChild(div);
+            .then(resp => resp.json())
+            .then(data => {
+                if (!mensajesDiv) return;
+                mensajesDiv.innerHTML = '';
+                data.mensajes.forEach(msg => appendMessage(msg.contenido, msg.es_mio, msg.fecha));
             });
-
-            mensajesDiv.scrollTop = mensajesDiv.scrollHeight;
-        })
-        .catch(err => console.error('Error al cargar mensajes:', err));
     }
 
     function seleccionarChat(chatId, contacto) {
-        if (avatar && nombre && status) {
-            avatar.textContent = contacto.slice(0,2).toUpperCase();
+        if (avatar && nombre) {
+            avatar.textContent = contacto.slice(0, 2).toUpperCase();
             nombre.textContent = contacto;
         }
-
         if (mensajesDiv) mensajesDiv.innerHTML = '';
 
         abrirWebSocket(chatId);
         cargarMensajes(chatId);
+        marcarLeidos(chatId);
+    }
+
+    function enviarMensaje(text) {
+        if (!text || !chatSocket) return;
+        appendMessage(text, true, new Date().toLocaleString());
+        chatSocket.send(JSON.stringify({ message: text }));
     }
 
     // ==========================
-    // 5. ASIGNAR CLICK A CONVERSACIONES (desktop)
+    // FORMULARIO DE MENSAJES
+    // ==========================
+    const form = document.getElementById('message-form');
+    const input = document.getElementById('message-input');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const mensaje = input.value.trim();
+        if (mensaje === '') return;
+        enviarMensaje(mensaje);
+        input.value = '';
+        input.focus();
+    });
+
+    $input.on('keypress', e => { if (e.which === 13) form.dispatchEvent(new Event('submit')); });
+
+    $btn.on('click', () => form.dispatchEvent(new Event('submit')));
+
+    // ==========================
+    // CLICK EN CONVERSACIONES
     // ==========================
     document.querySelectorAll('.conversation-item').forEach(item => {
-        item.addEventListener('click', function() {
+        item.addEventListener('click', function () {
             seleccionarChat(this.dataset.id, this.dataset.contacto);
         });
     });
 
     // ==========================
-    // 6. CARGAR PRIMERA CONVERSACIÓN AUTOMÁTICAMENTE
+    // ABRIR PRIMER CHAT AUTOMÁTICAMENTE
     // ==========================
-    const conversaciones = document.querySelectorAll('.conversation-item');
-    if (conversaciones.length > 0) conversaciones[0].click();
+    if (primeraChatId) {
+        const primerItem = document.querySelector(`.conversation-item[data-id="${primeraChatId}"]`);
+        if (primerItem) primerItem.click();
+    }
+
+    function actualizarChatLista(chatId, mensaje) {
+    // Panel de escritorio
+    const chatElem = document.querySelector(`.conversation-item[data-id="${chatId}"]`);
+    if (chatElem) {
+        const ultimoMsg = chatElem.querySelector('.conversation-last-msg');
+        if (ultimoMsg) ultimoMsg.textContent = mensaje;
+
+        // Badge
+        if (chatIdActual != chatId) {
+            let badge = chatElem.querySelector('.badge');
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'badge bg-danger rounded-pill ms-1';
+                chatElem.appendChild(badge);
+            }
+            badge.textContent = parseInt(badge.textContent || 0) + 1;
+        } else {
+            // Chat abierto, eliminar badge si existe
+            const badge = chatElem.querySelector('.badge');
+            if (badge) badge.remove();
+        }
+    }
+
+    // Panel offcanvas
+    const chatElemMobile = document.querySelector(`#lista-conversaciones-offcanvas .conversation-item[data-id="${chatId}"]`);
+    if (chatElemMobile) {
+        const ultimoMsg = chatElemMobile.querySelector('.conversation-last-msg');
+        if (ultimoMsg) ultimoMsg.textContent = mensaje;
+
+        if (chatIdActual != chatId) {
+            let badge = chatElemMobile.querySelector('.badge');
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'badge bg-danger rounded-pill ms-1';
+                chatElemMobile.appendChild(badge);
+            }
+            badge.textContent = parseInt(badge.textContent || 0) + 1;
+        } else {
+            const badge = chatElemMobile.querySelector('.badge');
+            if (badge) badge.remove();
+        }
+    }
+
+    // Contador global
+    const contadorGlobal = document.getElementById('contador-conversaciones');
+    if (contadorGlobal && chatIdActual != chatId) {
+        contadorGlobal.textContent = parseInt(contadorGlobal.textContent || 0) + 1;
+    }
+}
+
+
+    // ==========================
+    // NOTIFICACIONES GLOBALES
+    // ==========================
+    function conectarNotificaciones() {
+        const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
+        notificacionSocket = new WebSocket(`${ws_scheme}://${window.location.host}/ws/notificaciones/`);
+        console.log("🌐 Intentando conectar WebSocket de notificaciones...");
+
+        notificacionSocket.onopen = () => console.log("🔔 WebSocket de notificaciones conectado");
+
+        notificacionSocket.onmessage = function(e) {
+    try {
+        const data = JSON.parse(e.data);
+        console.log("📩 Notificación recibida:", data);
+
+        actualizarChatLista(data.chat_id, data.mensaje);
+
+        // Si el chat está abierto, marcarlo como leído automáticamente
+        if (chatIdActual == data.chat_id) {
+            fetch(`/chat/marcar_leidos/${data.chat_id}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({})
+            }).catch(err => console.error('❌ Error al marcar como leídos:', err));
+        }
+    } catch(err) {
+        console.error('❌ Error procesando notificación:', err, e.data);
+    }
+};
+
+
+        notificacionSocket.onclose = () => {
+            console.warn("🔔 WebSocket de notificaciones desconectado, reintentando en 5s...");
+            setTimeout(conectarNotificaciones, 5000);
+        };
+    }
+    
+
+    conectarNotificaciones();
+
+    // ==========================
+    // OFFCANVAS MÓVIL ≤767px
+    // ==========================
+    const toggleBtn = document.getElementById('toggleConversations');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            if (window.innerWidth <= 767) {
+                const offcanvas = new bootstrap.Offcanvas(document.getElementById('offcanvasConversations'));
+                offcanvas.show();
+            }
+        });
+    }
+
 });
+

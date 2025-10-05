@@ -53,9 +53,10 @@ class ChatConsumer(WebsocketConsumer):
                     {
                         'type': 'chat_message',
                         'message': message,
-                        'username': self.user.email,  # si tu campo es email
+                        'username': self.user.email,
                         'datetime': timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M:%S'),
-                        'sender_id': sender_id
+                        'sender_id': sender_id,
+                        'chat_id': self.id  # <-- AGREGAR ESTO
                     }
                 )
             else:
@@ -74,12 +75,43 @@ class ChatConsumer(WebsocketConsumer):
         username = event['username']
         datetime = event['datetime']
         sender_id = event['sender_id']
+        chat_id = event['chat_id']
 
         current_user_id = self.scope['user'].id
 
         if sender_id != current_user_id:
             self.send(text_data=json.dumps({
-            'message': message,
-            'username' : username,
-            'datetime' : datetime,
+                'message': message,
+                'username': username,
+                'datetime': datetime,
+                'chat_id': chat_id  # <-- AGREGAR ESTO
+            }))
+
+class NotificacionConsumer(WebsocketConsumer):
+    def connect(self):
+        self.user = self.scope['user']
+        if self.user.is_authenticated:
+            self.group_name = f'notificaciones_{self.user.id}'
+            async_to_sync(self.channel_layer.group_add)(
+                self.group_name,
+                self.channel_name
+            )
+            self.accept()
+        else:
+            self.close()
+
+    def disconnect(self, close_code):
+        if hasattr(self, 'group_name'):
+            async_to_sync(self.channel_layer.group_discard)(
+                self.group_name,
+                self.channel_name
+            )
+
+    # Handler síncrono para la notificación
+    def send_notificacion(self, event):
+        self.send(text_data=json.dumps({
+            "mensaje": event["mensaje"],
+            "chat_id": event["chat_id"],
+            "remitente": event["remitente"],
+            "timestamp": event["timestamp"]
         }))

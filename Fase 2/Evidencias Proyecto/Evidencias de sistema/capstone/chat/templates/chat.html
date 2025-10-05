@@ -10,6 +10,34 @@
   </div>
 <div class="container-fluid px-2 px-md-3 py-3 py-md-4">
   <div class="row g-3 g-md-4">
+
+ <div class="offcanvas offcanvas-start d-block d-md-none" tabindex="-1" id="offcanvasConversaciones" aria-labelledby="offcanvasConversacionesLabel">
+    <div class="offcanvas-header">
+      <h5 class="offcanvas-title fw-bold" id="offcanvasConversacionesLabel">💬 Conversaciones</h5>
+      <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+      <div class="list-group list-group-flush" id="lista-conversaciones-movil">
+        {% for chat in chat_data %}
+        <div class="list-group-item list-group-item-action d-flex align-items-center conversation-item" 
+            data-id="{{ chat.id }}" 
+            data-contacto="{{ chat.contacto }}">
+          <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
+              style="width: 40px; height: 40px;">
+            <span class="text-white fw-bold small">{{ chat.contacto|slice:":2"|upper }}</span>
+          </div>
+          <div class="flex-grow-1 min-width-0">
+            <h6 class="mb-0 fw-bold text-truncate">{{ chat.contacto }}</h6>
+            <p class="mb-0 text-truncate small">{{ chat.ultimo_mensaje }}</p>
+          </div>
+          {% if chat.no_leidos > 0 %}
+          <span class="badge bg-danger rounded-pill ms-2">{{ chat.no_leidos }}</span>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
     
     <!-- PANEL LATERAL - CONVERSACIONES -->
     <div class="col-12 col-md-5 col-lg-4 col-xl-3 d-none d-md-block">
@@ -38,6 +66,9 @@
                 </p>
               </div>
             </div>
+            {% if chat.no_leidos > 0 %}
+          <span class="badge bg-danger rounded-pill" id="badge-{{ chat.id }}">{{ chat.no_leidos }}</span>
+        {% endif %}
           </div>
           {% endfor %}
         </div>
@@ -62,9 +93,14 @@
         <div class="card-header bg-white border-bottom py-3">
           <div class="d-flex align-items-center">
             <!-- Botón para mostrar conversaciones en móvil -->
-            <button class="btn btn-outline-secondary btn-sm me-3 d-md-none" id="toggleConversations">
-              <i class="bi bi-list"></i>
-            </button>
+            <button class="btn btn-outline-secondary btn-sm me-3 d-block d-md-none" 
+                  type="button" 
+                  data-bs-toggle="offcanvas" 
+                  data-bs-target="#offcanvasConversaciones" 
+                  aria-controls="offcanvasConversaciones">
+            <i class="bi bi-list"></i>
+          </button>
+
             
             <div class="d-flex align-items-center flex-grow-1">
               <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
@@ -93,27 +129,19 @@
           <!-- INPUT PARA ENVIAR MENSAJES -->
           <div class="border-top p-3 p-md-4">
             <form id="message-form" class="d-flex gap-2 gap-md-3 align-items-center">
-              {% csrf_token %}
-              <div class="flex-grow-1">
-                <input type="text" 
-                       class="form-control form-control-md" 
-                       placeholder="Escribe tu mensaje..." 
-                       id="message-input"
-                       required>
-              </div>
-              <button type="submit" class="btn btn-primary px-3 px-md-4 flex-shrink-0" id="btn-enviar">
-                <i class="bi bi-send"></i>
-              </button>
+                {% csrf_token %}
+                <div class="flex-grow-1">
+                    <input type="text" 
+                          class="form-control form-control-md" 
+                          placeholder="Escribe tu mensaje..." 
+                          id="message-input">
+                </div>
+                <button type="submit" class="btn btn-primary px-3 px-md-4 flex-shrink-0" id="btn-enviar">
+                    <i class="bi bi-send"></i>
+                </button>
             </form>
-            
-            <!-- BOTONES RÁPIDOS -->
-            <div class="mt-2 d-flex flex-wrap gap-1" id="quick-buttons">
-              <button class="btn btn-sm btn-outline-secondary quick-msg" data-msg="Necesito ayuda con un ejercicio">Ayuda</button>
-              <button class="btn btn-sm btn-outline-secondary quick-msg" data-msg="¿Podemos programar una tutoría?">Tutoría</button>
-            </div>
-          </div>
         </div>
-
+        </div>
       </div>
     </div>
 
@@ -203,6 +231,11 @@
   .quick-msg {
     font-size: 0.75rem;
     padding: 0.25rem 0.5rem;
+  }
+}
+@media (min-width: 768px) {
+  #offcanvasConversaciones {
+    display: none !important;
   }
 }
 </style>

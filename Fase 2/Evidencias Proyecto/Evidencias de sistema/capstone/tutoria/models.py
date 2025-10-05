@@ -29,9 +29,6 @@ class Solicitud(models.Model):
         return f"Solicitud {self.tipo.nombre} de {self.estudiante.email}"
     
 
-class Archivo(models.Model):
-     contenido = models.CharField(max_length=200)
-
 class Tutor(models.Model):
     usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     areas_conocimiento = models.ManyToManyField(
@@ -39,11 +36,15 @@ class Tutor(models.Model):
         through='TutorArea',
         related_name='tutores'
     )
-    archivo = models.ManyToManyField(to=Archivo)
+
     estado = models.CharField(max_length=30)
 
     def __str__(self):
         return str(self.usuario)
+    
+class Archivo(models.Model):
+    contenido = models.CharField(max_length=200)
+    tutor = models.ForeignKey(Tutor, on_delete=models.PROTECT, related_name="archivos")
     
 class TutorArea(models.Model):
     tutor = models.ForeignKey(to=Tutor, on_delete=models.PROTECT)
@@ -131,8 +132,6 @@ class Tutoria(models.Model):
         ],
         default="Pendiente"
     )
-    enlace = models.URLField(null=True, blank=True)
-    observaciones = models.TextField(blank=True, null=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

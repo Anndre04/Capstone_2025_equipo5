@@ -112,7 +112,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = []
 
     def __str__(self):
-        return f"{self.email}"
+        return f"{self.email},  {str(self.id)}"
         
 
 class UsuarioArea(models.Model):
