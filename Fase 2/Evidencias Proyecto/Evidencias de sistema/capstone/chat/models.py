@@ -27,4 +27,4 @@ class Mensaje(models.Model):
     leido = models.BooleanField()
 
     def __str__(self):
-        return self.mensaje
+        return str(self.mensaje + '   ' + self.user.email + '   ' + self.chat.nombre)

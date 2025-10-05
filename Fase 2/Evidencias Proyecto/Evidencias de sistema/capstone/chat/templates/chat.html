@@ -4,6 +4,10 @@
 {% block title %}Chat - Tutorías Online{% endblock %}
 
 {% block content %}
+<div id="chat-container" 
+      data-user="{{ request.user.username }}" 
+      data-chat-id="{% if chat_data %}{{ chat_data.0.id }}{% endif %}">
+  </div>
 <div class="container-fluid px-2 px-md-3 py-3 py-md-4">
   <div class="row g-3 g-md-4">
     
@@ -16,21 +20,26 @@
           </div>
         </div>
         <div class="card-body p-0" id="lista-conversaciones">
-          
-          <!-- Conversación 1 - Activa -->
-          <div class="p-3 border-bottom bg-light conversation-item active" data-contacto="Ana García" data-materia="Matemáticas" data-id="1">
+          {% for chat in chat_data %}
+          <div class="p-3 border-bottom conversation-item" 
+              data-contacto="{{ chat.contacto }}" 
+              data-id="{{ chat.id }}">
             <div class="d-flex align-items-center">
               <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
-                   style="width: 45px; height: 45px;">
-                <span class="text-white fw-bold small">AG</span>
+                  style="width: 45px; height: 45px;">
+                <span class="text-white fw-bold small">
+                  {{ chat.contacto|slice:":2"|upper }}
+                </span>
               </div>
               <div class="flex-grow-1 min-width-0">
-                <h6 class="mb-0 fw-bold text-truncate conversation-name">Ana García</h6>
-                <small class="text-muted d-block text-truncate conversation-subject">Matemáticas</small>
-                <p class="mb-0 text-truncate small conversation-last-msg">¿Cómo vas con los ejercicios?</p>
+                <h6 class="mb-0 fw-bold text-truncate conversation-name">{{ chat.contacto }}</h6>
+                <p class="mb-0 text-truncate small conversation-last-msg">
+                  {{ chat.ultimo_mensaje }}
+                </p>
               </div>
             </div>
           </div>
+          {% endfor %}
         </div>
         
         <!-- BÚSQUEDA -->
@@ -42,6 +51,8 @@
         </div>
       </div>
     </div>
+
+    
 
     <!-- PANEL PRINCIPAL - CHAT -->
     <div class="col-12 col-md-7 col-lg-8 col-xl-9">
@@ -58,11 +69,11 @@
             <div class="d-flex align-items-center flex-grow-1">
               <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
                    style="width: 45px; height: 45px;">
-                <span class="text-white fw-bold" id="chat-avatar">AG</span>
+                <span class="text-white fw-bold" id="chat-avatar"></span>
               </div>
               <div class="min-width-0">
-                <h5 class="mb-0 fw-bold text-truncate" id="chat-contact-name">Ana García</h5>
-                <small class="text-muted text-truncate d-block" id="chat-contact-subject">Matemáticas • <span id="chat-status">En línea</span></small>
+                <h5 class="mb-0 fw-bold text-truncate" id="chat-contact-name"></h5>
+                <small class="text-muted text-truncate d-block" id="chat-contact-subject"><span id="chat-status"></span></small>
               </div>
             </div>
             
@@ -76,47 +87,7 @@
         <!-- ÁREA DE MENSAJES -->
         <div class="card-body p-0 d-flex flex-column">
           <div id="chat-messages" class="p-3 p-md-4 flex-grow-1" style="min-height: 400px; max-height: 60vh; overflow-y: auto;">
-            
-            <!-- Mensaje del tutor -->
-            <div class="d-flex mb-4">
-              <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
-                   style="width: 40px; height: 40px;">
-                <span class="text-white fw-bold small">AG</span>
-              </div>
-              <div class="flex-grow-1">
-                <div class="bg-light rounded p-3">
-                  <p class="mb-1">¡Hola! Soy Ana, tu tutora de matemáticas. ¿En qué puedo ayudarte hoy?</p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Mensaje del usuario -->
-            <div class="d-flex mb-4 justify-content-end">
-              <div class="flex-grow-1 me-3" style="max-width: 85%;">
-                <div class="bg-primary text-white rounded p-3">
-                  <p class="mb-1">Hola Ana, tengo dudas con los ejercicios de álgebra que dejaste.</p>
-                </div>
-              </div>
-              <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center flex-shrink-0" 
-                   style="width: 40px; height: 40px;">
-                <span class="text-white fw-bold small">TÚ</span>
-              </div>
-            </div>
-
-            <!-- Respuesta del tutor -->
-            <div class="d-flex mb-4">
-              <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
-                   style="width: 40px; height: 40px;">
-                <span class="text-white fw-bold small">AG</span>
-              </div>
-              <div class="flex-grow-1">
-                <div class="bg-light rounded p-3">
-                  <p class="mb-1">Claro, ¿en qué ejercicio específicamente tienes dificultades?</p>
-                  <small class="text-muted">10:33 AM</small>
-                </div>
-              </div>
-            </div>
-
+            <!-- Los mensajes se cargan dinámicamente vía JS -->
           </div>
 
           <!-- INPUT PARA ENVIAR MENSAJES -->
@@ -235,114 +206,4 @@
   }
 }
 </style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ Chat inicializado');
-
-    // 1. BÚSQUEDA EN TIEMPO REAL
-    const buscador = document.getElementById('buscador-conversaciones');
-    if (buscador) {
-        buscador.addEventListener('input', function() {
-            const busqueda = this.value.toLowerCase().trim();
-            const conversaciones = document.querySelectorAll('.conversation-item');
-            let visibles = 0;
-
-            conversaciones.forEach(conv => {
-                const nombre = conv.dataset.contacto.toLowerCase();
-                const materia = conv.dataset.materia.toLowerCase();
-                const mensaje = conv.querySelector('.conversation-last-msg').textContent.toLowerCase();
-                
-                const coincide = nombre.includes(busqueda) || 
-                               materia.includes(busqueda) || 
-                               mensaje.includes(busqueda);
-                
-                if (coincide || busqueda === '') {
-                    conv.classList.remove('oculta');
-                    visibles++;
-                } else {
-                    conv.classList.add('oculta');
-                }
-            });
-
-            document.getElementById('contador-conversaciones').textContent = visibles;
-        });
-    }
-
-    
-
-    // 4. BOTONES RÁPIDOS
-    document.querySelectorAll('.quick-msg').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const mensaje = this.dataset.msg;
-            document.getElementById('message-input').value = mensaje;
-            document.getElementById('message-input').focus();
-        });
-    });
-
-    // 5. PANEL MÓVIL
-    const toggleBtn = document.getElementById('toggleConversations');
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', abrirPanelMovil);
-    }
-
-    function abrirPanelMovil() {
-        const panelLateral = document.querySelector('.col-md-5 .card').cloneNode(true);
-        panelLateral.id = 'mobile-conversations';
-        panelLateral.classList.add('mobile-conversations');
-        
-        const header = panelLateral.querySelector('.card-header');
-        header.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center">
-                <h5 class="mb-0 fw-bold">💬 Conversaciones</h5>
-                <button type="button" class="btn-close" id="close-mobile-conversations"></button>
-            </div>
-        `;
-
-        document.body.appendChild(panelLateral);
-        document.body.appendChild(createOverlay());
-
-        setTimeout(() => {
-            panelLateral.classList.add('show');
-            document.getElementById('mobile-overlay').classList.add('show');
-        }, 10);
-
-        // Eventos de cierre
-        document.getElementById('close-mobile-conversations').addEventListener('click', cerrarPanelMovil);
-        document.getElementById('mobile-overlay').addEventListener('click', cerrarPanelMovil);
-    }
-
-    function cerrarPanelMovil() {
-        const panel = document.getElementById('mobile-conversations');
-        const overlay = document.getElementById('mobile-overlay');
-        
-        if (panel) panel.classList.remove('show');
-        if (overlay) overlay.classList.remove('show');
-        
-        setTimeout(() => {
-            if (panel) panel.remove();
-            if (overlay) overlay.remove();
-        }, 300);
-    }
-
-    function createOverlay() {
-        const overlay = document.createElement('div');
-        overlay.id = 'mobile-overlay';
-        overlay.className = 'overlay';
-        return overlay;
-    }
-
-    // FUNCIONES AUXILIARES
-    function scrollToBottom() {
-        const chatMessages = document.getElementById('chat-messages');
-        if (chatMessages) {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-    }
-
-
-    // INICIALIZACIÓN
-    scrollToBottom();
-});
-</script>
 {% endblock %}
