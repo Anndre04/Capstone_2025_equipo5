@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Chat - Tutorías Online{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-2 px-md-3 py-3 py-md-4">
+  <div class="row g-3 g-md-4">
+    
+    <!-- PANEL LATERAL - CONVERSACIONES -->
+    <div class="col-12 col-md-5 col-lg-4 col-xl-3 d-none d-md-block">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-white border-bottom py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold">Conversaciones</h5>
+          </div>
+        </div>
+        <div class="card-body p-0" id="lista-conversaciones">
+          
+          <!-- Conversación 1 - Activa -->
+          <div class="p-3 border-bottom bg-light conversation-item active" data-contacto="Ana García" data-materia="Matemáticas" data-id="1">
+            <div class="d-flex align-items-center">
+              <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
+                   style="width: 45px; height: 45px;">
+                <span class="text-white fw-bold small">AG</span>
+              </div>
+              <div class="flex-grow-1 min-width-0">
+                <h6 class="mb-0 fw-bold text-truncate conversation-name">Ana García</h6>
+                <small class="text-muted d-block text-truncate conversation-subject">Matemáticas</small>
+                <p class="mb-0 text-truncate small conversation-last-msg">¿Cómo vas con los ejercicios?</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- BÚSQUEDA -->
+        <div class="card-footer bg-white border-top p-3">
+          <div class="input-group input-group-sm">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" id="buscador-conversaciones" placeholder="Buscar conversación...">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL PRINCIPAL - CHAT -->
+    <div class="col-12 col-md-7 col-lg-8 col-xl-9">
+      <div class="card shadow-sm h-100">
+        
+        <!-- HEADER DEL CHAT -->
+        <div class="card-header bg-white border-bottom py-3">
+          <div class="d-flex align-items-center">
+            <!-- Botón para mostrar conversaciones en móvil -->
+            <button class="btn btn-outline-secondary btn-sm me-3 d-md-none" id="toggleConversations">
+              <i class="bi bi-list"></i>
+            </button>
+            
+            <div class="d-flex align-items-center flex-grow-1">
+              <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
+                   style="width: 45px; height: 45px;">
+                <span class="text-white fw-bold" id="chat-avatar">AG</span>
+              </div>
+              <div class="min-width-0">
+                <h5 class="mb-0 fw-bold text-truncate" id="chat-contact-name">Ana García</h5>
+                <small class="text-muted text-truncate d-block" id="chat-contact-subject">Matemáticas • <span id="chat-status">En línea</span></small>
+              </div>
+            </div>
+            
+            <!-- INDICADORES -->
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge bg-success d-none" id="contador-mensajes">0 nuevos</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ÁREA DE MENSAJES -->
+        <div class="card-body p-0 d-flex flex-column">
+          <div id="chat-messages" class="p-3 p-md-4 flex-grow-1" style="min-height: 400px; max-height: 60vh; overflow-y: auto;">
+            
+            <!-- Mensaje del tutor -->
+            <div class="d-flex mb-4">
+              <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
+                   style="width: 40px; height: 40px;">
+                <span class="text-white fw-bold small">AG</span>
+              </div>
+              <div class="flex-grow-1">
+                <div class="bg-light rounded p-3">
+                  <p class="mb-1">¡Hola! Soy Ana, tu tutora de matemáticas. ¿En qué puedo ayudarte hoy?</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mensaje del usuario -->
+            <div class="d-flex mb-4 justify-content-end">
+              <div class="flex-grow-1 me-3" style="max-width: 85%;">
+                <div class="bg-primary text-white rounded p-3">
+                  <p class="mb-1">Hola Ana, tengo dudas con los ejercicios de álgebra que dejaste.</p>
+                </div>
+              </div>
+              <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center flex-shrink-0" 
+                   style="width: 40px; height: 40px;">
+                <span class="text-white fw-bold small">TÚ</span>
+              </div>
+            </div>
+
+            <!-- Respuesta del tutor -->
+            <div class="d-flex mb-4">
+              <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
+                   style="width: 40px; height: 40px;">
+                <span class="text-white fw-bold small">AG</span>
+              </div>
+              <div class="flex-grow-1">
+                <div class="bg-light rounded p-3">
+                  <p class="mb-1">Claro, ¿en qué ejercicio específicamente tienes dificultades?</p>
+                  <small class="text-muted">10:33 AM</small>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- INPUT PARA ENVIAR MENSAJES -->
+          <div class="border-top p-3 p-md-4">
+            <form id="message-form" class="d-flex gap-2 gap-md-3 align-items-center">
+              {% csrf_token %}
+              <div class="flex-grow-1">
+                <input type="text" 
+                       class="form-control form-control-md" 
+                       placeholder="Escribe tu mensaje..." 
+                       id="message-input"
+                       required>
+              </div>
+              <button type="submit" class="btn btn-primary px-3 px-md-4 flex-shrink-0" id="btn-enviar">
+                <i class="bi bi-send"></i>
+              </button>
+            </form>
+            
+            <!-- BOTONES RÁPIDOS -->
+            <div class="mt-2 d-flex flex-wrap gap-1" id="quick-buttons">
+              <button class="btn btn-sm btn-outline-secondary quick-msg" data-msg="Necesito ayuda con un ejercicio">Ayuda</button>
+              <button class="btn btn-sm btn-outline-secondary quick-msg" data-msg="¿Podemos programar una tutoría?">Tutoría</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<style>
+.conversation-item {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.conversation-item:hover {
+  background-color: #f8f9fa;
+}
+
+.conversation-item.active {
+  background-color: #e3f2fd !important;
+}
+
+.quick-msg {
+  transition: all 0.2s ease;
+}
+
+.mensaje-nuevo {
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Estilos para panel móvil */
+.mobile-conversations {
+  position: fixed;
+  top: 0;
+  left: -100%;
+  width: 85%;
+  height: 100%;
+  z-index: 1050;
+  transition: left 0.3s ease;
+  background: white;
+}
+
+.mobile-conversations.show {
+  left: 0;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  z-index: 1040;
+  display: none;
+}
+
+.overlay.show {
+  display: block;
+}
+
+/* Mejoras de responsividad para móviles */
+@media (max-width: 767.98px) {
+  .container-fluid {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  #chat-messages {
+    max-height: 65vh;
+    padding: 1rem;
+  }
+  
+  #quick-buttons {
+    justify-content: center;
+  }
+  
+  .quick-msg {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+  }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ Chat inicializado');
+
+    // 1. BÚSQUEDA EN TIEMPO REAL
+    const buscador = document.getElementById('buscador-conversaciones');
+    if (buscador) {
+        buscador.addEventListener('input', function() {
+            const busqueda = this.value.toLowerCase().trim();
+            const conversaciones = document.querySelectorAll('.conversation-item');
+            let visibles = 0;
+
+            conversaciones.forEach(conv => {
+                const nombre = conv.dataset.contacto.toLowerCase();
+                const materia = conv.dataset.materia.toLowerCase();
+                const mensaje = conv.querySelector('.conversation-last-msg').textContent.toLowerCase();
+                
+                const coincide = nombre.includes(busqueda) || 
+                               materia.includes(busqueda) || 
+                               mensaje.includes(busqueda);
+                
+                if (coincide || busqueda === '') {
+                    conv.classList.remove('oculta');
+                    visibles++;
+                } else {
+                    conv.classList.add('oculta');
+                }
+            });
+
+            document.getElementById('contador-conversaciones').textContent = visibles;
+        });
+    }
+
+    
+
+    // 4. BOTONES RÁPIDOS
+    document.querySelectorAll('.quick-msg').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const mensaje = this.dataset.msg;
+            document.getElementById('message-input').value = mensaje;
+            document.getElementById('message-input').focus();
+        });
+    });
+
+    // 5. PANEL MÓVIL
+    const toggleBtn = document.getElementById('toggleConversations');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', abrirPanelMovil);
+    }
+
+    function abrirPanelMovil() {
+        const panelLateral = document.querySelector('.col-md-5 .card').cloneNode(true);
+        panelLateral.id = 'mobile-conversations';
+        panelLateral.classList.add('mobile-conversations');
+        
+        const header = panelLateral.querySelector('.card-header');
+        header.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold">💬 Conversaciones</h5>
+                <button type="button" class="btn-close" id="close-mobile-conversations"></button>
+            </div>
+        `;
+
+        document.body.appendChild(panelLateral);
+        document.body.appendChild(createOverlay());
+
+        setTimeout(() => {
+            panelLateral.classList.add('show');
+            document.getElementById('mobile-overlay').classList.add('show');
+        }, 10);
+
+        // Eventos de cierre
+        document.getElementById('close-mobile-conversations').addEventListener('click', cerrarPanelMovil);
+        document.getElementById('mobile-overlay').addEventListener('click', cerrarPanelMovil);
+    }
+
+    function cerrarPanelMovil() {
+        const panel = document.getElementById('mobile-conversations');
+        const overlay = document.getElementById('mobile-overlay');
+        
+        if (panel) panel.classList.remove('show');
+        if (overlay) overlay.classList.remove('show');
+        
+        setTimeout(() => {
+            if (panel) panel.remove();
+            if (overlay) overlay.remove();
+        }, 300);
+    }
+
+    function createOverlay() {
+        const overlay = document.createElement('div');
+        overlay.id = 'mobile-overlay';
+        overlay.className = 'overlay';
+        return overlay;
+    }
+
+    // FUNCIONES AUXILIARES
+    function scrollToBottom() {
+        const chatMessages = document.getElementById('chat-messages');
+        if (chatMessages) {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    }
+
+
+    // INICIALIZACIÓN
+    scrollToBottom();
+});
+</script>
+{% endblock %}
