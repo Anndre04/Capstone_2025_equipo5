@@ -1,3 +1,13 @@
 from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 
-# Create your views here.
+@login_required
+def mistutoriasprof(request):
+    return render(request, 'tutoria/mistutoriasprof.html')
+
+@login_required
+def anunciotutor(request):
+    return render(request, 'tutoria/anunciotutor.html')
+
+
+
