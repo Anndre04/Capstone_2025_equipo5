@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, authenticate
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .forms import RegistroForm, LoginForm
@@ -48,9 +48,7 @@ def login_view(request):
                 login(request, user)
                 messages.success(request, f'¡Bienvenido de nuevo, {user.nombre}!')
                 
-                # Redirigir a la página que intentaba acceder o al dashboard
-                next_url = request.GET.get('next', 'dashboard')
-                return redirect(next_url)
+                return redirect('home')
             else:
                 messages.error(request, 'Correo o contraseña incorrectos.')
         else:
@@ -59,19 +57,3 @@ def login_view(request):
         form = LoginForm()
     
     return render(request, 'autenticacion/login.html', {'form': form})
-
-def logout_view(request):
-    logout(request)
-    messages.info(request, 'Has cerrado sesión correctamente.')
-    return redirect('home')
-
-@login_required
-def dashboard_view(request):
-    return render(request, 'autenticacion/dashboard.html')
-
-def home_view(request):
-    return render(request, 'autenticacion/home.html')
-
-def historial(request):
-  
-    return render(request, 'autenticacion/historial.html')

@@ -144,10 +144,13 @@
 
                         <!-- LOGOUT -->
                         <li class="nav-item">
-                            <a class="nav-link smooth-transition" href="{% url 'logout' %}">
-                                <i class="bi bi-box-arrow-right"></i>
-                                <span class="d-lg-none ms-2">Salir</span>
-                            </a>
+                            <form method="post" action="{% url 'logout' %}" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-link nav-link smooth-transition">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                    <span class="d-lg-none ms-2">Salir</span>
+                                </button>
+                            </form>
                         </li>
                     {% else %}
                         <!-- LOGIN -->
@@ -178,14 +181,14 @@
             <ul class="nav">
                 <!-- DASHBOARD -->
                 <li class="nav-item">
-                    <a class="nav-link smooth-transition {% if request.path == '/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}">
+                    <a class="nav-link smooth-transition {% if request.path == '/dashboard/' %}active{% endif %}" href="#">
                         <i class="bi bi-speedometer2 me-1"></i>Dashboard
                     </a>
                 </li>
                 
                 <!-- HISTORIAL -->
                 <li class="nav-item">
-                    <a class="nav-link smooth-transition {% if request.path == '/historial/' %}active{% endif %}" href="{% url 'historial' %}">
+                    <a class="nav-link smooth-transition {% if request.path == '/historial/' %}active{% endif %}" href="#">
                         <i class="bi bi-clock-history me-1"></i>Historial
                     </a>
                 </li>

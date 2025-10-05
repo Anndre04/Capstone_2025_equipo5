@@ -53,29 +53,10 @@ class TutorArea(models.Model):
     fecha_desactivado = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        unique_together = ('tutor', 'area')
-
-class Disponibilidad_tutor(models.Model):
-    tutor = models.ForeignKey(to=Tutor, on_delete=models.PROTECT, null=True)
-
-    DIAS_SEMANA = [
-        ("Lunes", "Lunes"),
-        ("Martes", "Martes"),
-        ("Miércoles", "Miércoles"),
-        ("Jueves", "Jueves"),
-        ("Viernes", "Viernes"),
-        ("Sábado", "Sábado"),
-        ("Domingo", "Domingo"),
-    ]
-
-    dia = models.CharField(max_length=15, choices=DIAS_SEMANA)
-    mañana = models.BooleanField()
-    tarde = models.BooleanField()
-    noche = models.BooleanField()
-    
+        unique_together = ('tutor', 'area') 
 
 class Anuncio(models.Model):
-    tutor = models.ForeignKey(to=Tutor, on_delete=models.PROTECT)
+    tutor = models.ForeignKey(to=Tutor, on_delete=models.PROTECT, related_name="anuncios")
     area = models.ForeignKey(to=AreaInteres, on_delete=models.PROTECT, null=True)
     titulo = models.CharField(max_length=200)
     descripcion = models.TextField()
@@ -95,3 +76,64 @@ class Anuncio(models.Model):
 
     def __str__(self):
         return f"{self.titulo} - {self.area} - {self.tutor}"
+    
+class Disponibilidad(models.Model):
+    anuncio = models.ForeignKey(to=Anuncio, on_delete=models.PROTECT, null=True)
+
+    DIAS_SEMANA = [
+        ("Lunes", "Lunes"),
+        ("Martes", "Martes"),
+        ("Miércoles", "Miércoles"),
+        ("Jueves", "Jueves"),
+        ("Viernes", "Viernes"),
+        ("Sábado", "Sábado"),
+        ("Domingo", "Domingo"),
+    ]
+
+    dia = models.CharField(max_length=15, choices=DIAS_SEMANA)
+    mañana = models.BooleanField(default=False)
+    tarde = models.BooleanField(default=False)
+    noche = models.BooleanField(default=False)
+    
+class Tutoria(models.Model):
+    solicitud = models.OneToOneField(
+        to=Solicitud,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="tutoria"
+    )
+    anuncio = models.ForeignKey(
+        to=Anuncio,
+        on_delete=models.PROTECT,
+        related_name="tutorias"
+    )
+    tutor = models.ForeignKey(
+        to=Tutor,
+        on_delete=models.PROTECT,
+        related_name="tutorias"
+    )
+    estudiante = models.ForeignKey(
+        to=settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="tutorias_recibidas"
+    )
+    fecha = models.DateField()
+    hora_inicio = models.TimeField()
+    hora_fin = models.TimeField()
+    estado = models.CharField(
+        max_length=20,
+        choices=[
+            ("Pendiente", "Pendiente"),
+            ("Confirmada", "Confirmada"),
+            ("Completada", "Completada"),
+            ("Cancelada", "Cancelada"),
+        ],
+        default="Pendiente"
+    )
+    enlace = models.URLField(null=True, blank=True)
+    observaciones = models.TextField(blank=True, null=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Tutoria de {self.estudiante} con {self.tutor} ({self.fecha})"
