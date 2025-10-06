@@ -236,7 +236,7 @@
   </div>
 </div>
 
-<!-- MODAL PARA PUBLICAR NUEVA TUTORÍA - MEJORADO -->
+<!-- MODAL PARA PUBLICAR NUEVA TUTORÍA  -->
 <div class="modal fade" id="publicarTutoriaModal" tabindex="-1" aria-labelledby="publicarTutoriaModalLabel" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content border-0 shadow">
@@ -298,6 +298,378 @@
                 <option value="historia">Historia</option>
               </select>
             </div>
+
+            <!-- SECCIÓN DISPONIBILIDAD -->
+<div class="col-12">
+    <div class="border-top pt-4 mt-2">
+        <label class="form-label fw-semibold mb-3 d-flex align-items-center">
+            <i class="bi bi-calendar-week me-2 text-primary"></i>Disponibilidad de Clases
+        </label>
+        <p class="text-muted small mb-4">Selecciona los días y turnos en los que estás disponible para impartir clases</p>
+        
+        <!-- DÍAS DE LA SEMANA -->
+        <div class="row g-2">
+            <!-- Lunes -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card border day-card">
+                    <div class="card-body text-center p-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input day-checkbox" type="checkbox" id="diaLunes" checked>
+                            <label class="form-check-label fw-medium small" for="diaLunes">Lunes</label>
+                        </div>
+                        <div class="d-flex justify-content-around">
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="lunesManana" checked>
+                                <label class="form-check-label small" for="lunesManana" title="Mañana">M</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="lunesTarde" checked>
+                                <label class="form-check-label small" for="lunesTarde" title="Tarde">T</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="lunesNoche">
+                                <label class="form-check-label small" for="lunesNoche" title="Noche">N</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Martes -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card border day-card">
+                    <div class="card-body text-center p-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input day-checkbox" type="checkbox" id="diaMartes" checked>
+                            <label class="form-check-label fw-medium small" for="diaMartes">Martes</label>
+                        </div>
+                        <div class="d-flex justify-content-around">
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="martesManana" checked>
+                                <label class="form-check-label small" for="martesManana" title="Mañana">M</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="martesTarde" checked>
+                                <label class="form-check-label small" for="martesTarde" title="Tarde">T</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="martesNoche">
+                                <label class="form-check-label small" for="martesNoche" title="Noche">N</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Miércoles -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card border day-card">
+                    <div class="card-body text-center p-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input day-checkbox" type="checkbox" id="diaMiercoles" checked>
+                            <label class="form-check-label fw-medium small" for="diaMiercoles">Miércoles</label>
+                        </div>
+                        <div class="d-flex justify-content-around">
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="miercolesManana" checked>
+                                <label class="form-check-label small" for="miercolesManana" title="Mañana">M</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="miercolesTarde" checked>
+                                <label class="form-check-label small" for="miercolesTarde" title="Tarde">T</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="miercolesNoche">
+                                <label class="form-check-label small" for="miercolesNoche" title="Noche">N</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jueves -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card border day-card">
+                    <div class="card-body text-center p-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input day-checkbox" type="checkbox" id="diaJueves" checked>
+                            <label class="form-check-label fw-medium small" for="diaJueves">Jueves</label>
+                        </div>
+                        <div class="d-flex justify-content-around">
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="juevesManana" checked>
+                                <label class="form-check-label small" for="juevesManana" title="Mañana">M</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="juevesTarde" checked>
+                                <label class="form-check-label small" for="juevesTarde" title="Tarde">T</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="juevesNoche">
+                                <label class="form-check-label small" for="juevesNoche" title="Noche">N</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Viernes -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card border day-card">
+                    <div class="card-body text-center p-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input day-checkbox" type="checkbox" id="diaViernes" checked>
+                            <label class="form-check-label fw-medium small" for="diaViernes">Viernes</label>
+                        </div>
+                        <div class="d-flex justify-content-around">
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="viernesManana" checked>
+                                <label class="form-check-label small" for="viernesManana" title="Mañana">M</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="viernesTarde" checked>
+                                <label class="form-check-label small" for="viernesTarde" title="Tarde">T</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="viernesNoche">
+                                <label class="form-check-label small" for="viernesNoche" title="Noche">N</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sábado -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card border day-card">
+                    <div class="card-body text-center p-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input day-checkbox" type="checkbox" id="diaSabado">
+                            <label class="form-check-label fw-medium small" for="diaSabado">Sábado</label>
+                        </div>
+                        <div class="d-flex justify-content-around">
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="sabadoManana">
+                                <label class="form-check-label small" for="sabadoManana" title="Mañana">M</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="sabadoTarde">
+                                <label class="form-check-label small" for="sabadoTarde" title="Tarde">T</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="sabadoNoche">
+                                <label class="form-check-label small" for="sabadoNoche" title="Noche">N</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Domingo -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card border day-card">
+                    <div class="card-body text-center p-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input day-checkbox" type="checkbox" id="diaDomingo">
+                            <label class="form-check-label fw-medium small" for="diaDomingo">Domingo</label>
+                        </div>
+                        <div class="d-flex justify-content-around">
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="domingoManana">
+                                <label class="form-check-label small" for="domingoManana" title="Mañana">M</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="domingoTarde">
+                                <label class="form-check-label small" for="domingoTarde" title="Tarde">T</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="domingoNoche">
+                                <label class="form-check-label small" for="domingoNoche" title="Noche">N</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LEYENDA DE TURNOS -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="d-flex justify-content-center gap-4">
+                    <div class="d-flex align-items-center">
+                        <div class="form-check me-1">
+                            <input class="form-check-input" type="checkbox" checked disabled>
+                        </div>
+                        <small class="text-muted">M = Mañana (8:00-12:00)</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="form-check me-1">
+                            <input class="form-check-input" type="checkbox" checked disabled>
+                        </div>
+                        <small class="text-muted">T = Tarde (14:00-18:00)</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="form-check me-1">
+                            <input class="form-check-input" type="checkbox" disabled>
+                        </div>
+                        <small class="text-muted">N = Noche (19:00-22:00)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESUMEN DE DISPONIBILIDAD -->
+        <div class="alert alert-light border mt-3 mb-0">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-info-circle text-primary me-2"></i>
+                <small class="text-muted">
+                    <span id="resumenDisponibilidad">Disponible de Lunes a Viernes en turnos de Mañana y Tarde</span>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.day-card {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.day-card:hover {
+    border-color: #0d6efd !important;
+    transform: translateY(-1px);
+}
+
+.day-card .form-check-input:checked ~ .form-check-label {
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+.turno-check:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .day-card .card-body {
+        padding: 0.5rem !important;
+    }
+    
+    .d-flex.justify-content-around .form-check {
+        margin: 0 2px;
+    }
+    
+    .d-flex.justify-content-center.gap-4 {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+}
+
+/* Mejora la alineación de los checkboxes de turnos */
+.d-flex.justify-content-around {
+    gap: 2px;
+}
+
+.form-check {
+    margin-bottom: 0;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const resumenDisponibilidad = document.getElementById('resumenDisponibilidad');
+    
+    // Función para actualizar el resumen de disponibilidad
+    function actualizarResumen() {
+        const dias = [
+            { id: 'diaLunes', nombre: 'Lunes', turnos: ['lunesManana', 'lunesTarde', 'lunesNoche'] },
+            { id: 'diaMartes', nombre: 'Martes', turnos: ['martesManana', 'martesTarde', 'martesNoche'] },
+            { id: 'diaMiercoles', nombre: 'Miércoles', turnos: ['miercolesManana', 'miercolesTarde', 'miercolesNoche'] },
+            { id: 'diaJueves', nombre: 'Jueves', turnos: ['juevesManana', 'juevesTarde', 'juevesNoche'] },
+            { id: 'diaViernes', nombre: 'Viernes', turnos: ['viernesManana', 'viernesTarde', 'viernesNoche'] },
+            { id: 'diaSabado', nombre: 'Sábado', turnos: ['sabadoManana', 'sabadoTarde', 'sabadoNoche'] },
+            { id: 'diaDomingo', nombre: 'Domingo', turnos: ['domingoManana', 'domingoTarde', 'domingoNoche'] }
+        ];
+        
+        const diasSeleccionados = [];
+        const turnosTotales = { manana: 0, tarde: 0, noche: 0 };
+        
+        dias.forEach(dia => {
+            const diaCheckbox = document.getElementById(dia.id);
+            if (diaCheckbox.checked) {
+                // Verificar cuántos turnos tiene seleccionados
+                let turnosDia = 0;
+                dia.turnos.forEach((turnoId, index) => {
+                    const turnoCheckbox = document.getElementById(turnoId);
+                    if (turnoCheckbox.checked) {
+                        turnosDia++;
+                        // Contar turnos totales
+                        if (index === 0) turnosTotales.manana++;
+                        else if (index === 1) turnosTotales.tarde++;
+                        else if (index === 2) turnosTotales.noche++;
+                    }
+                });
+                
+                if (turnosDia > 0) {
+                    diasSeleccionados.push(dia.nombre);
+                }
+            }
+        });
+        
+        // Generar resumen
+        let resumen = 'No hay disponibilidad seleccionada';
+        
+        if (diasSeleccionados.length > 0) {
+            const turnosSeleccionados = [];
+            if (turnosTotales.manana > 0) turnosSeleccionados.push('Mañana');
+            if (turnosTotales.tarde > 0) turnosSeleccionados.push('Tarde');
+            if (turnosTotales.noche > 0) turnosSeleccionados.push('Noche');
+            
+            if (diasSeleccionados.length === 7) {
+                resumen = `Disponible todos los días en turnos de ${turnosSeleccionados.join(', ')}`;
+            } else if (diasSeleccionados.length >= 5) {
+                resumen = `Disponible de ${diasSeleccionados[0]} a ${diasSeleccionados[diasSeleccionados.length-1]} en turnos de ${turnosSeleccionados.join(', ')}`;
+            } else {
+                resumen = `Disponible los ${diasSeleccionados.join(', ')} en turnos de ${turnosSeleccionados.join(', ')}`;
+            }
+        }
+        
+        resumenDisponibilidad.textContent = resumen;
+    }
+    
+    // Event listeners para todos los checkboxes
+    const allCheckboxes = document.querySelectorAll('.day-checkbox, .turno-check');
+    allCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', actualizarResumen);
+    });
+    
+    // Event listener para el checkbox del día (selecciona/deselecciona todos los turnos)
+    const dayCheckboxes = document.querySelectorAll('.day-checkbox');
+    dayCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const dayId = this.id.replace('dia', '').toLowerCase();
+            const turnoCheckboxes = document.querySelectorAll(`[id^="${dayId}"]`);
+            
+            turnoCheckboxes.forEach(turnoCheckbox => {
+                turnoCheckbox.checked = this.checked;
+                turnoCheckbox.disabled = !this.checked;
+            });
+            
+            actualizarResumen();
+        });
+    });
+    
+    // Inicializar el estado
+    actualizarResumen();
+});
+</script>
           </div>
         </form>
       </div>
@@ -308,6 +680,146 @@
     </div>
   </div>
 </div>
+
+<style>
+.day-card {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.day-card:hover {
+  border-color: #0d6efd !important;
+  transform: translateY(-1px);
+}
+
+.day-card .form-check-input:checked ~ .form-check-label {
+  color: #0d6efd;
+  font-weight: 600;
+}
+
+.turno-check:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .day-card .card-body {
+    padding: 0.5rem !important;
+  }
+  
+  .form-check-inline {
+    margin-right: 0.25rem;
+  }
+}
+
+/* Estilos para los turnos */
+.form-check-label .bi {
+  font-size: 0.9em;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Referencias a los elementos principales
+  const turnoManana = document.getElementById('turnoManana');
+  const turnoTarde = document.getElementById('turnoTarde');
+  const turnoNoche = document.getElementById('turnoNoche');
+  const resumenDisponibilidad = document.getElementById('resumenDisponibilidad');
+  
+  // Función para actualizar los turnos de los días
+  function actualizarTurnosDias() {
+    const dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+    const turnos = ['Manana', 'Tarde', 'Noche'];
+    
+    dias.forEach(dia => {
+      const diaCheckbox = document.getElementById(`dia${dia.charAt(0).toUpperCase() + dia.slice(1)}`);
+      const estaActivo = diaCheckbox.checked;
+      
+      turnos.forEach(turno => {
+        const turnoCheckbox = document.getElementById(`${dia}${turno}`);
+        const turnoPrincipal = document.getElementById(`turno${turno}`);
+        
+        if (estaActivo && turnoPrincipal.checked) {
+          turnoCheckbox.checked = true;
+          turnoCheckbox.disabled = false;
+        } else {
+          turnoCheckbox.checked = false;
+          turnoCheckbox.disabled = true;
+        }
+      });
+    });
+    
+    actualizarResumen();
+  }
+  
+  // Función para actualizar el resumen de disponibilidad
+  function actualizarResumen() {
+    const diasSeleccionados = [];
+    const turnosSeleccionados = [];
+    
+    // Verificar días seleccionados
+    const dias = [
+      { id: 'diaLunes', nombre: 'Lunes' },
+      { id: 'diaMartes', nombre: 'Martes' },
+      { id: 'diaMiercoles', nombre: 'Miércoles' },
+      { id: 'diaJueves', nombre: 'Jueves' },
+      { id: 'diaViernes', nombre: 'Viernes' },
+      { id: 'diaSabado', nombre: 'Sábado' },
+      { id: 'diaDomingo', nombre: 'Domingo' }
+    ];
+    
+    dias.forEach(dia => {
+      if (document.getElementById(dia.id).checked) {
+        diasSeleccionados.push(dia.nombre);
+      }
+    });
+    
+    // Verificar turnos seleccionados
+    if (turnoManana.checked) turnosSeleccionados.push('Mañana');
+    if (turnoTarde.checked) turnosSeleccionados.push('Tarde');
+    if (turnoNoche.checked) turnosSeleccionados.push('Noche');
+    
+    // Generar resumen
+    let resumen = 'No hay disponibilidad seleccionada';
+    
+    if (diasSeleccionados.length > 0 && turnosSeleccionados.length > 0) {
+      if (diasSeleccionados.length === 7) {
+        resumen = `Disponible todos los días en turnos de ${turnosSeleccionados.join(', ')}`;
+      } else if (diasSeleccionados.length >= 5) {
+        resumen = `Disponible de ${diasSeleccionados[0]} a ${diasSeleccionados[diasSeleccionados.length-1]} en turnos de ${turnosSeleccionados.join(', ')}`;
+      } else {
+        resumen = `Disponible los ${diasSeleccionados.join(', ')} en turnos de ${turnosSeleccionados.join(', ')}`;
+      }
+    } else if (diasSeleccionados.length > 0) {
+      resumen = `Días seleccionados: ${diasSeleccionados.join(', ')} (selecciona turnos)`;
+    } else if (turnosSeleccionados.length > 0) {
+      resumen = `Turnos seleccionados: ${turnosSeleccionados.join(', ')} (selecciona días)`;
+    }
+    
+    resumenDisponibilidad.textContent = resumen;
+  }
+  
+  // Event listeners para los turnos principales
+  turnoManana.addEventListener('change', actualizarTurnosDias);
+  turnoTarde.addEventListener('change', actualizarTurnosDias);
+  turnoNoche.addEventListener('change', actualizarTurnosDias);
+  
+  // Event listeners para los días
+  const diasCheckboxes = document.querySelectorAll('input[id^="dia"]');
+  diasCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', actualizarTurnosDias);
+  });
+  
+  // Inicializar el estado
+  actualizarTurnosDias();
+});
+</script>
 
 <style>
 .hover-card {

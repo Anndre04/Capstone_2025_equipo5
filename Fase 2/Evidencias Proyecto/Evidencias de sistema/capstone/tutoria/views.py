@@ -9,5 +9,8 @@ def mistutoriasprof(request):
 def anunciotutor(request):
     return render(request, 'tutoria/anunciotutor.html')
 
+@login_required
+def solicitudesprof(request):
+    return render(request, 'tutoria/solicitudesprof.html')
 
 

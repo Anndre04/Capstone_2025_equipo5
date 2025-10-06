@@ -6,10 +6,9 @@
     <!-- Estilos -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- jQuery para funcionalidades mejoradas -->
+    <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <meta charset="utf-8">
@@ -17,21 +16,23 @@
     <title>{% block title %}Tutorías Online{% endblock %}</title>
 
     <style>
-        /* ESTILOS MEJORADOS PARA NAVBARS - MINIMALISTA NEGRO */
+        /* ESTILOS PARA NAVBARS  */
         .navbar-primary {
             min-height: 50px !important;
             padding-top: 0.25rem;
             padding-bottom: 0.25rem;
-            background: #000000 !important;
-            border-bottom: 1px solid #333;
+            background: linear-gradient(135deg, #0a1929 0%, #1a3658 100%) !important;
+            border-bottom: 1px solid #2a4a7a;
+            box-shadow: 0 4px 12px rgba(10, 25, 41, 0.3);
         }
         
         .navbar-primary .navbar-nav .nav-link {
             padding: 0.4rem 0.7rem;
             font-size: 0.9rem;
             color: #ffffff !important;
-            opacity: 0.8;
+            opacity: 0.85;
             transition: all 0.3s ease;
+            position: relative;
         }
         
         .navbar-primary .navbar-nav .nav-link:hover {
@@ -40,11 +41,31 @@
             transform: translateY(-1px);
         }
         
+        .navbar-primary .navbar-nav .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #4dabf7, #339af0);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .navbar-primary .navbar-nav .nav-link:hover::after {
+            width: 70%;
+        }
+        
         .navbar-primary .navbar-brand {
             font-size: 1.1rem;
             padding: 0.3rem 0;
             color: #ffffff !important;
             font-weight: 600;
+            background: linear-gradient(90deg, #ffffff, #a5d8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .navbar-secondary {
@@ -85,12 +106,13 @@
             display: none;
         }
         
-        /* NOTIFICACIONES MEJORADAS */
+
+        /* NOTIFICACIONES */
         .notification-badge {
             position: absolute;
             top: -5px;
             right: -5px;
-            background: #dc3545;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
             color: white;
             border-radius: 50%;
             width: 18px;
@@ -100,6 +122,7 @@
             align-items: center;
             justify-content: center;
             animation: pulse 2s infinite;
+            box-shadow: 0 2px 4px rgba(220, 53, 69, 0.4);
         }
         
         @keyframes pulse {
@@ -108,19 +131,21 @@
             100% { transform: scale(1); }
         }
         
-        /* INDICADOR DE ROL - ESTILO MINIMALISTA */
+
+        /* INDICADOR DE ROL */
         .role-indicator {
-            background: #333333;
+            background: linear-gradient(135deg, #2a4a7a, #1e3a5f);
             color: #ffffff;
             padding: 0.2rem 0.8rem;
             border-radius: 15px;
             font-size: 0.75rem;
             font-weight: 500;
             margin-left: 1rem;
-            border: 1px solid #444;
+            border: 1px solid #3a5a8a;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
-        /* EFECTOS SMOOTH */
+        /* SMOOTH */
         .smooth-transition {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -139,37 +164,43 @@
             flex-grow: 1;
         }
 
-        /* FOOTER NEGRO MINIMALISTA */
+        /* FOOTER  */
         .footer-minimal {
-            background: #000000 !important;
-            border-top: 1px solid #333;
+            background: linear-gradient(135deg, #0a1929 0%, #1a3658 100%) !important;
+            border-top: 1px solid #2a4a7a;
             padding: 2rem 0;
+            box-shadow: 0 -4px 12px rgba(10, 25, 41, 0.3);
         }
 
         .footer-minimal .text-muted {
-            color: #888 !important;
+            color: #a5d8ff !important;
         }
 
         .footer-minimal h5 {
             color: #ffffff;
             font-weight: 600;
+            background: linear-gradient(90deg, #ffffff, #a5d8ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .footer-minimal p, .footer-minimal small {
-            color: #aaaaaa;
+            color: #c5d9f0;
         }
 
-        /* BOTÓN TOGGLER PERSONALIZADO */
+        /* TOGGLER  */
         .navbar-toggler {
-            border: 1px solid #444;
+            border: 1px solid #3a5a8a;
             padding: 0.25rem 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .navbar-toggler-icon {
-            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.8%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28165, 216, 255, 0.9%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
         }
 
-        /* RESPONSIVE MEJORADO */
+        /* RESPONSIVE */
         @media (max-width: 991.98px) {
             .navbar-secondary {
                 overflow-x: auto;
@@ -205,14 +236,14 @@
 
 <body class="d-flex flex-column min-vh-100">
 
-  <!-- NAVBAR PRINCIPAL MINIMALISTA NEGRO -->
+  <!-- NAVBAR PRINCIPAL  -->
   <nav class="navbar navbar-expand-lg navbar-white navbar-primary">
     <div class="container">
       <a class="navbar-brand fw-bold smooth-transition" href="{% url 'home' %}">
-        <i class="bi bi-mortarboard-fill me-2"></i>Tutorías Online
+        <i class="bi bi-mortarboard-fill me-2"></i>TúToría
       </a>
       
-      <!-- INDICADOR DE ROL MINIMALISTA -->
+      <!-- INDICADOR DE ROL  -->
       <span class="role-indicator d-none d-sm-inline smooth-transition" id="current-role">
         🎓 Estudiante
       </span>
@@ -224,7 +255,7 @@
       <div class="collapse navbar-collapse" id="navbarMain">
         <ul class="navbar-nav ms-auto">
           
-          <!-- NOTIFICACIONES MEJORADAS -->
+          <!-- NOTIFICACIONES  -->
           <li class="nav-item position-relative">
             <a class="nav-link position-relative smooth-transition" href="#" id="notifications-btn">
               <i class="bi bi-bell"></i>
@@ -269,13 +300,6 @@
             </li>
           {% endif %}
           
-          <!-- SELECTOR DE ROL EN MÓVIL -->
-          <li class="nav-item d-lg-none">
-            <a class="nav-link smooth-transition" href="#" id="mobile-role-toggle">
-              <i class="bi bi-person-badge"></i>
-              <span class="ms-2">Cambiar Rol</span>
-            </a>
-          </li>
         </ul>
       </div>
     </div>
@@ -286,17 +310,19 @@
   <nav class="navbar navbar-secondary d-none d-lg-block sticky-top" id="secondary-navbar">
     <div class="container">
       <ul class="nav">
-        <!-- DASHBOARD -->
+
+        <!-- INICIO -->
         <li class="nav-item">
-          <a class="nav-link smooth-transition {% if request.path == '/auth/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}">
-            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+          <a class="nav-link smooth-transition {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">
+            <i class="bi bi-house-door me-1"></i>Inicio
           </a>
         </li>
 
-        <!-- HISTORIAL -->
+        <!-- MIS TUTORÍAS -->
         <li class="nav-item">
-          <a class="nav-link smooth-transition {% if request.path == '/auth/historial/' %}active{% endif %}" href="{% url 'historial' %}">
-            <i class="bi bi-clock-history me-1"></i>Historial
+          <a class="nav-link smooth-transition {% if request.path == '/tutoria/mistutoriasprof/' %}active{% endif %}" 
+                href="{% url 'tutoria:mistutoriasprof' %}">
+            <i class="bi bi-journal-text me-1"></i>Mis Tutorías
           </a>
         </li>
 
@@ -307,23 +333,11 @@
           </a>
         </li>
 
-        <!-- BUSCAR TUTORÍAS -->
-        <li class="nav-item">
-          <a class="nav-link smooth-transition" href="#">
-            <i class="bi bi-search me-1"></i>Buscar Tutorías
-          </a>
-        </li>
-
-        <!-- MIS TUTORÍAS -->
-        <li class="nav-item">
-          <a class="nav-link smooth-transition" href="#">
-            <i class="bi bi-journal-bookmark me-1"></i>Mis Cursos
-          </a>
-        </li>
 
         <!-- SOLICITUDES -->
         <li class="nav-item">
-          <a class="nav-link smooth-transition" href="#">
+          <a class="nav-link smooth-transition {% if request.path == '/tutoria/solicitudes/' %}active{% endif %}" 
+            href="{% url 'tutoria:solicitudesprof' %}">
             <i class="bi bi-clipboard-check me-1"></i>Mis Solicitudes
           </a>
         </li>
@@ -335,10 +349,10 @@
           </a>
         </li>
 
+
         <li class="nav-item">
-          <a class="nav-link smooth-transition {% if request.path == '/tutoria/mistutoriasprof/' %}active{% endif %}" 
-                href="{% url 'tutoria:mistutoriasprof' %}">
-            <i class="bi bi-journal-text me-1"></i>Mis Tutorías
+          <a class="nav-link smooth-transition" href="#">
+            <i class="bi bi-clipboard-check me-1"></i>Vacio
           </a>
         </li>
 
@@ -356,7 +370,6 @@
   <main class="flex-grow-1">
     {% if messages %}
       {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-0" role="alert">
           <div class="container">
             <div class="d-flex align-items-center">
               <i class="bi 
@@ -376,19 +389,19 @@
     {% endblock %}
   </main>
 
-  <!-- FOOTER MINIMALISTA NEGRO -->
+  <!-- FOOTER  -->
   <footer class="footer-minimal mt-5">
     <div class="container">
       <div class="row">
         <div class="col-md-6">
           <h5 class="fw-bold">
-            <i class="bi bi-mortarboard-fill me-2"></i>Tutorías Online
+            <i class="bi bi-mortarboard-fill me-2"></i>TúToría
           </h5>
           <p class="mb-2">Plataforma de tutorías profesionales</p>
           <small class="text-muted">Conectando estudiantes y tutores</small>
         </div>
         <div class="col-md-6 text-md-end">
-          <p class="mb-1">&copy; 2024 Tutorías Online. Todos los derechos reservados.</p>
+          <p class="mb-1">&copy; 2025 TúToría. Todos los derechos reservados.</p>
           <small class="text-muted">
 
           </small>
@@ -400,7 +413,7 @@
   <!-- SCRIPT JQUERY MEJORADO -->
   <script>
   $(document).ready(function() {
-      console.log('✅ jQuery cargado - Navbar negro minimalista activo');
+      console.log('✅ jQuery cargado - Navbar negro azulado profesional activo');
       
       // 1. INICIALIZACIÓN DE TOOLTIPS
       $('[data-bs-toggle="tooltip"]').tooltip();
@@ -416,18 +429,12 @@
           // Mostrar notificación de cambio
           mostrarNotificacion(`Rol cambiado a: ${rolText}`, 'success');
           
-          // Recargar para aplicar cambios (en producción sería una petición AJAX)
+          // Recargar para aplicar cambios ()
           setTimeout(() => {
               window.location.reload();
           }, 1000);
       }
       
-      // Selector de rol móvil
-      $('#mobile-role-toggle').click(function(e) {
-          e.preventDefault();
-          const nuevoRol = localStorage.getItem('user_rol') === 'profesor' ? 'estudiante' : 'profesor';
-          actualizarRol(nuevoRol);
-      });
       
       // 3. NOTIFICACIONES INTERACTIVAS
       $('#notifications-btn').click(function(e) {
@@ -538,7 +545,7 @@
       inicializarRol();
       resaltarEnlaceActivo();
       
-      console.log('🎯 Navbar negro minimalista inicializado correctamente');
+      console.log('🎯 Navbar negro azulado profesional inicializado correctamente');
   });
   
   // Script legacy para compatibilidad
