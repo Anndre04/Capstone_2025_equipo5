@@ -58,15 +58,15 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             body: JSON.stringify({})
         })
-        .then(resp => resp.json())
-        .then(() => {
-            const chatElem = document.querySelector(`.conversation-item[data-id="${chatId}"]`);
-            if (chatElem) {
-                const badge = chatElem.querySelector('.badge');
-                if (badge) badge.remove();
-            }
-        })
-        .catch(err => console.error('❌ Error al marcar como leídos:', err));
+            .then(resp => resp.json())
+            .then(() => {
+                const chatElem = document.querySelector(`.conversation-item[data-id="${chatId}"]`);
+                if (chatElem) {
+                    const badge = chatElem.querySelector('.badge');
+                    if (badge) badge.remove();
+                }
+            })
+            .catch(err => console.error('❌ Error al marcar como leídos:', err));
     }
 
     // ==========================
@@ -109,6 +109,50 @@ document.addEventListener('DOMContentLoaded', function () {
         abrirWebSocket(chatId);
         cargarMensajes(chatId);
         marcarLeidos(chatId);
+
+
+        // ==========================
+        // MARCAR MENSAJES COMO LEÍDOS EN BACKEND
+        // ==========================
+        fetch(`/chat/marcar_leidos/${chatId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({})
+        })
+            .then(resp => resp.json())
+            .then(() => {
+                // ==========================
+                // ELIMINAR BADGE DEL CHAT ABIERTO
+                // ==========================
+                const chatElemDesktop = document.querySelector(`.conversation-item[data-id="${chatId}"]`);
+                if (chatElemDesktop) {
+                    const badge = chatElemDesktop.querySelector('.badge');
+                    if (badge) badge.remove();
+                }
+
+                const chatElemMobile = document.querySelector(`#lista-conversaciones-movil .conversation-item[data-id="${chatId}"]`);
+                if (chatElemMobile) {
+                    const badge = chatElemMobile.querySelector('.badge');
+                    if (badge) badge.remove();
+                }
+
+                // ==========================
+                // ACTUALIZAR CONTADOR GLOBAL
+                // ==========================
+                const contadorGlobal = document.getElementById('contador-conversaciones');
+                if (contadorGlobal) {
+                    let total = 0;
+                    document.querySelectorAll('.conversation-item .badge').forEach(b => {
+                        total += parseInt(b.textContent || 0);
+                    });
+                    contadorGlobal.textContent = total;
+                    if (total === 0) contadorGlobal.classList.add('d-none');
+                }
+            })
+            .catch(err => console.error('❌ Error al marcar como leídos:', err));
     }
 
     function enviarMensaje(text) {
@@ -123,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('message-form');
     const input = document.getElementById('message-input');
 
-    form.addEventListener('submit', function(e) {
+    form.addEventListener('submit', function (e) {
         e.preventDefault();
         const mensaje = input.value.trim();
         if (mensaje === '') return;
@@ -141,7 +185,19 @@ document.addEventListener('DOMContentLoaded', function () {
     // ==========================
     document.querySelectorAll('.conversation-item').forEach(item => {
         item.addEventListener('click', function () {
-            seleccionarChat(this.dataset.id, this.dataset.contacto);
+            const chatId = this.dataset.id;
+            const contacto = this.dataset.contacto;
+
+            // Selecciona el chat
+            seleccionarChat(chatId, contacto);
+
+            // Si estamos en móvil y el chat está en el offcanvas, cerrarlo
+            if (window.innerWidth <= 767) {
+                const offcanvasEl = document.getElementById('offcanvasConversaciones');
+                const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl)
+                    || new bootstrap.Offcanvas(offcanvasEl);
+                bsOffcanvas.hide();
+            }
         });
     });
 
@@ -153,112 +209,132 @@ document.addEventListener('DOMContentLoaded', function () {
         if (primerItem) primerItem.click();
     }
 
+    // ==========================
+    // ACTUALIZAR LISTA DE CHATS (Desktop y Móvil)
+    // ==========================
     function actualizarChatLista(chatId, mensaje) {
-    // Panel de escritorio
-    const chatElem = document.querySelector(`.conversation-item[data-id="${chatId}"]`);
-    if (chatElem) {
-        const ultimoMsg = chatElem.querySelector('.conversation-last-msg');
-        if (ultimoMsg) ultimoMsg.textContent = mensaje;
+        console.log("🧩 Actualizando chat:", chatId);
 
-        // Badge
-        if (chatIdActual != chatId) {
-            let badge = chatElem.querySelector('.badge');
-            if (!badge) {
-                badge = document.createElement('span');
-                badge.className = 'badge bg-danger rounded-pill ms-1';
-                chatElem.appendChild(badge);
+        // === PANEL DE ESCRITORIO ===
+        const listaDesktop = document.getElementById('lista-conversaciones');
+        if (listaDesktop) {
+            const chatElem = listaDesktop.querySelector(`.conversation-item[data-id="${chatId}"]`);
+            if (chatElem) {
+                console.log("💻 Chat encontrado en panel de escritorio:", chatElem);
+
+                // Actualiza último mensaje
+                const ultimoMsg = chatElem.querySelector('.conversation-last-msg');
+                if (ultimoMsg) ultimoMsg.textContent = mensaje;
+
+                // Si el chat no está activo, muestra o incrementa badge
+                if (chatIdActual != chatId) {
+                    let badge = chatElem.querySelector('.badge');
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.className = 'badge bg-danger rounded-pill position-absolute end-0 me-3';
+                        badge.textContent = "1";
+                        chatElem.appendChild(badge);
+                    } else {
+                        badge.textContent = parseInt(badge.textContent || 0) + 1;
+                    }
+                } else {
+                    const badge = chatElem.querySelector('.badge');
+                    if (badge) badge.remove();
+                }
+
+                // Mover chat al inicio de la lista
+                listaDesktop.prepend(chatElem);
+            } else {
+                console.warn("⚠️ No se encontró chat en escritorio con id:", chatId);
             }
-            badge.textContent = parseInt(badge.textContent || 0) + 1;
-        } else {
-            // Chat abierto, eliminar badge si existe
-            const badge = chatElem.querySelector('.badge');
-            if (badge) badge.remove();
+        }
+
+        // === PANEL OFFCANVAS (MÓVIL) ===
+        const listaMovil = document.getElementById('lista-conversaciones-movil');
+        if (listaMovil) {
+            const chatElemMobile = listaMovil.querySelector(`.conversation-item[data-id="${chatId}"]`);
+            if (chatElemMobile) {
+                const ultimoMsg = chatElemMobile.querySelector('.small');
+                if (ultimoMsg) ultimoMsg.textContent = mensaje;
+
+                if (chatIdActual != chatId) {
+                    let badge = chatElemMobile.querySelector('.badge');
+                    if (!badge) {
+                        badge = document.createElement('span');
+                        badge.className = 'badge bg-danger rounded-pill position-absolute end-0 me-3';
+                        badge.textContent = "1";
+                        chatElemMobile.appendChild(badge);
+                    } else {
+                        badge.textContent = parseInt(badge.textContent || 0) + 1;
+                    }
+                } else {
+                    const badge = chatElemMobile.querySelector('.badge');
+                    if (badge) badge.remove();
+                }
+
+                // Mover chat al inicio de la lista móvil
+                listaMovil.prepend(chatElemMobile);
+            }
+        }
+
+        // === CONTADOR GLOBAL (si existe) ===
+        const contadorGlobal = document.getElementById('contador-conversaciones');
+        if (contadorGlobal && chatIdActual != chatId) {
+            contadorGlobal.textContent = parseInt(contadorGlobal.textContent || 0) + 1;
+            contadorGlobal.classList.remove('d-none');
         }
     }
-
-    // Panel offcanvas
-    const chatElemMobile = document.querySelector(`#lista-conversaciones-offcanvas .conversation-item[data-id="${chatId}"]`);
-    if (chatElemMobile) {
-        const ultimoMsg = chatElemMobile.querySelector('.conversation-last-msg');
-        if (ultimoMsg) ultimoMsg.textContent = mensaje;
-
-        if (chatIdActual != chatId) {
-            let badge = chatElemMobile.querySelector('.badge');
-            if (!badge) {
-                badge = document.createElement('span');
-                badge.className = 'badge bg-danger rounded-pill ms-1';
-                chatElemMobile.appendChild(badge);
-            }
-            badge.textContent = parseInt(badge.textContent || 0) + 1;
-        } else {
-            const badge = chatElemMobile.querySelector('.badge');
-            if (badge) badge.remove();
-        }
-    }
-
-    // Contador global
-    const contadorGlobal = document.getElementById('contador-conversaciones');
-    if (contadorGlobal && chatIdActual != chatId) {
-        contadorGlobal.textContent = parseInt(contadorGlobal.textContent || 0) + 1;
-    }
-}
-
 
     // ==========================
-    // NOTIFICACIONES GLOBALES
+    // WEBSOCKET DE NOTIFICACIONES
     // ==========================
     function conectarNotificaciones() {
         const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
-        notificacionSocket = new WebSocket(`${ws_scheme}://${window.location.host}/ws/notificaciones/`);
-        console.log("🌐 Intentando conectar WebSocket de notificaciones...");
+        const notificacionSocket = new WebSocket(`${ws_scheme}://${window.location.host}/ws/notificaciones/`);
+        console.log("🌐 Conectando WebSocket de notificaciones...");
 
-        notificacionSocket.onopen = () => console.log("🔔 WebSocket de notificaciones conectado");
+        notificacionSocket.onopen = () => console.log("🔔 WebSocket conectado");
 
-        notificacionSocket.onmessage = function(e) {
-    try {
-        const data = JSON.parse(e.data);
-        console.log("📩 Notificación recibida:", data);
+        notificacionSocket.onmessage = function (e) {
+            try {
+                const data = JSON.parse(e.data);
+                console.log("📩 Notificación recibida:", data);
 
-        actualizarChatLista(data.chat_id, data.mensaje);
+                actualizarChatLista(data.chat_id, data.mensaje);
 
-        // Si el chat está abierto, marcarlo como leído automáticamente
-        if (chatIdActual == data.chat_id) {
-            fetch(`/chat/marcar_leidos/${data.chat_id}/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({})
-            }).catch(err => console.error('❌ Error al marcar como leídos:', err));
-        }
-    } catch(err) {
-        console.error('❌ Error procesando notificación:', err, e.data);
-    }
-};
-
+                if (chatIdActual == data.chat_id) {
+                    fetch(`/chat/marcar_leidos/${data.chat_id}/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        }
+                    }).catch(err => console.error('❌ Error al marcar como leídos:', err));
+                }
+            } catch (err) {
+                console.error('❌ Error procesando notificación:', err, e.data);
+            }
+        };
 
         notificacionSocket.onclose = () => {
-            console.warn("🔔 WebSocket de notificaciones desconectado, reintentando en 5s...");
+            console.warn("🔔 WebSocket desconectado, reintentando en 5s...");
             setTimeout(conectarNotificaciones, 5000);
         };
     }
-    
 
     conectarNotificaciones();
-
+    
     // ==========================
-    // OFFCANVAS MÓVIL ≤767px
+    // OFFCANVAS MÓVIL (≤767px)
     // ==========================
     const toggleBtn = document.getElementById('toggleConversations');
     if (toggleBtn) {
         toggleBtn.addEventListener('click', () => {
             if (window.innerWidth <= 767) {
-                const offcanvas = new bootstrap.Offcanvas(document.getElementById('offcanvasConversations'));
+                const offcanvas = new bootstrap.Offcanvas(document.getElementById('offcanvasConversaciones'));
                 offcanvas.show();
             }
         });
     }
-
 });
 
