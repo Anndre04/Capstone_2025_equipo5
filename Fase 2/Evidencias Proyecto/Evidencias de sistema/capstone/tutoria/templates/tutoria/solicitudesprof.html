@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Solicitudes - Tutorías Online{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
+    
+    <!-- HEADER -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+                <div>
+                    <h1 class="h2 mb-2 fw-bold text-dark">Solicitudes de Estudiantes</h1>
+                    <p class="text-muted mb-0">Gestiona las solicitudes de tutoría y bajas de estudiantes</p>
+                </div>
+                <div class="mt-3 mt-md-0">
+                    <span class="badge bg-primary fs-6">2 solicitudes pendientes</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SOLICITUDES -->
+    <div class="row g-4">
+        
+        <!-- SOLICITUD 1: NUEVA TUTORÍA -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm hover-card position-relative">
+                <div class="border-start border-primary border-4 position-absolute start-0 top-0 bottom-0"></div>
+                <div class="card-body p-4 ps-5">
+                    <div class="row align-items-center">
+                        <!-- INFORMACIÓN DEL ESTUDIANTE -->
+                        <div class="col-12 col-md-8 col-lg-9">
+                            <div class="d-flex align-items-start mb-3">
+                                <div class="rounded-circle bg-dark bg-opacity-10 d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
+                                     style="width: 50px; height: 50px;">
+                                    <span class="text-dark fw-bold">CG</span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-2">
+                                        <h5 class="fw-bold text-dark mb-1 me-3">Carlos González</h5>
+                                        <span class="badge bg-dark bg-opacity-10 text-dark border-0">
+                                            <i class="bi bi-clock me-1"></i>Hoy, 10:30 AM
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <span class="badge bg-dark bg-opacity-10 text-dark border-0 me-2">
+                                            <i class="bi bi-book me-1"></i>Matemáticas Avanzadas
+                                        </span>
+                                        <span class="badge bg-dark bg-opacity-10 text-dark border-0">
+                                            <i class="bi bi-plus-circle me-1"></i>Nueva Tutoría
+                                        </span>
+                                    </div>
+                                    
+                                    <p class="text-muted mb-0">
+                                        "Hola, me interesa tomar clases de álgebra lineal. ¿Tienes disponibilidad los martes y jueves por la tarde?"
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ACCIONES -->
+                        <div class="col-12 col-md-4 col-lg-3 mt-3 mt-md-0">
+                            <div class="d-flex flex-column gap-2">
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-success btn-sm">
+                                        <i class="bi bi-check-circle me-2"></i>Aceptar
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-x-circle me-2"></i>Rechazar
+                                    </button>
+                                </div>
+                                <a href="{% url 'chat' %}" class="btn btn-outline-dark btn-sm">
+                                    <i class="bi bi-chat-dots me-2"></i>Responder
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SOLICITUD 2: SOLICITUD DE BAJA -->
+        <div class="col-12">
+            <div class="card border-0 shadow-sm hover-card position-relative">
+                <div class="border-start border-primary border-4 position-absolute start-0 top-0 bottom-0"></div>
+                <div class="card-body p-4 ps-5">
+                    <div class="row align-items-center">
+                        <!-- INFORMACIÓN DEL ESTUDIANTE -->
+                        <div class="col-12 col-md-8 col-lg-9">
+                            <div class="d-flex align-items-start mb-3">
+                                <div class="rounded-circle bg-dark bg-opacity-10 d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
+                                     style="width: 50px; height: 50px;">
+                                    <span class="text-dark fw-bold">ML</span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-2">
+                                        <h5 class="fw-bold text-dark mb-1 me-3">María López</h5>
+                                        <span class="badge bg-dark bg-opacity-10 text-dark border-0">
+                                            <i class="bi bi-clock me-1"></i>Ayer, 15:45 PM
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <span class="badge bg-dark bg-opacity-10 text-dark border-0 me-2">
+                                            <i class="bi bi-book me-1"></i>Cálculo Diferencial
+                                        </span>
+                                        <span class="badge bg-dark bg-opacity-10 text-dark border-0">
+                                            <i class="bi bi-arrow-left-circle me-1"></i>Solicitud de Baja
+                                        </span>
+                                    </div>
+                                    
+                                    <p class="text-muted mb-0">
+                                        "Buenas tardes, por cambios en mi horario universitario necesito dar de baja las tutorías de los viernes. ¿Podríamos reprogramar?"
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ACCIONES -->
+                        <div class="col-12 col-md-4 col-lg-3 mt-3 mt-md-0">
+                            <div class="d-flex flex-column gap-2">
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-success btn-sm">
+                                        <i class="bi bi-check-circle me-2"></i>Aceptar
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-x-circle me-2"></i>Rechazar
+                                    </button>
+                                </div>
+                                <a href="{% url 'chat' %}" class="btn btn-outline-dark btn-sm">
+                                    <i class="bi bi-chat-dots me-2"></i>Responder
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- SECCIÓN DE SOLICITUDES PROCESADAS -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h5 class="fw-bold text-dark mb-4">Solicitudes Procesadas</h5>
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-inbox display-4 text-muted mb-3"></i>
+                    <p class="text-muted mb-0">No hay solicitudes procesadas recientemente</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<style>
+.hover-card {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.hover-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+.card {
+    border-radius: 12px;
+}
+
+.badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.4em 0.7em;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Borde azul minimalista */
+.border-start {
+    border-left: 4px solid #0d6efd !important;
+}
+
+/* Ajuste de padding para el borde */
+.card-body.ps-5 {
+    padding-left: 2rem !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    
+    .card-body.ps-5 {
+        padding-left: 1.5rem !important;
+    }
+    
+    .d-flex.flex-md-row {
+        flex-direction: column !important;
+    }
+    
+    .me-3 {
+        margin-right: 0 !important;
+        margin-bottom: 1rem;
+    }
+    
+    .border-start {
+        border-left: 3px solid #0d6efd !important;
+    }
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeInUp 0.6s ease;
+}
+
+/* Mejoras en la tipografía */
+.text-muted {
+    line-height: 1.6;
+}
+
+.fw-bold {
+    font-weight: 600 !important;
+}
+
+/* Efectos sutiles para badges */
+.badge {
+    transition: all 0.2s ease;
+}
+
+.badge:hover {
+    transform: translateY(-1px);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ Solicitudes Profesor - Vista cargada correctamente');
+    
+    // Funcionalidad de botones Aceptar/Rechazar
+    const acceptButtons = document.querySelectorAll('.btn-success');
+    const rejectButtons = document.querySelectorAll('.btn-outline-secondary');
+    
+    acceptButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const studentName = this.closest('.card').querySelector('.fw-bold').textContent;
+            showNotification(`Solicitud de ${studentName} aceptada`, 'success');
+            
+            // Mover la tarjeta a procesadas (simulación)
+            setTimeout(() => {
+                const card = this.closest('.col-12');
+                card.style.opacity = '0.6';
+                this.disabled = true;
+                this.nextElementSibling.disabled = true;
+            }, 1000);
+        });
+    });
+    
+    rejectButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const studentName = this.closest('.card').querySelector('.fw-bold').textContent;
+            showNotification(`Solicitud de ${studentName} rechazada`, 'secondary');
+            
+            // Mover la tarjeta a procesadas (simulación)
+            setTimeout(() => {
+                const card = this.closest('.col-12');
+                card.style.opacity = '0.6';
+                this.disabled = true;
+                this.previousElementSibling.disabled = true;
+            }, 1000);
+        });
+    });
+    
+    function showNotification(message, type) {
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3`;
+        alert.style.zIndex = '9999';
+        alert.style.minWidth = '300px';
+        alert.innerHTML = `
+            <div class="d-flex align-items-center">
+                <i class="bi bi-${type === 'success' ? 'check-circle' : 'info-circle'}-fill me-2"></i>
+                <span class="flex-grow-1">${message}</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        document.body.appendChild(alert);
+        
+        setTimeout(() => {
+            alert.remove();
+        }, 4000);
+    }
+    
+    // Efectos hover para cards
+    const cards = document.querySelectorAll('.hover-card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transition = 'all 0.3s ease';
+        });
+    });
+    
+    // Efecto de carga sutil
+    const requestCards = document.querySelectorAll('.col-12 .card');
+    requestCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+    });
+});
+</script>
+{% endblock %}

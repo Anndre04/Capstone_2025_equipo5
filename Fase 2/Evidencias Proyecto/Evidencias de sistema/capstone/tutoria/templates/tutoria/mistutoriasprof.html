@@ -1,0 +1,928 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Mis Tutorías Publicadas - Tutorías Online{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
+  
+  <!-- HEADER RESPONSIVE MEJORADO -->
+  <div class="row mb-5">
+    <div class="col-12">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+        <div>
+          <h1 class="h2 mb-2 fw-bold text-dark">Mis Tutorías Publicadas</h1>
+          <p class="text-muted mb-0">Gestiona tus tutorías activas y publica nuevas</p>
+        </div>
+        <!-- BOTÓN PUBLICAR NUEVA TUTORÍA -->
+        <button class="btn btn-primary mt-3 mt-md-0" data-bs-toggle="modal" data-bs-target="#publicarTutoriaModal">
+          <i class="bi bi-plus-circle me-2"></i>Publicar nueva tutoría
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TARJETAS DE TUTORÍAS PUBLICADAS - DISEÑO MINIMALISTA -->
+  <div class="row g-4">
+    
+    <!-- TUTORÍA 1: MATEMÁTICAS AVANZADAS -->
+    <div class="col-12">
+      <div class="card border-0 shadow-sm hover-card">
+        <div class="card-body p-4">
+          <div class="row align-items-center">
+            <!-- INFORMACIÓN PRINCIPAL -->
+            <div class="col-12 col-md-8 col-lg-9">
+              <div class="d-flex align-items-start mb-3">
+                <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
+                     style="width: 50px; height: 50px;">
+                  <i class="bi bi-calculator text-primary fs-5"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h5 class="card-title mb-1 fw-bold text-dark">Matemáticas Avanzadas - Álgebra Lineal</h5>
+                  <div class="d-flex align-items-center flex-wrap gap-2 mt-2">
+                    <span class="badge bg-success bg-opacity-10 text-success border-0">
+                      <i class="bi bi-person-check me-1"></i>Con estudiante
+                    </span>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border-0">Ana García</span>
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary border-0">Universitario</span>
+                  </div>
+                </div>
+              </div>
+              
+              <p class="text-muted mb-4">Tutoría completa de álgebra lineal para estudiantes universitarios. Enfoque en espacios vectoriales, transformaciones lineales y aplicaciones prácticas.</p>
+              
+              <!-- INFORMACIÓN DETALLADA EN GRID MEJORADA -->
+              <div class="row g-3">
+                <div class="col-6 col-sm-3">
+                  <div class="text-center">
+                    <div class="border rounded p-3">
+                      <h6 class="text-muted mb-2 small fw-normal">Precio</h6>
+                      <strong class="text-success fs-6">$25/hora</strong>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-6 col-sm-3">
+                  <div class="text-center">
+                    <div class="border rounded p-3">
+                      <h6 class="text-muted mb-2 small fw-normal">Duración</h6>
+                      <strong class="fs-6">60 min</strong>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-6 col-sm-3">
+                  <div class="text-center">
+                    <div class="border rounded p-3">
+                      <h6 class="text-muted mb-2 small fw-normal">Sesiones</h6>
+                      <strong class="fs-6">12</strong>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-6 col-sm-3">
+                  <div class="text-center">
+                    <div class="border rounded p-3">
+                      <h6 class="text-muted mb-2 small fw-normal">Rating</h6>
+                      <div>
+                        <span class="text-warning">
+                          <i class="bi bi-star-fill"></i>
+                          <i class="bi bi-star-fill"></i>
+                          <i class="bi bi-star-fill"></i>
+                          <i class="bi bi-star-fill"></i>
+                          <i class="bi bi-star-half"></i>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- FECHA Y ESTADO -->
+              <div class="mt-4 pt-3 border-top">
+                <div class="d-flex justify-content-between align-items-center">
+                  <small class="text-muted">
+                    <i class="bi bi-calendar me-1"></i>Publicado el 15 Sep 2024
+                  </small>
+                  <span class="badge bg-success bg-opacity-10 text-success border-0">
+                    <i class="bi bi-check-circle me-1"></i>Activa
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- ACCIONES -->
+            <div class="col-12 col-md-4 col-lg-3 mt-4 mt-md-0">
+              <div class="d-flex flex-column gap-2">
+                <button class="btn btn-outline-primary">
+                  <i class="bi bi-pencil me-2"></i>Editar
+                </button>
+                <button class="btn btn-outline-secondary">
+                  <i class="bi bi-eye me-2"></i>Ver detalles
+                </button>
+                <button class="btn btn-outline-danger">
+                  <i class="bi bi-pause-circle me-2"></i>Pausar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TUTORÍA 2: CÁLCULO DIFERENCIAL -->
+    <div class="col-12">
+      <div class="card border-0 shadow-sm hover-card">
+        <div class="card-body p-4">
+          <div class="row align-items-center">
+            <!-- INFORMACIÓN PRINCIPAL -->
+            <div class="col-12 col-md-8 col-lg-9">
+              <div class="d-flex align-items-start mb-3">
+                <div class="rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
+                     style="width: 50px; height: 50px;">
+                  <i class="bi bi-graph-up text-info fs-5"></i>
+                </div>
+                <div class="flex-grow-1">
+                  <h5 class="card-title mb-1 fw-bold text-dark">Cálculo Diferencial e Integral</h5>
+                  <div class="d-flex align-items-center flex-wrap gap-2 mt-2">
+                    <span class="badge bg-warning bg-opacity-10 text-warning border-0">
+                      <i class="bi bi-clock me-1"></i>En espera
+                    </span>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border-0">Bachillerato</span>
+                    <span class="badge bg-secondary bg-opacity-10 text-secondary border-0">Nivel medio</span>
+                  </div>
+                </div>
+              </div>
+              
+              <p class="text-muted mb-4">Fundamentos de cálculo para bachillerato. Límites, derivadas e integrales con ejemplos prácticos y ejercicios resueltos.</p>
+              
+              <!-- INFORMACIÓN DETALLADA EN GRID MEJORADA -->
+              <div class="row g-3">
+                <div class="col-6 col-sm-3">
+                  <div class="text-center">
+                    <div class="border rounded p-3">
+                      <h6 class="text-muted mb-2 small fw-normal">Precio</h6>
+                      <strong class="text-success fs-6">$22/hora</strong>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-6 col-sm-3">
+                  <div class="text-center">
+                    <div class="border rounded p-3">
+                      <h6 class="text-muted mb-2 small fw-normal">Duración</h6>
+                      <strong class="fs-6">60 min</strong>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-6 col-sm-3">
+                  <div class="text-center">
+                    <div class="border rounded p-3">
+                      <h6 class="text-muted mb-2 small fw-normal">Sesiones</h6>
+                      <strong class="fs-6">0</strong>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="col-6 col-sm-3">
+                  <div class="text-center">
+                    <div class="border rounded p-3">
+                      <h6 class="text-muted mb-2 small fw-normal">Rating</h6>
+                      <div>
+                        <span class="text-warning">
+                          <i class="bi bi-star-fill"></i>
+                          <i class="bi bi-star-fill"></i>
+                          <i class="bi bi-star-fill"></i>
+                          <i class="bi bi-star-fill"></i>
+                          <i class="bi bi-star"></i>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- FECHA Y ESTADO -->
+              <div class="mt-4 pt-3 border-top">
+                <div class="d-flex justify-content-between align-items-center">
+                  <small class="text-muted">
+                    <i class="bi bi-calendar me-1"></i>Publicado el 10 Sep 2024
+                  </small>
+                  <span class="badge bg-warning bg-opacity-10 text-warning border-0">
+                    <i class="bi bi-clock me-1"></i>En espera
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- ACCIONES -->
+            <div class="col-12 col-md-4 col-lg-3 mt-4 mt-md-0">
+              <div class="d-flex flex-column gap-2">
+                <button class="btn btn-outline-primary">
+                  <i class="bi bi-pencil me-2"></i>Editar
+                </button>
+                <button class="btn btn-outline-secondary">
+                  <i class="bi bi-eye me-2"></i>Ver detalles
+                </button>
+                <button class="btn btn-outline-success">
+                  <i class="bi bi-play-circle me-2"></i>Activar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PARA PUBLICAR NUEVA TUTORÍA  -->
+<div class="modal fade" id="publicarTutoriaModal" tabindex="-1" aria-labelledby="publicarTutoriaModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold text-dark" id="publicarTutoriaModalLabel">
+          <i class="bi bi-plus-circle me-2"></i>Publicar Nueva Tutoría
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-0">
+        <form>
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label fw-semibold">Título de la Tutoría</label>
+              <input type="text" class="form-control border" placeholder="Ej: Matemáticas Avanzadas - Álgebra Lineal">
+            </div>
+            
+            <div class="col-12">
+              <label class="form-label fw-semibold">Descripción</label>
+              <textarea class="form-control border" rows="3" placeholder="Describe los temas que cubrirás en la tutoría..."></textarea>
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Precio por hora</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light border">$</span>
+                <input type="number" class="form-control border-start-0" placeholder="25" value="25">
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Duración</label>
+              <select class="form-select border">
+                <option value="30">30 minutos</option>
+                <option value="60" selected>60 minutos</option>
+                <option value="90">90 minutos</option>
+                <option value="120">120 minutos</option>
+              </select>
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Nivel</label>
+              <select class="form-select border">
+                <option value="primaria">Primaria</option>
+                <option value="secundaria">Secundaria</option>
+                <option value="bachillerato" selected>Bachillerato</option>
+                <option value="universitario">Universitario</option>
+              </select>
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Área de Conocimiento</label>
+              <select class="form-select border">
+                <option value="matematicas" selected>Matemáticas</option>
+                <option value="fisica">Física</option>
+                <option value="quimica">Química</option>
+                <option value="programacion">Programación</option>
+                <option value="ingles">Inglés</option>
+                <option value="historia">Historia</option>
+              </select>
+            </div>
+
+            <!-- SECCIÓN DISPONIBILIDAD -->
+<div class="col-12">
+    <div class="border-top pt-4 mt-2">
+        <label class="form-label fw-semibold mb-3 d-flex align-items-center">
+            <i class="bi bi-calendar-week me-2 text-primary"></i>Disponibilidad de Clases
+        </label>
+        <p class="text-muted small mb-4">Selecciona los días y turnos en los que estás disponible para impartir clases</p>
+        
+        <!-- DÍAS DE LA SEMANA -->
+        <div class="row g-2">
+            <!-- Lunes -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card border day-card">
+                    <div class="card-body text-center p-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input day-checkbox" type="checkbox" id="diaLunes" checked>
+                            <label class="form-check-label fw-medium small" for="diaLunes">Lunes</label>
+                        </div>
+                        <div class="d-flex justify-content-around">
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="lunesManana" checked>
+                                <label class="form-check-label small" for="lunesManana" title="Mañana">M</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="lunesTarde" checked>
+                                <label class="form-check-label small" for="lunesTarde" title="Tarde">T</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="lunesNoche">
+                                <label class="form-check-label small" for="lunesNoche" title="Noche">N</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Martes -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card border day-card">
+                    <div class="card-body text-center p-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input day-checkbox" type="checkbox" id="diaMartes" checked>
+                            <label class="form-check-label fw-medium small" for="diaMartes">Martes</label>
+                        </div>
+                        <div class="d-flex justify-content-around">
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="martesManana" checked>
+                                <label class="form-check-label small" for="martesManana" title="Mañana">M</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="martesTarde" checked>
+                                <label class="form-check-label small" for="martesTarde" title="Tarde">T</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="martesNoche">
+                                <label class="form-check-label small" for="martesNoche" title="Noche">N</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Miércoles -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card border day-card">
+                    <div class="card-body text-center p-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input day-checkbox" type="checkbox" id="diaMiercoles" checked>
+                            <label class="form-check-label fw-medium small" for="diaMiercoles">Miércoles</label>
+                        </div>
+                        <div class="d-flex justify-content-around">
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="miercolesManana" checked>
+                                <label class="form-check-label small" for="miercolesManana" title="Mañana">M</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="miercolesTarde" checked>
+                                <label class="form-check-label small" for="miercolesTarde" title="Tarde">T</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="miercolesNoche">
+                                <label class="form-check-label small" for="miercolesNoche" title="Noche">N</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jueves -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card border day-card">
+                    <div class="card-body text-center p-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input day-checkbox" type="checkbox" id="diaJueves" checked>
+                            <label class="form-check-label fw-medium small" for="diaJueves">Jueves</label>
+                        </div>
+                        <div class="d-flex justify-content-around">
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="juevesManana" checked>
+                                <label class="form-check-label small" for="juevesManana" title="Mañana">M</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="juevesTarde" checked>
+                                <label class="form-check-label small" for="juevesTarde" title="Tarde">T</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="juevesNoche">
+                                <label class="form-check-label small" for="juevesNoche" title="Noche">N</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Viernes -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card border day-card">
+                    <div class="card-body text-center p-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input day-checkbox" type="checkbox" id="diaViernes" checked>
+                            <label class="form-check-label fw-medium small" for="diaViernes">Viernes</label>
+                        </div>
+                        <div class="d-flex justify-content-around">
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="viernesManana" checked>
+                                <label class="form-check-label small" for="viernesManana" title="Mañana">M</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="viernesTarde" checked>
+                                <label class="form-check-label small" for="viernesTarde" title="Tarde">T</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="viernesNoche">
+                                <label class="form-check-label small" for="viernesNoche" title="Noche">N</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sábado -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card border day-card">
+                    <div class="card-body text-center p-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input day-checkbox" type="checkbox" id="diaSabado">
+                            <label class="form-check-label fw-medium small" for="diaSabado">Sábado</label>
+                        </div>
+                        <div class="d-flex justify-content-around">
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="sabadoManana">
+                                <label class="form-check-label small" for="sabadoManana" title="Mañana">M</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="sabadoTarde">
+                                <label class="form-check-label small" for="sabadoTarde" title="Tarde">T</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="sabadoNoche">
+                                <label class="form-check-label small" for="sabadoNoche" title="Noche">N</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Domingo -->
+            <div class="col-6 col-md-4 col-lg">
+                <div class="card border day-card">
+                    <div class="card-body text-center p-2">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input day-checkbox" type="checkbox" id="diaDomingo">
+                            <label class="form-check-label fw-medium small" for="diaDomingo">Domingo</label>
+                        </div>
+                        <div class="d-flex justify-content-around">
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="domingoManana">
+                                <label class="form-check-label small" for="domingoManana" title="Mañana">M</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="domingoTarde">
+                                <label class="form-check-label small" for="domingoTarde" title="Tarde">T</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input turno-check" type="checkbox" id="domingoNoche">
+                                <label class="form-check-label small" for="domingoNoche" title="Noche">N</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LEYENDA DE TURNOS -->
+        <div class="row mt-3">
+            <div class="col-12">
+                <div class="d-flex justify-content-center gap-4">
+                    <div class="d-flex align-items-center">
+                        <div class="form-check me-1">
+                            <input class="form-check-input" type="checkbox" checked disabled>
+                        </div>
+                        <small class="text-muted">M = Mañana (8:00-12:00)</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="form-check me-1">
+                            <input class="form-check-input" type="checkbox" checked disabled>
+                        </div>
+                        <small class="text-muted">T = Tarde (14:00-18:00)</small>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="form-check me-1">
+                            <input class="form-check-input" type="checkbox" disabled>
+                        </div>
+                        <small class="text-muted">N = Noche (19:00-22:00)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RESUMEN DE DISPONIBILIDAD -->
+        <div class="alert alert-light border mt-3 mb-0">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-info-circle text-primary me-2"></i>
+                <small class="text-muted">
+                    <span id="resumenDisponibilidad">Disponible de Lunes a Viernes en turnos de Mañana y Tarde</span>
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.day-card {
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.day-card:hover {
+    border-color: #0d6efd !important;
+    transform: translateY(-1px);
+}
+
+.day-card .form-check-input:checked ~ .form-check-label {
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+.turno-check:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .day-card .card-body {
+        padding: 0.5rem !important;
+    }
+    
+    .d-flex.justify-content-around .form-check {
+        margin: 0 2px;
+    }
+    
+    .d-flex.justify-content-center.gap-4 {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+}
+
+/* Mejora la alineación de los checkboxes de turnos */
+.d-flex.justify-content-around {
+    gap: 2px;
+}
+
+.form-check {
+    margin-bottom: 0;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const resumenDisponibilidad = document.getElementById('resumenDisponibilidad');
+    
+    // Función para actualizar el resumen de disponibilidad
+    function actualizarResumen() {
+        const dias = [
+            { id: 'diaLunes', nombre: 'Lunes', turnos: ['lunesManana', 'lunesTarde', 'lunesNoche'] },
+            { id: 'diaMartes', nombre: 'Martes', turnos: ['martesManana', 'martesTarde', 'martesNoche'] },
+            { id: 'diaMiercoles', nombre: 'Miércoles', turnos: ['miercolesManana', 'miercolesTarde', 'miercolesNoche'] },
+            { id: 'diaJueves', nombre: 'Jueves', turnos: ['juevesManana', 'juevesTarde', 'juevesNoche'] },
+            { id: 'diaViernes', nombre: 'Viernes', turnos: ['viernesManana', 'viernesTarde', 'viernesNoche'] },
+            { id: 'diaSabado', nombre: 'Sábado', turnos: ['sabadoManana', 'sabadoTarde', 'sabadoNoche'] },
+            { id: 'diaDomingo', nombre: 'Domingo', turnos: ['domingoManana', 'domingoTarde', 'domingoNoche'] }
+        ];
+        
+        const diasSeleccionados = [];
+        const turnosTotales = { manana: 0, tarde: 0, noche: 0 };
+        
+        dias.forEach(dia => {
+            const diaCheckbox = document.getElementById(dia.id);
+            if (diaCheckbox.checked) {
+                // Verificar cuántos turnos tiene seleccionados
+                let turnosDia = 0;
+                dia.turnos.forEach((turnoId, index) => {
+                    const turnoCheckbox = document.getElementById(turnoId);
+                    if (turnoCheckbox.checked) {
+                        turnosDia++;
+                        // Contar turnos totales
+                        if (index === 0) turnosTotales.manana++;
+                        else if (index === 1) turnosTotales.tarde++;
+                        else if (index === 2) turnosTotales.noche++;
+                    }
+                });
+                
+                if (turnosDia > 0) {
+                    diasSeleccionados.push(dia.nombre);
+                }
+            }
+        });
+        
+        // Generar resumen
+        let resumen = 'No hay disponibilidad seleccionada';
+        
+        if (diasSeleccionados.length > 0) {
+            const turnosSeleccionados = [];
+            if (turnosTotales.manana > 0) turnosSeleccionados.push('Mañana');
+            if (turnosTotales.tarde > 0) turnosSeleccionados.push('Tarde');
+            if (turnosTotales.noche > 0) turnosSeleccionados.push('Noche');
+            
+            if (diasSeleccionados.length === 7) {
+                resumen = `Disponible todos los días en turnos de ${turnosSeleccionados.join(', ')}`;
+            } else if (diasSeleccionados.length >= 5) {
+                resumen = `Disponible de ${diasSeleccionados[0]} a ${diasSeleccionados[diasSeleccionados.length-1]} en turnos de ${turnosSeleccionados.join(', ')}`;
+            } else {
+                resumen = `Disponible los ${diasSeleccionados.join(', ')} en turnos de ${turnosSeleccionados.join(', ')}`;
+            }
+        }
+        
+        resumenDisponibilidad.textContent = resumen;
+    }
+    
+    // Event listeners para todos los checkboxes
+    const allCheckboxes = document.querySelectorAll('.day-checkbox, .turno-check');
+    allCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', actualizarResumen);
+    });
+    
+    // Event listener para el checkbox del día (selecciona/deselecciona todos los turnos)
+    const dayCheckboxes = document.querySelectorAll('.day-checkbox');
+    dayCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const dayId = this.id.replace('dia', '').toLowerCase();
+            const turnoCheckboxes = document.querySelectorAll(`[id^="${dayId}"]`);
+            
+            turnoCheckboxes.forEach(turnoCheckbox => {
+                turnoCheckbox.checked = this.checked;
+                turnoCheckbox.disabled = !this.checked;
+            });
+            
+            actualizarResumen();
+        });
+    });
+    
+    // Inicializar el estado
+    actualizarResumen();
+});
+</script>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary">Publicar Tutoría</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.day-card {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.day-card:hover {
+  border-color: #0d6efd !important;
+  transform: translateY(-1px);
+}
+
+.day-card .form-check-input:checked ~ .form-check-label {
+  color: #0d6efd;
+  font-weight: 600;
+}
+
+.turno-check:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .day-card .card-body {
+    padding: 0.5rem !important;
+  }
+  
+  .form-check-inline {
+    margin-right: 0.25rem;
+  }
+}
+
+/* Estilos para los turnos */
+.form-check-label .bi {
+  font-size: 0.9em;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Referencias a los elementos principales
+  const turnoManana = document.getElementById('turnoManana');
+  const turnoTarde = document.getElementById('turnoTarde');
+  const turnoNoche = document.getElementById('turnoNoche');
+  const resumenDisponibilidad = document.getElementById('resumenDisponibilidad');
+  
+  // Función para actualizar los turnos de los días
+  function actualizarTurnosDias() {
+    const dias = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'];
+    const turnos = ['Manana', 'Tarde', 'Noche'];
+    
+    dias.forEach(dia => {
+      const diaCheckbox = document.getElementById(`dia${dia.charAt(0).toUpperCase() + dia.slice(1)}`);
+      const estaActivo = diaCheckbox.checked;
+      
+      turnos.forEach(turno => {
+        const turnoCheckbox = document.getElementById(`${dia}${turno}`);
+        const turnoPrincipal = document.getElementById(`turno${turno}`);
+        
+        if (estaActivo && turnoPrincipal.checked) {
+          turnoCheckbox.checked = true;
+          turnoCheckbox.disabled = false;
+        } else {
+          turnoCheckbox.checked = false;
+          turnoCheckbox.disabled = true;
+        }
+      });
+    });
+    
+    actualizarResumen();
+  }
+  
+  // Función para actualizar el resumen de disponibilidad
+  function actualizarResumen() {
+    const diasSeleccionados = [];
+    const turnosSeleccionados = [];
+    
+    // Verificar días seleccionados
+    const dias = [
+      { id: 'diaLunes', nombre: 'Lunes' },
+      { id: 'diaMartes', nombre: 'Martes' },
+      { id: 'diaMiercoles', nombre: 'Miércoles' },
+      { id: 'diaJueves', nombre: 'Jueves' },
+      { id: 'diaViernes', nombre: 'Viernes' },
+      { id: 'diaSabado', nombre: 'Sábado' },
+      { id: 'diaDomingo', nombre: 'Domingo' }
+    ];
+    
+    dias.forEach(dia => {
+      if (document.getElementById(dia.id).checked) {
+        diasSeleccionados.push(dia.nombre);
+      }
+    });
+    
+    // Verificar turnos seleccionados
+    if (turnoManana.checked) turnosSeleccionados.push('Mañana');
+    if (turnoTarde.checked) turnosSeleccionados.push('Tarde');
+    if (turnoNoche.checked) turnosSeleccionados.push('Noche');
+    
+    // Generar resumen
+    let resumen = 'No hay disponibilidad seleccionada';
+    
+    if (diasSeleccionados.length > 0 && turnosSeleccionados.length > 0) {
+      if (diasSeleccionados.length === 7) {
+        resumen = `Disponible todos los días en turnos de ${turnosSeleccionados.join(', ')}`;
+      } else if (diasSeleccionados.length >= 5) {
+        resumen = `Disponible de ${diasSeleccionados[0]} a ${diasSeleccionados[diasSeleccionados.length-1]} en turnos de ${turnosSeleccionados.join(', ')}`;
+      } else {
+        resumen = `Disponible los ${diasSeleccionados.join(', ')} en turnos de ${turnosSeleccionados.join(', ')}`;
+      }
+    } else if (diasSeleccionados.length > 0) {
+      resumen = `Días seleccionados: ${diasSeleccionados.join(', ')} (selecciona turnos)`;
+    } else if (turnosSeleccionados.length > 0) {
+      resumen = `Turnos seleccionados: ${turnosSeleccionados.join(', ')} (selecciona días)`;
+    }
+    
+    resumenDisponibilidad.textContent = resumen;
+  }
+  
+  // Event listeners para los turnos principales
+  turnoManana.addEventListener('change', actualizarTurnosDias);
+  turnoTarde.addEventListener('change', actualizarTurnosDias);
+  turnoNoche.addEventListener('change', actualizarTurnosDias);
+  
+  // Event listeners para los días
+  const diasCheckboxes = document.querySelectorAll('input[id^="dia"]');
+  diasCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', actualizarTurnosDias);
+  });
+  
+  // Inicializar el estado
+  actualizarTurnosDias();
+});
+</script>
+
+<style>
+.hover-card {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.hover-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+}
+
+.card {
+    border-radius: 12px;
+}
+
+.badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.4em 0.7em;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.modal-content {
+    border-radius: 16px;
+}
+
+.border {
+    border-color: #e9ecef !important;
+}
+
+.text-warning {
+    color: #ffc107 !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    
+    .modal-dialog {
+        margin: 1rem;
+    }
+    
+    .btn {
+        font-size: 0.875rem;
+    }
+}
+
+/* Animaciones de entrada */
+.card {
+    animation: fadeInUp 0.6s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ Mis Tutorías Profesor - Vista cargada');
+    
+    // Efectos hover para cards
+    const cards = document.querySelectorAll('.hover-card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transition = 'all 0.3s ease';
+        });
+    });
+    
+    // Funcionalidad de botones
+    const editButtons = document.querySelectorAll('.btn-outline-primary');
+    editButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Simular funcionalidad de edición
+            const cardTitle = this.closest('.card').querySelector('.card-title').textContent;
+            console.log(`Editando: ${cardTitle}`);
+        });
+    });
+    
+    // Inicializar tooltips si es necesario
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    const tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}

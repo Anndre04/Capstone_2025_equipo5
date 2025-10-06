@@ -73,15 +73,14 @@ class RegistroForm(UserCreationForm):
         required=False,
         widget=forms.TextInput(attrs={
             'class': 'form-control form-control-sm', 
-            'placeholder': 'Segundo apellido (opcional)'
+            'placeholder': 'Segundo apellido'
         })
     )
     run = forms.CharField(
-        max_length=18,  # Cambiado de 10 a 18 caracteres
-        required=False,
+        max_length=10,  # Cambiado de 10
         widget=forms.TextInput(attrs={
             'class': 'form-control form-control-sm', 
-            'placeholder': 'RUN (opcional) - Máx. 18 caracteres'
+            'placeholder': 'RUN - Máx. 18 caracteres'
         })
     )
     fecha_nac = forms.DateField(

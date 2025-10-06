@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Tutoría - {{ tutoria.titulo }} | Tutorías Online{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-8">
+            
+            <!-- TARJETA INFORMACIÓN PROFESOR - ENCABEZADO -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <!-- ENCABEZADO CON AVATAR Y NOMBRE -->
+                    <div class="text-center mb-4 pb-3 border-bottom">
+                        <div class="position-relative d-inline-block mb-3">
+                            <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center mx-auto" 
+                                 style="width: 100px; height: 100px;">
+                                <span class="text-white fw-bold fs-3">AG</span>
+                            </div>
+                            <div class="position-absolute bottom-0 end-0 bg-success rounded-circle border border-3 border-white" 
+                                 style="width: 24px; height: 24px;"></div>
+                        </div>
+                        <h4 class="fw-bold text-dark mb-1">Ana García</h4>
+                        <p class="text-muted mb-3">Profesora de Matemáticas</p>
+                        
+                        <!-- RATING -->
+                        <div class="mb-3">
+                            <div class="d-flex align-items-center justify-content-center">
+                                <span class="text-warning fs-5">
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-fill"></i>
+                                    <i class="bi bi-star-half"></i>
+                                </span>
+                                <span class="text-muted ms-2">4.5 (128 reseñas)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- INFORMACIÓN DETALLADA EN GRID -->
+                    <div class="row g-4">
+                        <!-- EXPERIENCIA -->
+                        <div class="col-12 col-md-6">
+                            <h6 class="fw-bold text-dark mb-3 d-flex align-items-center">
+                                <i class="bi bi-briefcase me-2 text-primary"></i>Experiencia
+                            </h6>
+                            <p class="text-muted mb-0 ps-4">5+ años enseñando matemáticas a nivel universitario y bachillerato</p>
+                        </div>
+
+                        <!-- ESPECIALIZACIONES -->
+                        <div class="col-12 col-md-6">
+                            <h6 class="fw-bold text-dark mb-3 d-flex align-items-center">
+                                <i class="bi bi-award me-2 text-primary"></i>Especializaciones
+                            </h6>
+                            <div class="d-flex flex-wrap gap-2 ps-4">
+                                <span class="badge bg-primary bg-opacity-10 text-primary border-0 px-3 py-2">Álgebra</span>
+                                <span class="badge bg-primary bg-opacity-10 text-primary border-0 px-3 py-2">Cálculo</span>
+                                <span class="badge bg-primary bg-opacity-10 text-primary border-0 px-3 py-2">Geometría</span>
+                                <span class="badge bg-primary bg-opacity-10 text-primary border-0 px-3 py-2">Estadística</span>
+                            </div>
+                        </div>
+
+                        <!-- TÍTULOS Y FORMACIÓN -->
+                        <div class="col-12 col-md-6">
+                            <h6 class="fw-bold text-dark mb-3 d-flex align-items-center">
+                                <i class="bi bi-mortarboard me-2 text-primary"></i>Formación
+                            </h6>
+                            <ul class="list-unstyled text-muted ps-4">
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    Magíster en Matemáticas Aplicadas
+                                </li>
+                                <li class="mb-2">
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    Licenciatura en Matemáticas
+                                </li>
+                                <li>
+                                    <i class="bi bi-check-circle text-success me-2"></i>
+                                    Certificación en Educación Online
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- BOTÓN CHAT -->
+                    <div class="d-grid mt-4 pt-3 border-top">
+                        <a href="{% url 'chat' %}" class="btn btn-primary py-2">
+                            <i class="bi bi-chat-dots me-2"></i>Iniciar Chat con el Profesor
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TARJETA INFORMACIÓN TUTORÍA -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <h2 class="fw-bold text-dark mb-2">Matemáticas Avanzadas - Cálculo Diferencial</h2>
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                <span class="badge bg-success bg-opacity-10 text-success border-0">
+                                    <i class="bi bi-clock me-1"></i>60 minutos
+                                </span>
+                                <span class="badge bg-primary bg-opacity-10 text-primary border-0">Avanzado</span>
+                                <span class="badge bg-info bg-opacity-10 text-info border-0">Matemáticas</span>
+                            </div>
+                        </div>
+                        <span class="fs-4 fw-bold text-success">$15.000/hr</span>
+                    </div>
+
+                    <!-- DESCRIPCIÓN -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold text-dark mb-3">Descripción de la Tutoría</h5>
+                        <p class="text-muted mb-0">
+                            Curso completo de cálculo diferencial para estudiantes universitarios. Cubre límites, derivadas, 
+                            aplicaciones de derivadas y problemas de optimización. Ideal para estudiantes de ingeniería, 
+                            matemáticas y ciencias que necesitan reforzar sus conocimientos en cálculo.
+                        </p>
+                    </div>
+
+                    <!-- INFORMACIÓN DETALLADA -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="text-center border rounded p-3">
+                                <h6 class="text-muted mb-2 small fw-normal">Nivel</h6>
+                                <strong class="text-dark">Avanzado</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-center border rounded p-3">
+                                <h6 class="text-muted mb-2 small fw-normal">Duración</h6>
+                                <strong class="text-dark">60 min</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-center border rounded p-3">
+                                <h6 class="text-muted mb-2 small fw-normal">Modalidad</h6>
+                                <strong class="text-dark">Online</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-center border rounded p-3">
+                                <h6 class="text-muted mb-2 small fw-normal">Idioma</h6>
+                                <strong class="text-dark">Español</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FECHA DE PUBLICACIÓN -->
+                    <div class="border-top pt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-calendar me-1"></i>
+                            Publicado el 15 de Noviembre, 2024
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ESTILOS PROFESIONALES MEJORADOS -->
+<style>
+.card {
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1) !important;
+    transform: translateY(-2px);
+}
+
+.badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.5em 0.75em;
+}
+
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.text-warning {
+    color: #ffc107 !important;
+}
+
+.border {
+    border-color: #e9ecef !important;
+}
+
+/* Efectos de hover para elementos interactivos */
+.btn-outline-primary:hover {
+    transform: translateY(-1px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    
+    .fs-4 {
+        font-size: 1.5rem !important;
+    }
+    
+    .d-flex.justify-content-between {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .text-center.mb-4 .rounded-circle {
+        width: 80px !important;
+        height: 80px !important;
+    }
+    
+    .ps-4 {
+        padding-left: 1rem !important;
+    }
+    
+    .col-12.col-md-6 {
+        margin-bottom: 1rem;
+    }
+}
+
+/* Animaciones sutiles */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card {
+    animation: fadeInUp 0.6s ease;
+}
+
+/* Mejoras para la legibilidad */
+.text-muted {
+    line-height: 1.6;
+}
+
+.fw-bold {
+    font-weight: 600 !important;
+}
+
+/* Espaciados consistentes */
+.mb-4 {
+    margin-bottom: 1.5rem !important;
+}
+
+.p-4 {
+    padding: 1.5rem !important;
+}
+
+/* Indicador de estado en línea */
+.position-absolute.bg-success {
+    box-shadow: 0 0 0 2px white;
+}
+
+/* Separadores visuales */
+.border-bottom {
+    border-color: #e9ecef !important;
+}
+
+.border-top {
+    border-color: #e9ecef !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ Vista de Tutoría - Anuncio cargada correctamente');
+    
+    // Simular funcionalidad de descarga
+    const downloadButtons = document.querySelectorAll('.btn-outline-primary');
+    downloadButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const fileName = this.closest('.border').querySelector('h6').textContent;
+            
+            // Simular descarga
+            const alert = document.createElement('div');
+            alert.className = 'alert alert-success alert-dismissible fade show position-fixed top-0 start-50 translate-middle-x mt-3';
+            alert.style.zIndex = '9999';
+            alert.style.minWidth = '300px';
+            alert.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    <span class="flex-grow-1">Iniciando descarga: ${fileName}</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+            
+            document.body.appendChild(alert);
+            
+            // Remover alerta después de 3 segundos
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        });
+    });
+    
+    // Efectos hover para cards
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transition = 'all 0.3s ease';
+        });
+    });
+});
+</script>
+{% endblock %}
