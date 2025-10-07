@@ -424,7 +424,7 @@
         <!-- MIS TUTORÍAS -->
         <li class="nav-item">
           <a class="nav-link smooth-transition {% if request.path == '/tutoria/mistutoriasprof/' %}active{% endif %}"
-            href="{% url 'tutoria:mistutoriasprof' %}">
+            href="{% url 'tutoria:mistutoriasprof' user.id %}">
             <i class="bi bi-journal-text me-1"></i>Mis Tutorías
           </a>
         </li>
@@ -441,7 +441,7 @@
         <!-- SOLICITUDES -->
         <li class="nav-item">
           <a class="nav-link smooth-transition {% if request.path == '/tutoria/solicitudes/' %}active{% endif %}"
-            href="{% url 'tutoria:solicitudesprof' %}">
+            href="{% url 'tutoria:solicitudesprof' user.id %}">
             <i class="bi bi-clipboard-check me-1"></i>Solicitudes
           </a>
         </li>
@@ -449,7 +449,7 @@
         <!-- GESTOR -->
         <li class="nav-item">
           <a class="nav-link smooth-transition {% if request.path == '/tutoria/gestortutorias/' %}active{% endif %}"
-            href="{% url 'tutoria:gestortutorias' %}">
+            href="{% url 'tutoria:gestortutorias'  %}">
             <i class="bi bi-person-check me-1"></i>Gestor Tutorías 
           </a>
         </li>
