@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Anuncio, TipoSolicitud, Solicitud, Tutor
+from .models import Anuncio, TipoSolicitud, Solicitud, Usuario, Tutor
 
 @login_required
 def mistutoriasprof(request, user_id):
@@ -65,9 +65,9 @@ def enviar_solicitud(request, anuncio_id):
 def solicitudesprof(request, user_id):
 
     # Obtener el tutor
-    tutor = get_object_or_404(Tutor, usuario__id=user_id)
+    usuario = get_object_or_404(Usuario, id=user_id)
     
-    solicitudes = Solicitud.objects.filter(tutor=tutor, estado='Pendiente')
+    solicitudes = Solicitud.objects.filter(usuarioreceive=usuario, estado='Pendiente')
     
     contexto = {
         'solicitudes': solicitudes,
@@ -80,14 +80,14 @@ def aceptar_solicitud(request, solicitud_id):
     solicitud = get_object_or_404(Solicitud, id=solicitud_id)
 
     # Solo el tutor correspondiente puede aceptar
-    if solicitud.tutor.usuario != request.user:
+    if solicitud.usuarioreceive != request.user:
         messages.error(request, "No tienes permisos para aceptar esta solicitud.")
         return redirect('tutoria:solicitudesprof', user_id=request.user.id)
 
     solicitud.estado = "Aceptada"
     solicitud.save()
 
-    messages.success(request, f"Solicitud de {solicitud.estudiante.nombre} aceptada.")
+    messages.success(request, f"Solicitud de {solicitud.usuarioenvia.nombre} aceptada.")
 
     
     return redirect('tutoria:solicitudesprof', user_id=request.user.id)
@@ -96,12 +96,12 @@ def rechazar_solicitud(request, solicitud_id):
     solicitud = get_object_or_404(Solicitud, id=solicitud_id)
 
     # Solo el tutor correspondiente puede rechazar
-    if solicitud.tutor.usuario != request.user:
+    if solicitud.usuarioreceive != request.user:
         messages.error(request, "No tienes permisos para rechazar esta solicitud.")
         return redirect('tutoria:solicitudesprof', user_id=request.user.id)
 
     solicitud.estado = "Rechazada"
     solicitud.save()
 
-    messages.success(request, f"Solicitud de {solicitud.estudiante.nombre} rechazada.")
+    messages.success(request, f"Solicitud de {solicitud.usuarioenvia.nombre} rechazada.")
     return redirect('tutoria:solicitudesprof', user_id=request.user.id)
