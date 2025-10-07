@@ -17,7 +17,7 @@ def registro_view(request):
                 
                 form.save_m2m()
                 
-                rol_estudiante, created = Rol.objects.get_or_create(nombre='Estudiante')
+                rol_estudiante = Rol.objects.get_or_create(nombre='Estudiante')
                 user.roles.add(rol_estudiante)
                 
                 login(request, user)

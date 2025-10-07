@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load precios %}
+
 
 {% block title %}Inicio - Tutorías Online{% endblock %}
 
@@ -52,12 +54,9 @@
                         <div class="col-md-4">
                             <select name="subject" class="form-select">
                                 <option value="">Todas las asignaturas</option>
-                                <option value="matematicas">Matemáticas</option>
-                                <option value="programacion">Programación</option>
-                                <option value="fisica">Física</option>
-                                <option value="quimica">Química</option>
-                                <option value="ingles">Inglés</option>
-                                <option value="historia">Historia</option>
+                                {% for area in areas %}
+                                <option value="{{ area.id }}">{{ area.nombre }}</option>
+                                {% endfor %}
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -82,6 +81,7 @@
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
 
         <!-- Tutoría 1 -->
+        {% for anuncio in anuncios %}
         <div class="col">
             <div class="card h-100 border-0 shadow tutoring-card">
                 <div class="tutoring-header bg-primary position-relative">
@@ -94,33 +94,18 @@
                 </div>
                 <div class="card-body d-flex flex-column p-3">
                     <div class="tutoring-title mb-2">
-                        <h6 class="card-title fw-bold mb-1 text-dark">Inglés Básico para Principiantes</h6>
+                        <h4 class="card-title fw-bold mb-1 text-dark">{{ anuncio.titulo }}</h4>
                         <div class="tutor-info d-flex align-items-center text-muted small">
-                            <i class="bi bi-person-circle me-1"></i>
-                            <span>Ana García</span>
-                            <span class="mx-1">•</span>
-                            <i class="bi bi-award me-1"></i>
-                            <span>5 años</span>
+                            <h5>{{ anuncio.tutor.usuario.nombre }} {{ anuncio.tutor.usuario.p_apellido }}</h5>
                         </div>
-                    </div>
-                    
-                    <div class="tutoring-description mb-2">
-                        <p class="text-muted mb-2 small">Curso completo desde cero. Gramática, vocabulario y conversación básica.</p>
                     </div>
 
-                    <div class="tutoring-features mb-2">
-                        <div class="feature-item d-flex align-items-center mb-1">
-                            <i class="bi bi-check-circle-fill text-success me-1 small"></i>
-                            <span class="small">TOEFL/IELTS</span>
-                        </div>
-                        <div class="feature-item d-flex align-items-center mb-1">
-                            <i class="bi bi-check-circle-fill text-success me-1 small"></i>
-                            <span class="small">Material incluido</span>
-                        </div>
-                        <div class="feature-item d-flex align-items-center">
-                            <i class="bi bi-check-circle-fill text-success me-1 small"></i>
-                            <span class="small">Personalizado</span>
-                        </div>
+                    <h2>
+                        FOTO
+                    </h2>
+                    
+                    <div class="tutoring-description mb-2">
+                        <p class="text-muted mb-2 small">{{ anuncio.descripcion }}</p>
                     </div>
 
                     <div class="tutoring-stats d-flex justify-content-between mb-2 pt-2 border-top">
@@ -134,82 +119,15 @@
                         </div>
                     </div>
 
-                    <div class="mt-auto">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold text-success h6 mb-0">$15.000/hr</span>
-                            <span class="badge bg-success bg-opacity-10 text-success x-small">Disponible</span>
-                        </div>
-                        <div class="d-grid gap-1">
-                            <a href="{% url 'tutoria:anunciotutor' %}" class="btn btn-outline-primary btn-sm py-1">Ver tutoría</a>
-                            <a href="{% url 'chat' %}" class="btn btn-primary btn-sm py-1">
-                                <i class="bi bi-chat-dots me-1"></i>Contactar
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tutoría 2 -->
-        <div class="col">
-            <div class="card h-100 border-0 shadow tutoring-card">
-                <div class="tutoring-header bg-primary position-relative">
-                    <div class="subject-icon text-white">
-                        <i class="bi bi-code-slash"></i>
-                    </div>
-                    <div class="tutoring-badge bg-white text-primary fw-semibold">
-                        Programación
-                    </div>
-                </div>
-                <div class="card-body d-flex flex-column p-3">
-                    <div class="tutoring-title mb-2">
-                        <h6 class="card-title fw-bold mb-1 text-dark">Python desde Cero</h6>
-                        <div class="tutor-info d-flex align-items-center text-muted small">
-                            <i class="bi bi-person-circle me-1"></i>
-                            <span>María López</span>
-                            <span class="mx-1">•</span>
-                            <i class="bi bi-award me-1"></i>
-                            <span>3 años</span>
-                        </div>
-                    </div>
                     
-                    <div class="tutoring-description mb-2">
-                        <p class="text-muted mb-2 small">Aprende Python con proyectos reales. Desde fundamentos hasta desarrollo web.</p>
-                    </div>
-
-                    <div class="tutoring-features mb-2">
-                        <div class="feature-item d-flex align-items-center mb-1">
-                            <i class="bi bi-check-circle-fill text-success me-1 small"></i>
-                            <span class="small">Proyectos prácticos</span>
-                        </div>
-                        <div class="feature-item d-flex align-items-center mb-1">
-                            <i class="bi bi-check-circle-fill text-success me-1 small"></i>
-                            <span class="small">Code reviews</span>
-                        </div>
-                        <div class="feature-item d-flex align-items-center">
-                            <i class="bi bi-check-circle-fill text-success me-1 small"></i>
-                            <span class="small">Portfolio</span>
-                        </div>
-                    </div>
-
-                    <div class="tutoring-stats d-flex justify-content-between mb-2 pt-2 border-top">
-                        <div class="stat-item text-center">
-                            <div class="stat-value fw-bold text-dark small">4.0</div>
-                            <div class="stat-label text-muted x-small">Rating</div>
-                        </div>
-                        <div class="stat-item text-center">
-                            <div class="stat-value fw-bold text-dark small">20+</div>
-                            <div class="stat-label text-muted x-small">Estudiantes</div>
-                        </div>
-                    </div>
 
                     <div class="mt-auto">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold text-success h6 mb-0">$12.000/hr</span>
+                            <span class="fw-bold text-success h6 mb-0">{{ anuncio.precio|clp }}/hr</span>
                             <span class="badge bg-success bg-opacity-10 text-success x-small">Disponible</span>
                         </div>
                         <div class="d-grid gap-1">
-                            <a href="{% url 'tutoria:anunciotutor' %}" class="btn btn-outline-primary btn-sm py-1">Ver tutoría</a>
+                            <a href="{% url 'tutoria:anunciotutor' anuncio.id %}" class="btn btn-outline-primary btn-sm py-1">Ver anuncio</a>
                             <a href="{% url 'chat' %}" class="btn btn-primary btn-sm py-1">
                                 <i class="bi bi-chat-dots me-1"></i>Contactar
                             </a>
@@ -218,76 +136,7 @@
                 </div>
             </div>
         </div>
-
-        <!-- Tutoría 3 -->
-        <div class="col">
-            <div class="card h-100 border-0 shadow tutoring-card">
-                <div class="tutoring-header bg-primary position-relative">
-                    <div class="subject-icon text-white">
-                        <i class="bi bi-calculator"></i>
-                    </div>
-                    <div class="tutoring-badge bg-white text-primary fw-semibold">
-                        Matemáticas
-                    </div>
-                </div>
-                <div class="card-body d-flex flex-column p-3">
-                    <div class="tutoring-title mb-2">
-                        <h6 class="card-title fw-bold mb-1 text-dark">Álgebra Universitario</h6>
-                        <div class="tutor-info d-flex align-items-center text-muted small">
-                            <i class="bi bi-person-circle me-1"></i>
-                            <span>Carlos Rodríguez</span>
-                            <span class="mx-1">•</span>
-                            <i class="bi bi-award me-1"></i>
-                            <span>8 años</span>
-                        </div>
-                    </div>
-                    
-                    <div class="tutoring-description mb-2">
-                        <p class="text-muted mb-2 small">Domina álgebra lineal y cálculo. Preparación para exámenes universitarios.</p>
-                    </div>
-
-                    <div class="tutoring-features mb-2">
-                        <div class="feature-item d-flex align-items-center mb-1">
-                            <i class="bi bi-check-circle-fill text-success me-1 small"></i>
-                            <span class="small">Ejercicios resueltos</span>
-                        </div>
-                        <div class="feature-item d-flex align-items-center mb-1">
-                            <i class="bi bi-check-circle-fill text-success me-1 small"></i>
-                            <span class="small">Exámenes simulados</span>
-                        </div>
-                        <div class="feature-item d-flex align-items-center">
-                            <i class="bi bi-check-circle-fill text-success me-1 small"></i>
-                            <span class="small">Soporte 24/7</span>
-                        </div>
-                    </div>
-
-                    <div class="tutoring-stats d-flex justify-content-between mb-2 pt-2 border-top">
-                        <div class="stat-item text-center">
-                            <div class="stat-value fw-bold text-dark small">5.0</div>
-                            <div class="stat-label text-muted x-small">Rating</div>
-                        </div>
-                        <div class="stat-item text-center">
-                            <div class="stat-value fw-bold text-dark small">20+</div>
-                            <div class="stat-label text-muted x-small">Estudiantes</div>
-                        </div>
-                    </div>
-
-                    <div class="mt-auto">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold text-success h6 mb-0">$18.000/hr</span>
-                            <span class="badge bg-success bg-opacity-10 text-success x-small">Disponible</span>
-                        </div>
-                        <div class="d-grid gap-1">
-                            <a href="{% url 'tutoria:anunciotutor' %}" class="btn btn-outline-primary btn-sm py-1">Ver tutoría</a>
-                            <a href="{% url 'chat' %}" class="btn btn-primary btn-sm py-1">
-                                <i class="bi bi-chat-dots me-1"></i>Contactar
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        {% endfor %}
     </div>
 
 </div>

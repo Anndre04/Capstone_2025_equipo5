@@ -25,6 +25,7 @@
     <div class="row g-4">
         
         <!-- SOLICITUD 1: NUEVA TUTORÍA -->
+        {% for solicitud in solicitudes %}
         <div class="col-12">
             <div class="card border-0 shadow-sm hover-card position-relative">
                 <div class="border-start border-primary border-4 position-absolute start-0 top-0 bottom-0"></div>
@@ -39,23 +40,23 @@
                                 </div>
                                 <div class="flex-grow-1">
                                     <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-2">
-                                        <h5 class="fw-bold text-dark mb-1 me-3">Carlos González</h5>
+                                        <h5 class="fw-bold text-dark mb-1 me-3">{{ solicitud.estudiante.nombre }} {{ solicitud.estudiante.p_apellido }}</h5>
                                         <span class="badge bg-dark bg-opacity-10 text-dark border-0">
-                                            <i class="bi bi-clock me-1"></i>Hoy, 10:30 AM
+                                            <i class="bi bi-clock me-1"></i>{{ solicitud.fecha_creacion }}
                                         </span>
                                     </div>
                                     
                                     <div class="mb-3">
                                         <span class="badge bg-dark bg-opacity-10 text-dark border-0 me-2">
-                                            <i class="bi bi-book me-1"></i>Matemáticas Avanzadas
+                                            <i class="bi bi-book me-1"></i>{{ solicitud.anuncio.titulo }}
                                         </span>
                                         <span class="badge bg-dark bg-opacity-10 text-dark border-0">
-                                            <i class="bi bi-plus-circle me-1"></i>Nueva Tutoría
+                                            <i class="bi bi-plus-circle me-1"></i>{{ solicitud.tipo.nombre }}
                                         </span>
                                     </div>
                                     
                                     <p class="text-muted mb-0">
-                                        "Hola, me interesa tomar clases de álgebra lineal. ¿Tienes disponibilidad los martes y jueves por la tarde?"
+                                        {{ solicitud.mensaje }}
                                     </p>
                                 </div>
                             </div>
@@ -65,12 +66,12 @@
                         <div class="col-12 col-md-4 col-lg-3 mt-3 mt-md-0">
                             <div class="d-flex flex-column gap-2">
                                 <div class="d-grid gap-2">
-                                    <button class="btn btn-success btn-sm">
+                                    <a href="{% url 'tutoria:aceptar_solicitud' solicitud.id %}" class="btn btn-success btn-sm">
                                         <i class="bi bi-check-circle me-2"></i>Aceptar
-                                    </button>
-                                    <button class="btn btn-outline-secondary btn-sm">
+                                    </a>
+                                    <a href="{% url 'tutoria:rechazar_solicitud' solicitud.id %}" class="btn btn-outline-secondary btn-sm">
                                         <i class="bi bi-x-circle me-2"></i>Rechazar
-                                    </button>
+                                    </a>
                                 </div>
                                 <a href="{% url 'chat' %}" class="btn btn-outline-dark btn-sm">
                                     <i class="bi bi-chat-dots me-2"></i>Responder
@@ -81,66 +82,9 @@
                 </div>
             </div>
         </div>
-
-        <!-- SOLICITUD 2: SOLICITUD DE BAJA -->
-        <div class="col-12">
-            <div class="card border-0 shadow-sm hover-card position-relative">
-                <div class="border-start border-primary border-4 position-absolute start-0 top-0 bottom-0"></div>
-                <div class="card-body p-4 ps-5">
-                    <div class="row align-items-center">
-                        <!-- INFORMACIÓN DEL ESTUDIANTE -->
-                        <div class="col-12 col-md-8 col-lg-9">
-                            <div class="d-flex align-items-start mb-3">
-                                <div class="rounded-circle bg-dark bg-opacity-10 d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
-                                     style="width: 50px; height: 50px;">
-                                    <span class="text-dark fw-bold">ML</span>
-                                </div>
-                                <div class="flex-grow-1">
-                                    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-2">
-                                        <h5 class="fw-bold text-dark mb-1 me-3">María López</h5>
-                                        <span class="badge bg-dark bg-opacity-10 text-dark border-0">
-                                            <i class="bi bi-clock me-1"></i>Ayer, 15:45 PM
-                                        </span>
-                                    </div>
-                                    
-                                    <div class="mb-3">
-                                        <span class="badge bg-dark bg-opacity-10 text-dark border-0 me-2">
-                                            <i class="bi bi-book me-1"></i>Cálculo Diferencial
-                                        </span>
-                                        <span class="badge bg-dark bg-opacity-10 text-dark border-0">
-                                            <i class="bi bi-arrow-left-circle me-1"></i>Solicitud de Baja
-                                        </span>
-                                    </div>
-                                    
-                                    <p class="text-muted mb-0">
-                                        "Buenas tardes, por cambios en mi horario universitario necesito dar de baja las tutorías de los viernes. ¿Podríamos reprogramar?"
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <!-- ACCIONES -->
-                        <div class="col-12 col-md-4 col-lg-3 mt-3 mt-md-0">
-                            <div class="d-flex flex-column gap-2">
-                                <div class="d-grid gap-2">
-                                    <button class="btn btn-success btn-sm">
-                                        <i class="bi bi-check-circle me-2"></i>Aceptar
-                                    </button>
-                                    <button class="btn btn-outline-secondary btn-sm">
-                                        <i class="bi bi-x-circle me-2"></i>Rechazar
-                                    </button>
-                                </div>
-                                <a href="{% url 'chat' %}" class="btn btn-outline-dark btn-sm">
-                                    <i class="bi bi-chat-dots me-2"></i>Responder
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        {% endfor %}
     </div>
+        
 
     <!-- SECCIÓN DE SOLICITUDES PROCESADAS -->
     <div class="row mt-5">

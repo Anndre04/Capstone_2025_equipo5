@@ -4,6 +4,7 @@
 {% block title %}Tutoría - {{ tutoria.titulo }} | Tutorías Online{% endblock %}
 
 {% block content %}
+{% if anuncio %}
 <div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
     <div class="row justify-content-center">
         <div class="col-12 col-lg-10 col-xl-8">
@@ -21,8 +22,8 @@
                             <div class="position-absolute bottom-0 end-0 bg-success rounded-circle border border-3 border-white" 
                                  style="width: 24px; height: 24px;"></div>
                         </div>
-                        <h4 class="fw-bold text-dark mb-1">Ana García</h4>
-                        <p class="text-muted mb-3">Profesora de Matemáticas</p>
+                        <h4 class="fw-bold text-dark mb-1">{{ anuncio.tutor.usuario.nombre }} {{ anuncio.tutor.usuario.p_apellido }}</h4>
+                        <p class="text-muted mb-3"></p>
                         
                         <!-- RATING -->
                         <div class="mb-3">
@@ -98,11 +99,8 @@
                 <div class="card-body p-4">
                     <div class="d-flex justify-content-between align-items-start mb-4">
                         <div>
-                            <h2 class="fw-bold text-dark mb-2">Matemáticas Avanzadas - Cálculo Diferencial</h2>
+                            <h2 class="fw-bold text-dark mb-2">{{ anuncio.titulo }}</h2>
                             <div class="d-flex align-items-center flex-wrap gap-2">
-                                <span class="badge bg-success bg-opacity-10 text-success border-0">
-                                    <i class="bi bi-clock me-1"></i>60 minutos
-                                </span>
                                 <span class="badge bg-primary bg-opacity-10 text-primary border-0">Avanzado</span>
                                 <span class="badge bg-info bg-opacity-10 text-info border-0">Matemáticas</span>
                             </div>
@@ -114,45 +112,15 @@
                     <div class="mb-4">
                         <h5 class="fw-bold text-dark mb-3">Descripción de la Tutoría</h5>
                         <p class="text-muted mb-0">
-                            Curso completo de cálculo diferencial para estudiantes universitarios. Cubre límites, derivadas, 
-                            aplicaciones de derivadas y problemas de optimización. Ideal para estudiantes de ingeniería, 
-                            matemáticas y ciencias que necesitan reforzar sus conocimientos en cálculo.
+                            {{ anuncio.descripcion }}
                         </p>
-                    </div>
-
-                    <!-- INFORMACIÓN DETALLADA -->
-                    <div class="row g-3 mb-4">
-                        <div class="col-6 col-md-3">
-                            <div class="text-center border rounded p-3">
-                                <h6 class="text-muted mb-2 small fw-normal">Nivel</h6>
-                                <strong class="text-dark">Avanzado</strong>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="text-center border rounded p-3">
-                                <h6 class="text-muted mb-2 small fw-normal">Duración</h6>
-                                <strong class="text-dark">60 min</strong>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="text-center border rounded p-3">
-                                <h6 class="text-muted mb-2 small fw-normal">Modalidad</h6>
-                                <strong class="text-dark">Online</strong>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="text-center border rounded p-3">
-                                <h6 class="text-muted mb-2 small fw-normal">Idioma</h6>
-                                <strong class="text-dark">Español</strong>
-                            </div>
-                        </div>
                     </div>
 
                     <!-- FECHA DE PUBLICACIÓN -->
                     <div class="border-top pt-3">
                         <small class="text-muted">
                             <i class="bi bi-calendar me-1"></i>
-                            Publicado el 15 de Noviembre, 2024
+                            {{ anuncio.fecha_creacion }}
                         </small>
                     </div>
                 </div>
@@ -160,6 +128,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 
 <!-- ESTILOS PROFESIONALES MEJORADOS -->
 <style>
