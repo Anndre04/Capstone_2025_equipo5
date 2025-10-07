@@ -42,7 +42,7 @@
                     </h5>
                     <form method="get" class="row g-3">
                         <!-- BUSQUEDA POR NOMBRE -->
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label small fw-semibold text-muted">NOMBRE</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0">
@@ -65,20 +65,34 @@
                         </div>
 
                         <!-- FILTRO POR PRECIO -->
-                        <div class="col-md-2">
-                            <label class="form-label small fw-semibold text-muted">PRECIO</label>
-                            <select name="precio" class="form-select">
-                                <option value="">Cualquier precio</option>
-                                <option value="0-10000">$5000 - $10.000</option>
-                                <option value="10000-20000">$10.000 - $20.000</option>
-                                <option value="20000-30000">$20.000 - $30.000</option>
-                            </select>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold text-muted">PRECIO MÁXIMO</label>
+                            <input type="range" class="form-range" min="5000" max="50000" step="1000" value="{{ filtros.precio_max }}" id="precio-slider">
+                            <input type="hidden" name="precio_max" id="precio_max" value="{{ filtros.precio_max }}">
+                            <div class="d-flex justify-content-between mt-1">
+                                <small class="text-muted">$5.000</small>
+                                <small class="text-primary fw-bold" id="precio-label">${{ filtros.precio_max }}</small>
+                                <small class="text-muted">$50.000</small>
+                            </div>
                         </div>
+
+                        <script>
+                            const slider = document.getElementById('precio-slider');
+                            const label = document.getElementById('precio-label');
+                            const hiddenInput = document.getElementById('precio_max');
+
+                            slider.addEventListener('input', function() {
+                                const value = parseInt(slider.value);
+                                const formatted = new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0 }).format(value);
+                                label.textContent = `$${formatted}`;
+                                hiddenInput.value = value;
+                            });
+                        </script>
 
                         <!-- FILTRO POR CALIFICACION -->
                         <div class="col-md-2">
                             <label class="form-label small fw-semibold text-muted">CALIFICACION</label>
-                            <select name="calificacion" class="form-select">
+                            <select name="calificacion" class="form-select" disabled>
                                 <option value="">Todas</option>
                                 <option value="5">★★★★★ 5 estrellas</option>
                                 <option value="4">★★★★☆ 4+ estrellas</option>
@@ -87,7 +101,7 @@
                         </div>
 
                         <!-- BOTON BUSCAR -->
-                        <div class="col-md-1 d-flex align-items-end">
+                        <div class="col-md-1 d-flex align-self-center">
                             <button class="btn btn-primary w-100 py-2">
                                 <i class="bi bi-search"></i>
                             </button>

@@ -46,7 +46,7 @@
                         <i class="bi bi-person-check me-1"></i>Con estudiante
                       </span>
                       <span class="badge bg-primary bg-opacity-10 text-primary border-0">Ana García</span>
-                      <span class="badge bg-secondary bg-opacity-10 text-secondary border-0">Universitario</span>
+                      <span class="badge bg-secondary bg-opacity-10 text-secondary border-0">{{ anuncio.area }}</span>
                     </div>
                   </div>
                 </div>
@@ -138,288 +138,150 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body pt-0">
-        <form>
+        <form method="POST" action="{% url 'tutoria:publicartutoria' user.id %}">
+          {% csrf_token %}
           <div class="row g-3">
+            <!-- Título -->
             <div class="col-12">
               <label class="form-label fw-semibold">Título de la Tutoría</label>
-              <input type="text" class="form-control border" placeholder="Ej: Matemáticas Avanzadas - Álgebra Lineal">
+              <input type="text" name="titulo" class="form-control border" placeholder="Ej: Matemáticas Avanzadas - Álgebra Lineal" required>
             </div>
-            
+
+            <!-- Descripción -->
             <div class="col-12">
               <label class="form-label fw-semibold">Descripción</label>
-              <textarea class="form-control border" rows="3" placeholder="Describe los temas que cubrirás en la tutoría..."></textarea>
+              <textarea name="descripcion" class="form-control border" rows="3" placeholder="Describe los temas que cubrirás en la tutoría..." required></textarea>
             </div>
-            
+
+            <!-- Precio -->
             <div class="col-md-6">
               <label class="form-label fw-semibold">Precio por hora</label>
               <div class="input-group">
                 <span class="input-group-text bg-light border">$</span>
-                <input type="number" class="form-control border-start-0" placeholder="25" value="25">
+                <input type="number" name="precio" class="form-control border-start-0" placeholder="25" value="25" min="0" required>
               </div>
             </div>
-            
+
+            <!-- Duración -->
             <div class="col-md-6">
               <label class="form-label fw-semibold">Duración</label>
-              <select class="form-select border">
-                <option value="30">30 minutos</option>
+              <select name="duracion" class="form-select border" disabled>
                 <option value="60" selected>60 minutos</option>
-                <option value="90">90 minutos</option>
-                <option value="120">120 minutos</option>
               </select>
             </div>
-            
-            <div class="col-md-6">
-              <label class="form-label fw-semibold">Nivel</label>
-              <select class="form-select border">
-                <option value="primaria">Primaria</option>
-                <option value="secundaria">Secundaria</option>
-                <option value="bachillerato" selected>Bachillerato</option>
-                <option value="universitario">Universitario</option>
-              </select>
-            </div>
-            
+
+            <!-- Área de conocimiento -->
             <div class="col-md-6">
               <label class="form-label fw-semibold">Área de Conocimiento</label>
-              <select class="form-select border">
-                <option value="matematicas" selected>Matemáticas</option>
-                <option value="fisica">Física</option>
-                <option value="quimica">Química</option>
-                <option value="programacion">Programación</option>
-                <option value="ingles">Inglés</option>
-                <option value="historia">Historia</option>
+              <select name="area" class="form-select border" required>
+                {% for at in areastutor %}
+                  <option value="{{ at.id }}">{{ at.area }}</option>
+                {% endfor %}
               </select>
             </div>
 
-            <!-- SECCIÓN DISPONIBILIDAD -->
-<div class="col-12">
-    <div class="border-top pt-4 mt-2">
-        <label class="form-label fw-semibold mb-3 d-flex align-items-center">
-            <i class="bi bi-calendar-week me-2 text-primary"></i>Disponibilidad de Clases
-        </label>
-        <p class="text-muted small mb-4">Selecciona los días y turnos en los que estás disponible para impartir clases</p>
-        
-        <!-- DÍAS DE LA SEMANA -->
-        <div class="row g-2">
-            <!-- Lunes -->
-            <div class="col-6 col-md-4 col-lg">
-                <div class="card border day-card">
-                    <div class="card-body text-center p-2">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input day-checkbox" type="checkbox" id="diaLunes" checked>
-                            <label class="form-check-label fw-medium small" for="diaLunes">Lunes</label>
-                        </div>
-                        <div class="d-flex justify-content-around">
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="lunesManana" checked>
-                                <label class="form-check-label small" for="lunesManana" title="Mañana">M</label>
+            <!-- Disponibilidad -->
+            <div class="col-12 border-top pt-4 mt-2">
+              <label class="form-label fw-semibold mb-3 d-flex align-items-center">
+                <i class="bi bi-calendar-week me-2 text-primary"></i>Disponibilidad de Clases
+              </label>
+              <p class="text-muted small mb-4">Selecciona los días y turnos en los que estás disponible</p>
+
+              <div class="row g-2">
+                {% for dia in dias_semana %}
+                <div class="col-6 col-md-4 col-lg">
+                    <div class="card border day-card">
+                        <div class="card-body text-center p-2">
+                            <div class="form-check mb-2">
+                                <input class="form-check-input day-checkbox" type="checkbox" name="dias[]" value="{{ dia }}" id="dia{{ dia }}" checked>
+                                <label class="form-check-label fw-medium small" for="dia{{ dia }}">{{ dia }}</label>
                             </div>
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="lunesTarde" checked>
-                                <label class="form-check-label small" for="lunesTarde" title="Tarde">T</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="lunesNoche">
-                                <label class="form-check-label small" for="lunesNoche" title="Noche">N</label>
+                            <div class="d-flex justify-content-around">
+                                <div class="form-check">
+                                    <input class="form-check-input turno-check" type="checkbox" name="turnos_{{ dia }}[]" value="M" id="{{ dia }}Manana" checked>
+                                    <label class="form-check-label small" for="{{ dia }}Manana" title="Mañana">M</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input turno-check" type="checkbox" name="turnos_{{ dia }}[]" value="T" id="{{ dia }}Tarde" checked>
+                                    <label class="form-check-label small" for="{{ dia }}Tarde" title="Tarde">T</label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input turno-check" type="checkbox" name="turnos_{{ dia }}[]" value="N" id="{{ dia }}Noche">
+                                    <label class="form-check-label small" for="{{ dia }}Noche" title="Noche">N</label>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                {% endfor %}
+              </div>
             </div>
 
-            <!-- Martes -->
-            <div class="col-6 col-md-4 col-lg">
-                <div class="card border day-card">
-                    <div class="card-body text-center p-2">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input day-checkbox" type="checkbox" id="diaMartes" checked>
-                            <label class="form-check-label fw-medium small" for="diaMartes">Martes</label>
-                        </div>
-                        <div class="d-flex justify-content-around">
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="martesManana" checked>
-                                <label class="form-check-label small" for="martesManana" title="Mañana">M</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="martesTarde" checked>
-                                <label class="form-check-label small" for="martesTarde" title="Tarde">T</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="martesNoche">
-                                <label class="form-check-label small" for="martesNoche" title="Noche">N</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Miércoles -->
-            <div class="col-6 col-md-4 col-lg">
-                <div class="card border day-card">
-                    <div class="card-body text-center p-2">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input day-checkbox" type="checkbox" id="diaMiercoles" checked>
-                            <label class="form-check-label fw-medium small" for="diaMiercoles">Miércoles</label>
-                        </div>
-                        <div class="d-flex justify-content-around">
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="miercolesManana" checked>
-                                <label class="form-check-label small" for="miercolesManana" title="Mañana">M</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="miercolesTarde" checked>
-                                <label class="form-check-label small" for="miercolesTarde" title="Tarde">T</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="miercolesNoche">
-                                <label class="form-check-label small" for="miercolesNoche" title="Noche">N</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Jueves -->
-            <div class="col-6 col-md-4 col-lg">
-                <div class="card border day-card">
-                    <div class="card-body text-center p-2">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input day-checkbox" type="checkbox" id="diaJueves" checked>
-                            <label class="form-check-label fw-medium small" for="diaJueves">Jueves</label>
-                        </div>
-                        <div class="d-flex justify-content-around">
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="juevesManana" checked>
-                                <label class="form-check-label small" for="juevesManana" title="Mañana">M</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="juevesTarde" checked>
-                                <label class="form-check-label small" for="juevesTarde" title="Tarde">T</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="juevesNoche">
-                                <label class="form-check-label small" for="juevesNoche" title="Noche">N</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Viernes -->
-            <div class="col-6 col-md-4 col-lg">
-                <div class="card border day-card">
-                    <div class="card-body text-center p-2">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input day-checkbox" type="checkbox" id="diaViernes" checked>
-                            <label class="form-check-label fw-medium small" for="diaViernes">Viernes</label>
-                        </div>
-                        <div class="d-flex justify-content-around">
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="viernesManana" checked>
-                                <label class="form-check-label small" for="viernesManana" title="Mañana">M</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="viernesTarde" checked>
-                                <label class="form-check-label small" for="viernesTarde" title="Tarde">T</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="viernesNoche">
-                                <label class="form-check-label small" for="viernesNoche" title="Noche">N</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sábado -->
-            <div class="col-6 col-md-4 col-lg">
-                <div class="card border day-card">
-                    <div class="card-body text-center p-2">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input day-checkbox" type="checkbox" id="diaSabado">
-                            <label class="form-check-label fw-medium small" for="diaSabado">Sábado</label>
-                        </div>
-                        <div class="d-flex justify-content-around">
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="sabadoManana">
-                                <label class="form-check-label small" for="sabadoManana" title="Mañana">M</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="sabadoTarde">
-                                <label class="form-check-label small" for="sabadoTarde" title="Tarde">T</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="sabadoNoche">
-                                <label class="form-check-label small" for="sabadoNoche" title="Noche">N</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Domingo -->
-            <div class="col-6 col-md-4 col-lg">
-                <div class="card border day-card">
-                    <div class="card-body text-center p-2">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input day-checkbox" type="checkbox" id="diaDomingo">
-                            <label class="form-check-label fw-medium small" for="diaDomingo">Domingo</label>
-                        </div>
-                        <div class="d-flex justify-content-around">
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="domingoManana">
-                                <label class="form-check-label small" for="domingoManana" title="Mañana">M</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="domingoTarde">
-                                <label class="form-check-label small" for="domingoTarde" title="Tarde">T</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input turno-check" type="checkbox" id="domingoNoche">
-                                <label class="form-check-label small" for="domingoNoche" title="Noche">N</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- LEYENDA DE TURNOS -->
-        <div class="row mt-3">
-            <div class="col-12">
-                <div class="d-flex justify-content-center gap-4">
-                    <div class="d-flex align-items-center">
-                        <div class="form-check me-1">
-                            <input class="form-check-input" type="checkbox" checked disabled>
-                        </div>
-                        <small class="text-muted">M = Mañana (8:00-12:00)</small>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class="form-check me-1">
-                            <input class="form-check-input" type="checkbox" checked disabled>
-                        </div>
-                        <small class="text-muted">T = Tarde (14:00-18:00)</small>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <div class="form-check me-1">
-                            <input class="form-check-input" type="checkbox" disabled>
-                        </div>
-                        <small class="text-muted">N = Noche (19:00-22:00)</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- RESUMEN DE DISPONIBILIDAD -->
-        <div class="alert alert-light border mt-3 mb-0">
-            <div class="d-flex align-items-center">
+            <!-- Resumen -->
+            <div class="alert alert-light border mt-3 mb-0">
+              <div class="d-flex align-items-center">
                 <i class="bi bi-info-circle text-primary me-2"></i>
                 <small class="text-muted">
-                    <span id="resumenDisponibilidad">Disponible de Lunes a Viernes en turnos de Mañana y Tarde</span>
+                  <span id="resumenDisponibilidad">Disponible de Lunes a Viernes en turnos de Mañana y Tarde</span>
                 </small>
+              </div>
             </div>
-        </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer border-0 pt-0">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Publicar Tutoría</button>
+          </div>
+        </form>
+      </div>
     </div>
+  </div>
 </div>
+
+<style>
+.day-card {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.day-card:hover {
+  border-color: #0d6efd !important;
+  transform: translateY(-1px);
+}
+
+.day-card .form-check-input:checked ~ .form-check-label {
+  color: #0d6efd;
+  font-weight: 600;
+}
+
+.turno-check:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .day-card .card-body {
+    padding: 0.5rem !important;
+  }
+  
+  .form-check-inline {
+    margin-right: 0.25rem;
+  }
+}
+
+/* Estilos para los turnos */
+.form-check-label .bi {
+  font-size: 0.9em;
+}
+</style>
+
 
 <style>
 .day-card {
@@ -561,59 +423,6 @@ document.addEventListener('DOMContentLoaded', function() {
     actualizarResumen();
 });
 </script>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer border-0 pt-0">
-        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-        <button type="button" class="btn btn-primary">Publicar Tutoría</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<style>
-.day-card {
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.day-card:hover {
-  border-color: #0d6efd !important;
-  transform: translateY(-1px);
-}
-
-.day-card .form-check-input:checked ~ .form-check-label {
-  color: #0d6efd;
-  font-weight: 600;
-}
-
-.turno-check:checked {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
-}
-
-.form-check-input:checked {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .day-card .card-body {
-    padding: 0.5rem !important;
-  }
-  
-  .form-check-inline {
-    margin-right: 0.25rem;
-  }
-}
-
-/* Estilos para los turnos */
-.form-check-label .bi {
-  font-size: 0.9em;
-}
-</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

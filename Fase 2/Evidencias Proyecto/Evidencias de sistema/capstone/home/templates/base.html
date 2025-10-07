@@ -289,10 +289,20 @@
         <i class="bi bi-mortarboard-fill me-2"></i>TúToría
       </a>
 
-      <!-- INDICADOR DE ROL  -->
-      <span class="role-indicator d-none d-sm-inline smooth-transition" id="current-role">
-        🎓 Estudiante
-      </span>
+      {% if user.is_authenticated %}
+        {% if request.session.rol_actual == "Estudiante" %}
+          <!-- INDICADOR DE ROL -->
+          <span class="role-indicator d-none d-sm-inline smooth-transition" id="current-role">
+            🎓 Estudiante
+          </span>
+        {% elif request.session.rol_actual == "Tutor" %}
+          <span class="role-indicator d-none d-sm-inline smooth-transition" id="current-role">
+            🎓 Tutor
+          </span>
+        {% else %}
+          
+        {% endif %}
+      {% endif %}
 
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
         <span class="navbar-toggler-icon"></span>
@@ -354,7 +364,7 @@
   </nav>
 
   <!-- NAVBAR SECUNDARIO PARA ESCRITORIO -->
-  {% if user.is_authenticated and request.path != '/auth/login/' %}
+  {% if user.is_authenticated and request.path != '/auth/login/' and request.session.rol_actual == "Tutor" %}
   <nav class="navbar navbar-secondary d-none d-lg-block sticky-top" id="secondary-navbar">
     <div class="container">
       <ul class="nav">
@@ -370,7 +380,7 @@
         <!-- MIS TUTORÍAS -->
         <li class="nav-item">
           <a class="nav-link smooth-transition {% if request.path == '/tutoria/mistutoriasprof/' %}active{% endif %}" 
-                href="{% url 'tutoria:mistutoriasprof' user.id %}">
+                href="{% url 'tutoria:misanunciosprof' user.id %}">
             <i class="bi bi-journal-text me-1"></i>Mis Anuncios
           </a>
         </li>
@@ -424,7 +434,7 @@
         <!-- MIS TUTORÍAS -->
         <li class="nav-item">
           <a class="nav-link smooth-transition {% if request.path == '/tutoria/mistutoriasprof/' %}active{% endif %}"
-            href="{% url 'tutoria:mistutoriasprof' user.id %}">
+            href="{% url 'tutoria:misanunciosprof' user.id %}">
             <i class="bi bi-journal-text me-1"></i>Mis Tutorías
           </a>
         </li>
@@ -528,24 +538,6 @@
       // 1. INICIALIZACIÓN DE TOOLTIPS
       $('[data-bs-toggle="tooltip"]').tooltip();
 
-      // 2. MANEJO DE ROLES CON JQUERY
-      function actualizarRol(rol) {
-        localStorage.setItem('user_rol', rol);
-
-        // Actualizar indicador visual
-        const rolText = rol === 'profesor' ? '👨‍🏫 Profesor' : '🎓 Estudiante';
-        $('#current-role').text(rolText);
-
-        // Mostrar notificación de cambio
-        mostrarNotificacion(`Rol cambiado a: ${rolText}`, 'success');
-
-        // Recargar para aplicar cambios ()
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      }
-
-
       // 3. NOTIFICACIONES INTERACTIVAS
       $('#notifications-btn').click(function (e) {
         e.preventDefault();
@@ -636,20 +628,6 @@
         setTimeout(() => {
           $notificacion.alert('close');
         }, 4000);
-      }
-
-      // 8. INICIALIZACIÓN DE ROL
-      function inicializarRol() {
-        let rol = localStorage.getItem('user_rol');
-        if (!rol) {
-          rol = 'estudiante';
-          localStorage.setItem('user_rol', rol);
-        }
-
-        const rolText = rol === 'profesor' ? '👨‍🏫 Profesor' : '🎓 Estudiante';
-        $('#current-role').text(rolText);
-
-        console.log(`Rol inicializado: ${rolText}`);
       }
 
       // 9. EFECTO HOVER MEJORADO PARA NAV LINKS
