@@ -164,16 +164,24 @@ document.addEventListener('DOMContentLoaded', function () {
     // ==========================
     // FORMULARIO DE MENSAJES
     // ==========================
-    const form = document.getElementById('message-form');
-    const input = document.getElementById('message-input');
+    
 
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-        const mensaje = input.value.trim();
-        if (mensaje === '') return;
-        enviarMensaje(mensaje);
-        input.value = '';
-        input.focus();
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('message-form');
+        const input = document.getElementById('message-input');
+
+        if (form && input) {  // Solo agrega el listener si existen
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const mensaje = input.value.trim();
+                if (mensaje === '') return;
+
+                enviarMensaje(mensaje); // tu función para enviar el mensaje
+                input.value = '';
+                input.focus();
+            });
+        }
     });
 
     $input.on('keypress', e => { if (e.which === 13) form.dispatchEvent(new Event('submit')); });
@@ -293,7 +301,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const notificacionSocket = new WebSocket(`${ws_scheme}://${window.location.host}/ws/notificaciones/`);
         console.log("🌐 Conectando WebSocket de notificaciones...");
 
-        notificacionSocket.onopen = () => console.log("🔔 WebSocket conectado");
+        notificacionSocket.onopen = () => console.log("🔔 WebSocket de notificacion conectado ");
 
         notificacionSocket.onmessage = function (e) {
             try {

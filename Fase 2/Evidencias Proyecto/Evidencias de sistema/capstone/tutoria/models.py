@@ -1,5 +1,6 @@
 from django.db import models
-from autenticacion.models import AreaInteres
+from autenticacion.models import AreaInteres, Usuario
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
 
 # Create your models here.
@@ -11,8 +12,13 @@ class TipoSolicitud(models.Model):
         return self.nombre
     
 class Solicitud(models.Model):
-    estudiante = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="solicitudes", null=True
+    usuarioenvia = models.ForeignKey(
+        Usuario, on_delete=models.PROTECT, related_name="solicitudes", null=True
+    )
+    usuarioreceive = models.ForeignKey(
+        Usuario,
+        on_delete=models.PROTECT,
+        related_name="solicitudes_recibidas", null=True
     )
     tipo = models.ForeignKey(TipoSolicitud, on_delete=models.PROTECT)
     mensaje = models.TextField()
@@ -25,8 +31,11 @@ class Solicitud(models.Model):
 
     anuncio = models.ForeignKey("Anuncio", on_delete=models.PROTECT, null=True, blank=True)
 
+    class Meta:
+        unique_together = ('usuarioenvia', 'usuarioreceive') 
+
     def __str__(self):
-        return f"Solicitud {self.tipo.nombre} de {self.estudiante.email}"
+        return f"Solicitud {self.tipo.nombre} de {self.usuarioenvia.email}"
     
 
 class Tutor(models.Model):
@@ -42,12 +51,15 @@ class Tutor(models.Model):
     def __str__(self):
         return str(self.usuario)
     
+
+    
 class Archivo(models.Model):
+    nombre = models.CharField(max_length=80, null=True)
     contenido = models.CharField(max_length=200)
-    tutor = models.ForeignKey(Tutor, on_delete=models.PROTECT, related_name="archivos")
+    tutor = models.ForeignKey(Tutor, on_delete=models.PROTECT, related_name="archivos", null=True)
     
 class TutorArea(models.Model):
-    tutor = models.ForeignKey(to=Tutor, on_delete=models.PROTECT)
+    tutor = models.ForeignKey(to=Tutor, on_delete=models.PROTECT, null=True)
     area = models.ForeignKey(to=AreaInteres, on_delete=models.PROTECT)
     activo = models.BooleanField(default=True)
     fecha_agregado = models.DateTimeField(auto_now_add=True)
@@ -56,12 +68,18 @@ class TutorArea(models.Model):
     class Meta:
         unique_together = ('tutor', 'area') 
 
+    def __str__(self):
+        return self.area.nombre
+
 class Anuncio(models.Model):
     tutor = models.ForeignKey(to=Tutor, on_delete=models.PROTECT, related_name="anuncios")
-    area = models.ForeignKey(to=AreaInteres, on_delete=models.PROTECT, null=True)
+    area = models.ForeignKey(to=TutorArea, on_delete=models.PROTECT, null=True)
     titulo = models.CharField(max_length=200)
     descripcion = models.TextField()
-    precio = models.DecimalField(max_digits=8, decimal_places=2)
+    precio = models.IntegerField(validators=[
+            MinValueValidator(5000),
+            MaxValueValidator(1000000)
+        ])
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     activo = models.BooleanField(default=True)
 
