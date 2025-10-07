@@ -13,4 +13,6 @@ def anunciotutor(request):
 def solicitudesprof(request):
     return render(request, 'tutoria/solicitudesprof.html')
 
-
+@login_required
+def gestortutorias(request):
+    return render(request, 'tutoria/gestortutorias.html')

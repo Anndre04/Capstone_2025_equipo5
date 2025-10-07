@@ -1,0 +1,362 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Gestor Tutorías - Tutorías Online{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
+  
+  <!-- HEADER -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
+        <div>
+          <h1 class="h2 mb-2 fw-bold text-dark">Gestor de Tutorías</h1>
+          <p class="text-muted mb-0">Administra tus tutorías aceptadas</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SELECTORES -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <div class="row g-3 align-items-end">
+            <!-- TUTORÍA -->
+            <div class="col-12 col-md-4">
+              <label class="form-label fw-semibold">Tutoría</label>
+              <select class="form-select border" id="selectTutoria">
+                <option value="">Selecciona tutoría</option>
+                <option value="matematicas">Matemáticas Avanzadas</option>
+                <option value="calculo">Cálculo Diferencial</option>
+                <option value="fisica">Física General</option>
+              </select>
+            </div>
+
+            <!-- ALUMNO -->
+            <div class="col-12 col-md-4">
+              <label class="form-label fw-semibold">Alumno</label>
+              <select class="form-select border" id="selectAlumno">
+                <option value="">Selecciona alumno</option>
+                <option value="ana">Ana García</option>
+                <option value="carlos">Carlos López</option>
+                <option value="maria">María Rodríguez</option>
+              </select>
+            </div>
+
+            <!-- BOTÓN -->
+            <div class="col-12 col-md-4">
+              <button class="btn btn-primary w-100" id="btnIniciar" disabled>
+                <i class="bi bi-camera-video me-2"></i>Iniciar Sesión
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TUTORÍAS -->
+  <div class="row g-4">
+    
+    <!-- TUTORÍA -->
+    <div class="col-12">
+      <div class="card border-0 shadow-sm hover-card">
+        <div class="card-body p-4">
+          <div class="row align-items-center">
+            <!-- INFO -->
+            <div class="col-12 col-lg-8">
+              <div class="d-flex align-items-start mb-3">
+                <div class="flex-shrink-0">
+                  <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3" 
+                       style="width: 48px; height: 48px;">
+                    <i class="bi bi-calculator text-primary fs-6"></i>
+                  </div>
+                </div>
+                <div class="flex-grow-1">
+                  <h5 class="card-title mb-2 fw-bold text-dark">Matemáticas Avanzadas</h5>
+                  <div class="d-flex align-items-center flex-wrap gap-2">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border-0">Ana García</span>
+                    <span class="badge bg-light text-muted border">8/12 sesiones</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- ESTUDIANTE -->
+              <div class="row g-3 mb-3">
+                <div class="col-12 col-sm-6">
+                  <div class="bg-light rounded p-3">
+                    <div class="d-flex align-items-center">
+                      <div class="rounded-circle bg-white d-flex align-items-center justify-content-center me-2 flex-shrink-0" 
+                           style="width: 36px; height: 36px;">
+                        <i class="bi bi-person text-muted fs-6"></i>
+                      </div>
+                      <div>
+                        <strong class="fs-6 d-block">Ana García</strong>
+                        <small class="text-muted">Ing. Sistemas - 3er semestre</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- CONTACTO -->
+                <div class="col-12 col-sm-6">
+                  <div class="bg-light rounded p-3">
+                    <div class="d-flex flex-column">
+                      <small class="d-flex align-items-center mb-1">
+                        <i class="bi bi-envelope me-2 text-primary"></i>ana.garcia@email.com
+                      </small>
+                      <small class="d-flex align-items-center">
+                        <i class="bi bi-star-fill me-2 text-warning"></i>4.5 
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- ARCHIVOS -->
+              <div class="pt-3 border-top">
+                <h6 class="text-muted mb-3 small fw-semibold">Material</h6>
+                <div class="d-flex flex-wrap gap-2">
+                  <div class="border rounded-3 p-2 d-flex align-items-center bg-white">
+                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                    <small class="text-muted">Guía_Algebra.pdf</small>
+                    <button class="btn btn-sm btn-light ms-2 p-1">
+                      <i class="bi bi-download text-muted"></i>
+                    </button>
+                  </div>
+                  <div class="border rounded-3 p-2 d-flex align-items-center bg-white">
+                    <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                    <small class="text-muted">Ejercicios.docx</small>
+                    <button class="btn btn-sm btn-light ms-2 p-1">
+                      <i class="bi bi-download text-muted"></i>
+                    </button>
+                  </div>
+                  <!-- SUBIR -->
+                  <div class="border rounded-3 p-2 d-flex align-items-center justify-content-center upload-btn bg-light" 
+                       style="width: 44px; height: 44px; cursor: pointer;" 
+                       onclick="subirArchivo()">
+                    <i class="bi bi-plus-lg text-muted"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- ACCIONES -->
+            <div class="col-12 col-lg-4 mt-4 mt-lg-0">
+              <div class="d-grid gap-2">
+                <button class="btn btn-outline-primary btn-sm">
+                  <i class="bi bi-chat me-2"></i>Mensaje
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TUTORÍA -->
+    <div class="col-12">
+      <div class="card border-0 shadow-sm hover-card">
+        <div class="card-body p-4">
+          <div class="row align-items-center">
+            <!-- INFO -->
+            <div class="col-12 col-lg-8">
+              <div class="d-flex align-items-start mb-3">
+                <div class="flex-shrink-0">
+                  <div class="rounded-circle bg-info bg-opacity-10 d-flex align-items-center justify-content-center me-3" 
+                       style="width: 48px; height: 48px;">
+                    <i class="bi bi-graph-up text-info fs-6"></i>
+                  </div>
+                </div>
+                <div class="flex-grow-1">
+                  <h5 class="card-title mb-2 fw-bold text-dark">Cálculo Diferencial</h5>
+                  <div class="d-flex align-items-center flex-wrap gap-2">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border-0">Carlos López</span>
+                    <span class="badge bg-light text-muted border">5/10 sesiones</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- ESTUDIANTE -->
+              <div class="row g-3 mb-3">
+                <div class="col-12 col-sm-6">
+                  <div class="bg-light rounded p-3">
+                    <div class="d-flex align-items-center">
+                      <div class="rounded-circle bg-white d-flex align-items-center justify-content-center me-2 flex-shrink-0" 
+                           style="width: 36px; height: 36px;">
+                        <i class="bi bi-person text-muted fs-6"></i>
+                      </div>
+                      <div>
+                        <strong class="fs-6 d-block">Carlos López</strong>
+                        <small class="text-muted">Preparatoria - 2do año</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- CONTACTO -->
+                <div class="col-12 col-sm-6">
+                  <div class="bg-light rounded p-3">
+                    <div class="d-flex flex-column">
+                      <small class="d-flex align-items-center mb-1">
+                        <i class="bi bi-envelope me-2 text-primary"></i>carlos.lopez@email.com
+                      </small>
+                      <small class="d-flex align-items-center">
+                        <i class="bi bi-star-fill me-2 text-warning"></i>4.5 
+                      </small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ARCHIVOS -->
+              <div class="pt-3 border-top">
+                <h6 class="text-muted mb-3 small fw-semibold">Material</h6>
+                <div class="d-flex flex-wrap gap-2">
+                  <div class="border rounded-3 p-2 d-flex align-items-center bg-white">
+                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                    <small class="text-muted">Calculo_Intro.pdf</small>
+                    <button class="btn btn-sm btn-light ms-2 p-1">
+                      <i class="bi bi-download text-muted"></i>
+                    </button>
+                  </div>
+                  <!-- SUBIR -->
+                  <div class="border rounded-3 p-2 d-flex align-items-center justify-content-center upload-btn bg-light" 
+                       style="width: 44px; height: 44px; cursor: pointer;" 
+                       onclick="subirArchivo()">
+                    <i class="bi bi-plus-lg text-muted"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- ACCIONES -->
+            <div class="col-12 col-lg-4 mt-4 mt-lg-0">
+              <div class="d-grid gap-2">
+                <button class="btn btn-outline-primary btn-sm">
+                  <i class="bi bi-chat me-2"></i>Mensaje
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.hover-card {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.08);
+}
+
+.hover-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important;
+}
+
+.card {
+    border-radius: 16px;
+}
+
+.badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+
+.btn {
+    border-radius: 10px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.form-select {
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e9ecef;
+}
+
+.upload-btn {
+    transition: all 0.2s ease;
+    border: 1.5px dashed #dee2e6 !important;
+}
+
+.upload-btn:hover {
+    background-color: #e9ecef !important;
+    border-color: #0d6efd !important;
+    transform: scale(1.05);
+}
+
+.upload-btn:hover .bi-plus-lg {
+    color: #0d6efd !important;
+}
+
+@media (max-width: 768px) {
+    .card-body {
+        padding: 1.25rem !important;
+    }
+    
+    .btn {
+        font-size: 0.875rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .container-fluid {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    .card-body {
+        padding: 1rem !important;
+    }
+}
+
+.card {
+    animation: fadeInUp 0.5s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.bg-light {
+    background-color: #f8f9fa !important;
+}
+</style>
+<script>
+
+function subirArchivo() {
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.accept = '.pdf,.doc,.docx,.txt';
+    fileInput.style.display = 'none';
+    
+    fileInput.addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            const fileName = this.files[0].name;
+            alert(`Archivo seleccionado: ${fileName}\n\n(Esta es una maqueta - En producción se subiría el archivo)`);
+        }
+    });
+    
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
+}
+</script>
+{% endblock %}
