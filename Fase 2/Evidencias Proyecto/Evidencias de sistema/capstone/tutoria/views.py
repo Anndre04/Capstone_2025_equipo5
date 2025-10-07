@@ -105,3 +105,7 @@ def rechazar_solicitud(request, solicitud_id):
 
     messages.success(request, f"Solicitud de {solicitud.usuarioenvia.nombre} rechazada.")
     return redirect('tutoria:solicitudesprof', user_id=request.user.id)
+
+def gestortutorias(request):
+    
+    return render(request, 'tutoria/gestortutorias.html',)

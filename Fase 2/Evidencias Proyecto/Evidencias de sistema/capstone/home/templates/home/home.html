@@ -2,13 +2,12 @@
 {% load static %}
 {% load precios %}
 
-
 {% block title %}Inicio - Tutorías Online{% endblock %}
 
 {% block content %}
 <div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
 
-    <!-- 🔹 BANNER REGISTRO MÁS GRANDE -->
+    <!-- BANNER -->
     {% if not user.is_authenticated %}
     <div class="alert alert-primary border-0 rounded-3 shadow-sm mb-5 text-center position-relative overflow-hidden" 
          style="background: linear-gradient(135deg, #0056b3, #0088cc); color: white; min-height: 140px; display: flex; align-items: center;">
@@ -25,7 +24,7 @@
     </div>
     {% endif %}
 
-    <!-- HERO SECTION -->
+    <!-- HERO -->
     <div class="row justify-content-center mb-5">
         <div class="col-12 col-lg-10 text-center">
             <h1 class="display-5 fw-bold text-dark mb-3">Bienvenido a <span class="text-primary">TúToría</span></h1>
@@ -33,35 +32,64 @@
         </div>
     </div>
 
-    <!-- BUSCADOR -->
+    <!-- BUSCADOR MEJORADO -->
     <div class="row justify-content-center mb-5">
-        <div class="col-12 col-lg-8">
+        <div class="col-12 col-lg-10">
             <div class="card border-0 shadow-sm">
                 <div class="card-body p-4">
                     <h5 class="card-title fw-bold mb-3 text-center text-md-start">
                         Encuentra el tutor perfecto
                     </h5>
                     <form method="get" class="row g-3">
-                        <div class="col-md-6">
+                        <!-- BUSQUEDA POR NOMBRE -->
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold text-muted">NOMBRE</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light border-end-0">
-                                    <i class="bi bi-search text-muted"></i>
+                                    <i class="bi bi-person text-muted"></i>
                                 </span>
-                                <input type="text" name="q" class="form-control border-start-0"
-                                    placeholder="Buscar profesor o materia...">
+                                <input type="text" name="nombre" class="form-control border-start-0"
+                                    placeholder="Buscar por nombre...">
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <select name="subject" class="form-select">
+
+                        <!-- FILTRO POR ASIGNATURA -->
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold text-muted">ASIGNATURA</label>
+                            <select name="asignatura" class="form-select">
                                 <option value="">Todas las asignaturas</option>
                                 {% for area in areas %}
                                 <option value="{{ area.id }}">{{ area.nombre }}</option>
                                 {% endfor %}
                             </select>
                         </div>
+
+                        <!-- FILTRO POR PRECIO -->
                         <div class="col-md-2">
-                            <button class="btn btn-primary w-100">
-                                <i class="bi bi-search me-2"></i>Buscar
+                            <label class="form-label small fw-semibold text-muted">PRECIO</label>
+                            <select name="precio" class="form-select">
+                                <option value="">Cualquier precio</option>
+                                <option value="0-10000">$5000 - $10.000</option>
+                                <option value="10000-20000">$10.000 - $20.000</option>
+                                <option value="20000-30000">$20.000 - $30.000</option>
+                            </select>
+                        </div>
+
+                        <!-- FILTRO POR CALIFICACION -->
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold text-muted">CALIFICACION</label>
+                            <select name="calificacion" class="form-select">
+                                <option value="">Todas</option>
+                                <option value="5">★★★★★ 5 estrellas</option>
+                                <option value="4">★★★★☆ 4+ estrellas</option>
+                                <option value="3">★★★☆☆ 3+ estrellas</option>
+                            </select>
+                        </div>
+
+                        <!-- BOTON BUSCAR -->
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button class="btn btn-primary w-100 py-2">
+                                <i class="bi bi-search"></i>
                             </button>
                         </div>
                     </form>
@@ -77,10 +105,8 @@
         </div>
     </div>
 
-    <!-- TARJETAS DE TUTORÍAS - MÁS PEQUEÑAS PARA 3 POR FILA -->
+    <!-- TARJETAS -->
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-
-        <!-- Tutoría 1 -->
         {% for anuncio in anuncios %}
         <div class="col">
             <div class="card h-100 border-0 shadow tutoring-card">
@@ -100,9 +126,7 @@
                         </div>
                     </div>
 
-                    <h2>
-                        FOTO
-                    </h2>
+                    <h2>FOTO</h2>
                     
                     <div class="tutoring-description mb-2">
                         <p class="text-muted mb-2 small">{{ anuncio.descripcion }}</p>
@@ -118,8 +142,6 @@
                             <div class="stat-label text-muted x-small">Estudiantes</div>
                         </div>
                     </div>
-
-                    
 
                     <div class="mt-auto">
                         <div class="d-flex justify-content-between align-items-center mb-2">
@@ -225,6 +247,10 @@
 .alert h5 {
     font-size: 1.2rem;
 }
+.form-label {
+    font-size: 0.75rem;
+    margin-bottom: 0.3rem;
+}
 @media (max-width: 768px) {
     .display-5 { font-size: 1.9rem; }
     .card-body { padding: 1rem !important; }
@@ -237,12 +263,17 @@
     .subject-icon {
         font-size: 1rem;
     }
+    .col-md-1 {
+        margin-top: 0.5rem;
+    }
 }
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Página de inicio cargada correctamente');
+    
+    // ANIMACION
     const cards = document.querySelectorAll('.tutoring-card');
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -252,12 +283,21 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+    
     cards.forEach((card, i) => {
         card.style.opacity = '0';
         card.style.transform = 'translateY(15px)';
         card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
         card.style.transitionDelay = `${i * 0.1}s`;
         observer.observe(card);
+    });
+
+    // FILTROS
+    const filtros = document.querySelectorAll('select[name], input[name]');
+    filtros.forEach(filtro => {
+        filtro.addEventListener('change', function() {
+            console.log('🔍 Filtro aplicado:', this.name, this.value);
+        });
     });
 });
 </script>
