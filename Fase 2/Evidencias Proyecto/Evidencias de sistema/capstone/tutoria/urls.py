@@ -15,6 +15,7 @@ urlpatterns = [
     path('estado-anuncio/<int:anuncio_id>', views.estadoanuncio, name='estadoanuncio'),
     path('editaranuncio/<int:anuncio_id>', views.editaranuncio, name="editaranuncio"),
     path('eliminaranuncio/<int:anuncio_id>/', views.eliminar_anuncio, name='eliminar_anuncio'),
-    
+    path('perfil', views.perfil, name='perfil'),
+    path('perfilusuario', views.perfilusuario, name='perfilusuario'),
 
 ]

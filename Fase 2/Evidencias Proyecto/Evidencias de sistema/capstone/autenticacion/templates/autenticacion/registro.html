@@ -118,25 +118,67 @@
               </div>
             </div>
 
-            <!-- OCPCION -->
+            <!-- OCUPACIÓN - NUEVO DISEÑO CON RADIO BUTTONS -->
             <div class="mb-3">
-              <label for="{{ form.ocupacion.id_for_label }}" class="form-label fw-semibold small">Ocupación (Puedes seleccionar varias)</label>
-              {{ form.ocupacion }}
+              <label class="form-label fw-semibold small">Ocupación</label>
+              <div class="ocupacion-container">
+                <div class="form-check mb-2">
+                  <input class="form-check-input ocupacion-radio" type="radio" name="ocupacion_radio" id="ocupacion_estudiante" value="estudiante">
+                  <label class="form-check-label" for="ocupacion_estudiante">
+                    Estudiante
+                  </label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input ocupacion-radio" type="radio" name="ocupacion_radio" id="ocupacion_trabajador" value="trabajador">
+                  <label class="form-check-label" for="ocupacion_trabajador">
+                    Trabajador
+                  </label>
+                </div>
+                <div class="form-check mb-2">
+                  <input class="form-check-input ocupacion-radio" type="radio" name="ocupacion_radio" id="ocupacion_ambos" value="ambos">
+                  <label class="form-check-label" for="ocupacion_ambos">
+                    Ambos (Estudiante y Trabajador)
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input ocupacion-radio" type="radio" name="ocupacion_radio" id="ocupacion_ninguno" value="ninguno">
+                  <label class="form-check-label" for="ocupacion_ninguno">
+                    Ninguno
+                  </label>
+                </div>
+              </div>
+              <input type="hidden" name="ocupacion" id="ocupacionInput" value="">
+              {% if form.ocupacion.errors %}
+                <div class="text-danger small">{{ form.ocupacion.errors }}</div>
+              {% endif %}
             </div>
 
-            <!-- AREAS DE INTERES -->
+            <!-- AREAS DE INTERES - NUEVO DISEÑO -->
             <div class="mb-3">
-              <label for="{{ form.areas_interes.id_for_label }}" class="form-label fw-semibold small">Áreas de Interés (Puedes seleccionar varias)</label>
-              {{ form.areas_interes }}
-              <div class="form-text small">Mantén presionado Ctrl (o Cmd en Mac) para seleccionar múltiples opciones</div>
+              <label class="form-label fw-semibold small">Áreas de Interés (Puedes seleccionar varias)</label>
+              <div class="areas-interes-container">
+                <div class="areas-grid" id="areasGrid">
+                  <!-- Las áreas se cargarán aquí dinámicamente -->
+                </div>
+                <div class="selected-tags-container mt-3" id="selectedTags">
+                  <!-- Las etiquetas seleccionadas aparecerán aquí -->
+                </div>
+                <input type="hidden" name="areas_interes" id="areasInteresInput" value="">
+              </div>
+              <div class="form-text small">Haz clic en las áreas que te interesen</div>
             </div>
 
-            <!-- CONTRASEÑAS -->
+            <!-- CONTRASEÑAS MEJORADAS -->
             <div class="row g-2 g-md-3">
               <div class="col-12 col-sm-6">
                 <div class="mb-3">
                   <label for="{{ form.password1.id_for_label }}" class="form-label fw-semibold small">Contraseña</label>
-                  {{ form.password1 }}
+                  <input type="password" 
+                         name="{{ form.password1.name }}" 
+                         id="{{ form.password1.id_for_label }}" 
+                         class="form-control" 
+                         placeholder="Ingresa tu contraseña"
+                         {% if form.password1.value %}value="{{ form.password1.value }}"{% endif %}>
                   {% if form.password1.errors %}
                     <div class="text-danger small">{{ form.password1.errors }}</div>
                   {% endif %}
@@ -145,7 +187,12 @@
               <div class="col-12 col-sm-6">
                 <div class="mb-3">
                   <label for="{{ form.password2.id_for_label }}" class="form-label fw-semibold small">Confirmar Contraseña</label>
-                  {{ form.password2 }}
+                  <input type="password" 
+                         name="{{ form.password2.name }}" 
+                         id="{{ form.password2.id_for_label }}" 
+                         class="form-control" 
+                         placeholder="Confirma tu contraseña"
+                         {% if form.password2.value %}value="{{ form.password2.value }}"{% endif %}>
                   {% if form.password2.errors %}
                     <div class="text-danger small">{{ form.password2.errors }}</div>
                   {% endif %}
@@ -204,6 +251,86 @@
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
+/* NUEVOS ESTILOS PARA EL SELECTOR DE ÁREAS DE INTERÉS */
+.areas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.area-option {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  background-color: #f8f9fa;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  font-size: 0.875rem;
+  user-select: none;
+}
+
+.area-option:hover {
+  background-color: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.area-option.selected {
+  background-color: #0d6efd;
+  color: white;
+  border-color: #0d6efd;
+}
+
+.selected-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0.5rem;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  background-color: #f8f9fa;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  background-color: #0d6efd;
+  color: white;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.tag-remove {
+  margin-left: 0.25rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* ESTILOS PARA LOS RADIO BUTTONS DE OCUPACIÓN */
+.ocupacion-container {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 0.375rem;
+  padding: 1rem;
+}
+
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.form-check-input:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
 /* Responsive adjustments */
 @media (max-width: 576px) {
   .card-body {
@@ -214,13 +341,214 @@
     padding: 0.75rem 1rem;
     font-size: 1rem;
   }
+  
+  .areas-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+  
+  .ocupacion-container {
+    padding: 0.75rem;
+  }
 }
 </style>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // ===== GESTIÓN DE OCUPACIÓN =====
+  const ocupacionRadios = document.querySelectorAll('.ocupacion-radio');
+  const ocupacionInput = document.getElementById('ocupacionInput');
+  const originalOcupacionSelect = document.getElementById('{{ form.ocupacion.id_for_label }}');
+  
+  // Ocultar el select original de ocupación
+  if (originalOcupacionSelect) {
+    originalOcupacionSelect.style.display = 'none';
+  }
+  
+  // Manejar cambios en los radio buttons
+  ocupacionRadios.forEach(radio => {
+    radio.addEventListener('change', function() {
+      updateOcupacionInput();
+    });
+  });
+  
+  // Función para actualizar el input oculto con los valores seleccionados
+  function updateOcupacionInput() {
+    const selectedRadio = document.querySelector('.ocupacion-radio:checked');
+    
+    if (selectedRadio) {
+      const value = selectedRadio.value;
+      
+      // Mapear los valores a IDs que coincidan con el select original
+      let ocupacionValues = [];
+      
+      switch(value) {
+        case 'estudiante':
+          ocupacionValues = ['1']; // Asumiendo que '1' es el ID para Estudiante
+          break;
+        case 'trabajador':
+          ocupacionValues = ['2']; // Asumiendo que '2' es el ID para Trabajador
+          break;
+        case 'ambos':
+          ocupacionValues = ['1', '2']; // Ambos IDs
+          break;
+        case 'ninguno':
+          ocupacionValues = []; // Ninguna selección
+          break;
+      }
+      
+      ocupacionInput.value = ocupacionValues.join(',');
+    } else {
+      ocupacionInput.value = '';
+    }
+  }
+  
+  // Si hay valores preseleccionados en el select original, establecer los radio buttons
+  if (originalOcupacionSelect) {
+    const selectedValues = Array.from(originalOcupacionSelect.selectedOptions).map(option => option.value);
+    
+    if (selectedValues.length === 0) {
+      // Ninguno seleccionado
+      document.getElementById('ocupacion_ninguno').checked = true;
+    } else if (selectedValues.includes('1') && selectedValues.includes('2')) {
+      // Ambos seleccionados
+      document.getElementById('ocupacion_ambos').checked = true;
+    } else if (selectedValues.includes('1')) {
+      // Solo estudiante
+      document.getElementById('ocupacion_estudiante').checked = true;
+    } else if (selectedValues.includes('2')) {
+      // Solo trabajador
+      document.getElementById('ocupacion_trabajador').checked = true;
+    }
+    
+    updateOcupacionInput();
+  }
+  
+  // ===== GESTIÓN DE ÁREAS DE INTERÉS =====
+  // Obtener las opciones del select original (si está disponible)
+  const originalSelect = document.getElementById('{{ form.areas_interes.id_for_label }}');
+  const areasGrid = document.getElementById('areasGrid');
+  const selectedTagsContainer = document.getElementById('selectedTags');
+  const areasInteresInput = document.getElementById('areasInteresInput');
+  
+  // Si no existe el select original, usar opciones predeterminadas
+  let areasOptions = [];
+  
+  if (originalSelect) {
+    // Obtener las opciones del select original
+    for (let option of originalSelect.options) {
+      if (option.value) {
+        areasOptions.push({
+          id: option.value,
+          text: option.text
+        });
+      }
+    }
+    // Ocultar el select original
+    originalSelect.style.display = 'none';
+  } else {
+    // Opciones predeterminadas si no hay select original
+    areasOptions = [
+      { id: '1', text: 'Matemáticas' },
+      { id: '2', text: 'Ciencias' },
+      { id: '3', text: 'Lenguaje' },
+      { id: '4', text: 'Historia' },
+      { id: '5', text: 'Inglés' },
+      { id: '6', text: 'Programación' },
+      { id: '7', text: 'Arte' },
+      { id: '8', text: 'Música' },
+      { id: '9', text: 'Deportes' },
+      { id: '10', text: 'Tecnología' }
+    ];
+  }
+  
+  // Crear las opciones visuales
+  areasOptions.forEach(area => {
+    const optionElement = document.createElement('div');
+    optionElement.className = 'area-option';
+    optionElement.textContent = area.text;
+    optionElement.dataset.id = area.id;
+    
+    optionElement.addEventListener('click', function() {
+      toggleAreaSelection(this);
+    });
+    
+    areasGrid.appendChild(optionElement);
+  });
+  
+  // Función para alternar la selección de un área
+  function toggleAreaSelection(element) {
+    const areaId = element.dataset.id;
+    const areaText = element.textContent;
+    
+    if (element.classList.contains('selected')) {
+      // Deseleccionar
+      element.classList.remove('selected');
+      removeTag(areaId);
+    } else {
+      // Seleccionar
+      element.classList.add('selected');
+      addTag(areaId, areaText);
+    }
+    
+    updateAreasInteresInput();
+  }
+  
+  // Función para agregar una etiqueta
+  function addTag(id, text) {
+    const tag = document.createElement('div');
+    tag.className = 'tag';
+    tag.dataset.id = id;
+    
+    tag.innerHTML = `
+      ${text}
+      <span class="tag-remove">&times;</span>
+    `;
+    
+    tag.querySelector('.tag-remove').addEventListener('click', function(e) {
+      e.stopPropagation();
+      removeTag(id);
+      
+      // También deseleccionar la opción en la cuadrícula
+      const option = document.querySelector(`.area-option[data-id="${id}"]`);
+      if (option) {
+        option.classList.remove('selected');
+      }
+    });
+    
+    selectedTagsContainer.appendChild(tag);
+  }
+  
+  // Función para eliminar una etiqueta
+  function removeTag(id) {
+    const tag = document.querySelector(`.tag[data-id="${id}"]`);
+    if (tag) {
+      tag.remove();
+    }
+  }
+  
+  // Función para actualizar el input oculto con los valores seleccionados
+  function updateAreasInteresInput() {
+    const selectedIds = Array.from(document.querySelectorAll('.tag'))
+      .map(tag => tag.dataset.id);
+    
+    areasInteresInput.value = selectedIds.join(',');
+  }
+  
+  // Si hay valores preseleccionados (en caso de edición), seleccionarlos
+  if (originalSelect && originalSelect.value) {
+    const selectedValues = Array.from(originalSelect.selectedOptions).map(option => option.value);
+    
+    selectedValues.forEach(value => {
+      const option = document.querySelector(`.area-option[data-id="${value}"]`);
+      if (option) {
+        option.classList.add('selected');
+        addTag(value, option.textContent);
+      }
+    });
+    
+    updateAreasInteresInput();
+  }
+});
+</script>
 
 {% endblock %}
-
-
-
-
-

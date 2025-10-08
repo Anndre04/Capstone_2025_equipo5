@@ -274,3 +274,11 @@ def rechazar_solicitud(request, solicitud_id):
 def gestortutorias(request):
     
     return render(request, 'tutoria/gestortutorias.html',)
+
+def perfil(request):
+    
+    return render(request, 'tutoria/perfil.html',)
+
+def perfilusuario(request):
+    
+    return render(request, 'tutoria/perfilusuario.html',)
