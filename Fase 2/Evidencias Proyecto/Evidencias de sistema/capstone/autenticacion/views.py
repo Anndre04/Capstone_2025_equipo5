@@ -33,10 +33,16 @@ def registro_view(request):
     
     return render(request, 'autenticacion/registro.html', {'form': form})
 
+def seleccionar_rol(request):
+    if request.method == "POST":
+        rol_seleccionado = request.POST.get("rol")
+        request.session['rol_actual'] = rol_seleccionado
+        return redirect('home')  # O dashboard según tu lógica
+
+    roles = request.session.get('roles_disponibles', [])
+    return render(request, "autenticacion/seleccionar_rol.html", {"roles": roles})
+
 def login_view(request):
-    if request.user.is_authenticated:
-        return redirect('dashboard')
-    
     if request.method == 'POST':
         form = LoginForm(request, data=request.POST)
         if form.is_valid():
@@ -46,9 +52,20 @@ def login_view(request):
             
             if user is not None:
                 login(request, user)
-                messages.success(request, f'¡Bienvenido de nuevo, {user.nombre}!')
                 
-                return redirect('home')
+                # Consultar los roles del usuario
+                roles = list(user.roles.values_list('nombre', flat=True))
+
+                if "Tutor" in roles and "Estudiante" in roles:
+                    # Usuario tiene ambos roles -> mostrar modal
+                    request.session['roles_disponibles'] = roles
+                    messages.success(request, f'¡Bienvenido de nuevo, {user.nombre}!')
+                    return redirect('seleccionar_rol')
+                else:
+                    # Usuario tiene solo un rol -> guardar en sesión
+                    request.session['rol_actual'] = roles[0]
+                    return redirect('home')
+
             else:
                 messages.error(request, 'Correo o contraseña incorrectos.')
         else:
@@ -57,3 +74,4 @@ def login_view(request):
         form = LoginForm()
     
     return render(request, 'autenticacion/login.html', {'form': form})
+

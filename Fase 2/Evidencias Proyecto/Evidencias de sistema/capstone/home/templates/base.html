@@ -289,10 +289,20 @@
         <i class="bi bi-mortarboard-fill me-2"></i>TúToría
       </a>
 
-      <!-- INDICADOR DE ROL  -->
-      <span class="role-indicator d-none d-sm-inline smooth-transition" id="current-role">
-        🎓 Estudiante
-      </span>
+      {% if user.is_authenticated %}
+        {% if request.session.rol_actual == "Estudiante" %}
+          <!-- INDICADOR DE ROL -->
+          <span class="role-indicator d-none d-sm-inline smooth-transition" id="current-role">
+            🎓 Estudiante
+          </span>
+        {% elif request.session.rol_actual == "Tutor" %}
+          <span class="role-indicator d-none d-sm-inline smooth-transition" id="current-role">
+            🎓 Tutor
+          </span>
+        {% else %}
+          
+        {% endif %}
+      {% endif %}
 
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
         <span class="navbar-toggler-icon"></span>
@@ -354,7 +364,7 @@
   </nav>
 
   <!-- NAVBAR SECUNDARIO PARA ESCRITORIO -->
-  {% if user.is_authenticated and request.path != '/auth/login/' %}
+  {% if user.is_authenticated and request.path != '/auth/login/' and request.session.rol_actual == "Tutor" %}
   <nav class="navbar navbar-secondary d-none d-lg-block sticky-top" id="secondary-navbar">
     <div class="container">
       <ul class="nav">
@@ -370,7 +380,7 @@
         <!-- MIS TUTORÍAS -->
         <li class="nav-item">
           <a class="nav-link smooth-transition {% if request.path == '/tutoria/mistutoriasprof/' %}active{% endif %}" 
-                href="{% url 'tutoria:mistutoriasprof' user.id %}">
+                href="{% url 'tutoria:misanunciosprof' user.id %}">
             <i class="bi bi-journal-text me-1"></i>Mis Anuncios
           </a>
         </li>
@@ -395,7 +405,7 @@
         <!-- GESTOR -->
         <li class="nav-item">
           <a class="nav-link smooth-transition {% if request.path == '/tutoria/gestortutorias/' %}active{% endif %}"
-            href="{% url 'tutoria:gestortutorias' %}">
+            href="#">
             <i class="bi bi-person-check me-1"></i>Gestor Tutorías 
           </a>
         </li>
@@ -424,7 +434,7 @@
         <!-- MIS TUTORÍAS -->
         <li class="nav-item">
           <a class="nav-link smooth-transition {% if request.path == '/tutoria/mistutoriasprof/' %}active{% endif %}"
-            href="{% url 'tutoria:mistutoriasprof' user.id %}">
+            href="{% url 'tutoria:misanunciosprof' user.id %}">
             <i class="bi bi-journal-text me-1"></i>Mis Tutorías
           </a>
         </li>
@@ -463,21 +473,37 @@
   <!-- CONTENIDO PRINCIPAL -->
   <main class="flex-grow-1">
     {% if messages %}
-    {% for message in messages %}
-    <div class="container">
-      <div class="d-flex align-items-center">
-        <i class="bi 
-                {% if message.tags == 'success' %}bi-check-circle-fill
-                {% elif message.tags == 'error' %}bi-exclamation-circle-fill
-                {% else %}bi-info-circle-fill{% endif %} 
-              me-2"></i>
-        <span class="flex-grow-1">{{ message }}</span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      <div class="alert-container position-fixed top-0 mt-5" style="right: 2rem; z-index: 2000;">
+        {% for message in messages %}
+          <div 
+            class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-lg d-flex align-items-center"
+            role="alert"
+            style="min-width: 320px;"
+          >
+            <i class="bi 
+              {% if message.tags == 'success' %}bi-check-circle-fill text-success
+              {% elif message.tags == 'error' %}bi-x-circle-fill text-danger
+              {% elif message.tags == 'warning' %}bi-exclamation-triangle-fill text-warning
+              {% else %}bi-info-circle-fill text-info{% endif %}
+              me-2 fs-5"></i>
+
+            <div class="flex-grow-1">{{ message }}</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
       </div>
-    </div>
-    </div>
-    {% endfor %}
+
+      <script>
+        // Desaparecer automáticamente las alertas después de 8 segundos
+        setTimeout(() => {
+          document.querySelectorAll('.alert').forEach(alert => {
+            const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
+            bsAlert.close();
+          });
+        }, 8000);
+      </script>
     {% endif %}
+
 
     {% block content %}
     {% endblock %}
@@ -511,24 +537,6 @@
       
       // 1. INICIALIZACIÓN DE TOOLTIPS
       $('[data-bs-toggle="tooltip"]').tooltip();
-
-      // 2. MANEJO DE ROLES CON JQUERY
-      function actualizarRol(rol) {
-        localStorage.setItem('user_rol', rol);
-
-        // Actualizar indicador visual
-        const rolText = rol === 'profesor' ? '👨‍🏫 Profesor' : '🎓 Estudiante';
-        $('#current-role').text(rolText);
-
-        // Mostrar notificación de cambio
-        mostrarNotificacion(`Rol cambiado a: ${rolText}`, 'success');
-
-        // Recargar para aplicar cambios ()
-        setTimeout(() => {
-          window.location.reload();
-        }, 1000);
-      }
-
 
       // 3. NOTIFICACIONES INTERACTIVAS
       $('#notifications-btn').click(function (e) {
@@ -620,20 +628,6 @@
         setTimeout(() => {
           $notificacion.alert('close');
         }, 4000);
-      }
-
-      // 8. INICIALIZACIÓN DE ROL
-      function inicializarRol() {
-        let rol = localStorage.getItem('user_rol');
-        if (!rol) {
-          rol = 'estudiante';
-          localStorage.setItem('user_rol', rol);
-        }
-
-        const rolText = rol === 'profesor' ? '👨‍🏫 Profesor' : '🎓 Estudiante';
-        $('#current-role').text(rolText);
-
-        console.log(`Rol inicializado: ${rolText}`);
       }
 
       // 9. EFECTO HOVER MEJORADO PARA NAV LINKS

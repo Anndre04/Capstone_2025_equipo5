@@ -1,23 +1,78 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Anuncio, TipoSolicitud, Solicitud, Tutor
+from .models import Anuncio, TipoSolicitud, Solicitud, Usuario, Tutor, TutorArea, Disponibilidad
 
 @login_required
-def mistutoriasprof(request, user_id):
-
-    # Obtener el tutor
+def misanunciosprof(request, user_id):
+    """
+    Vista que muestra los anuncios activos de un tutor.
+    """
     tutor = get_object_or_404(Tutor, usuario__id=user_id)
-    
-    anuncios = Anuncio.objects.filter(tutor=tutor)
+    areastutor = TutorArea.objects.filter(tutor=tutor)
+    anuncios = Anuncio.objects.filter(tutor=tutor, activo=True).order_by('-fecha_creacion')
 
-    print(anuncios)
-    
+    dias_semana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+
     contexto = {
         'anuncios': anuncios,
+        'areastutor': areastutor,
+        'dias_semana': dias_semana,
     }
-
     return render(request, 'tutoria/mistutoriasprof.html', contexto)
+
+@login_required
+def publicartutoria(request, user_id):
+    tutor = get_object_or_404(Tutor, usuario__id=user_id)
+
+    if request.method == "POST":
+        titulo = request.POST.get("titulo")
+        descripcion = request.POST.get("descripcion")
+        precio = request.POST.get("precio")
+        area_id = request.POST.get("area")
+        area = get_object_or_404(TutorArea, id=area_id)
+
+        if int(precio) < 5000:
+            messages.error(request, "El precio mínimo permitido es $5000")
+            return redirect("tutoria:misanunciosprof", user_id=user_id)
+
+        # Validar que no exista un anuncio activo para la misma área
+        if Anuncio.objects.filter(tutor=tutor, area=area, activo=True).exists():
+            messages.error(request, f"Ya existe un anuncio activo para el área {area}")
+            return redirect("tutoria:misanunciosprof", user_id=user_id)
+
+        # Crear el anuncio
+        anuncio = Anuncio.objects.create(
+            tutor=tutor,
+            area=area,
+            titulo=titulo,
+            descripcion=descripcion,
+            precio=precio,
+        )
+
+        # Guardar la disponibilidad
+        dias_semana = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+
+        for dia in dias_semana:
+            turnos = request.POST.getlist(f"turnos_{dia}[]")  # Esto devuelve una lista como ['M','T']
+            
+            manana = "M" in turnos
+            tarde = "T" in turnos
+            noche = "N" in turnos
+
+            print(f"{dia}: Mañana={manana}, Tarde={tarde}, Noche={noche}")
+
+            if manana or tarde or noche:
+                Disponibilidad.objects.create(
+                    anuncio=anuncio,
+                    dia=dia,
+                    mañana=manana,
+                    tarde=tarde,
+                    noche=noche,
+                )
+
+        messages.success(request, "Tutoría publicada correctamente")
+        return redirect('tutoria:misanunciosprof', user_id=user_id)
 
 @login_required
 def anunciotutor(request, anuncio_id):
@@ -65,9 +120,9 @@ def enviar_solicitud(request, anuncio_id):
 def solicitudesprof(request, user_id):
 
     # Obtener el tutor
-    tutor = get_object_or_404(Tutor, usuario__id=user_id)
+    usuario = get_object_or_404(Usuario, id=user_id)
     
-    solicitudes = Solicitud.objects.filter(tutor=tutor, estado='Pendiente')
+    solicitudes = Solicitud.objects.filter(usuarioreceive=usuario, estado='Pendiente')
     
     contexto = {
         'solicitudes': solicitudes,
@@ -80,14 +135,14 @@ def aceptar_solicitud(request, solicitud_id):
     solicitud = get_object_or_404(Solicitud, id=solicitud_id)
 
     # Solo el tutor correspondiente puede aceptar
-    if solicitud.tutor.usuario != request.user:
+    if solicitud.usuarioreceive != request.user:
         messages.error(request, "No tienes permisos para aceptar esta solicitud.")
         return redirect('tutoria:solicitudesprof', user_id=request.user.id)
 
     solicitud.estado = "Aceptada"
     solicitud.save()
 
-    messages.success(request, f"Solicitud de {solicitud.estudiante.nombre} aceptada.")
+    messages.success(request, f"Solicitud de {solicitud.usuarioenvia.nombre} aceptada.")
 
     
     return redirect('tutoria:solicitudesprof', user_id=request.user.id)
@@ -96,14 +151,14 @@ def rechazar_solicitud(request, solicitud_id):
     solicitud = get_object_or_404(Solicitud, id=solicitud_id)
 
     # Solo el tutor correspondiente puede rechazar
-    if solicitud.tutor.usuario != request.user:
+    if solicitud.usuarioreceive != request.user:
         messages.error(request, "No tienes permisos para rechazar esta solicitud.")
         return redirect('tutoria:solicitudesprof', user_id=request.user.id)
 
     solicitud.estado = "Rechazada"
     solicitud.save()
 
-    messages.success(request, f"Solicitud de {solicitud.estudiante.nombre} rechazada.")
+    messages.success(request, f"Solicitud de {solicitud.usuarioenvia.nombre} rechazada.")
     return redirect('tutoria:solicitudesprof', user_id=request.user.id)
 
 def gestortutorias(request):
