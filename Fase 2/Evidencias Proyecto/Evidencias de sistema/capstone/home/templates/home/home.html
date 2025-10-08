@@ -9,8 +9,8 @@
 
     <!-- BANNER -->
     {% if not user.is_authenticated %}
-    <div class="alert alert-primary border-0 rounded-3 shadow-sm mb-5 text-center position-relative overflow-hidden" 
-         style="background: linear-gradient(135deg, #0056b3, #0088cc); color: white; min-height: 140px; display: flex; align-items: center;">
+    <div class="alert alert-primary border-0 rounded-3 shadow-sm mb-5 text-center position-relative overflow-hidden"
+        style="background: linear-gradient(135deg, #0056b3, #0088cc); color: white; min-height: 140px; display: flex; align-items: center;">
         <div class="position-relative z-2 w-100">
             <h5 class="fw-semibold mb-2">¿Aún no tienes una cuenta?</h5>
             <p class="mb-3">Únete gratis y comienza a conectar con tutores expertos en línea.</p>
@@ -18,8 +18,7 @@
                 <i class="bi bi-person-plus me-2"></i>Registrarme ahora
             </a>
         </div>
-        <div class="position-absolute top-0 start-0 w-100 h-100" 
-             style="background: center/cover; opacity: 0.15;">
+        <div class="position-absolute top-0 start-0 w-100 h-100" style="background: center/cover; opacity: 0.15;">
         </div>
     </div>
     {% endif %}
@@ -65,15 +64,27 @@
                         </div>
 
                         <!-- FILTRO POR PRECIO -->
-                        <div class="col-md-2">
-                            <label class="form-label small fw-semibold text-muted">PRECIO</label>
-                            <select name="precio" class="form-select">
-                                <option value="">Cualquier precio</option>
-                                <option value="0-10000">$5000 - $10.000</option>
-                                <option value="10000-20000">$10.000 - $20.000</option>
-                                <option value="20000-30000">$20.000 - $30.000</option>
-                            </select>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold text-muted mb-2">PRECIO</label>
+                            <div class="price-slider-container">
+                                <input type="range" class="form-range" min="5000" max="50000" value="5000">
+                                <div class="d-flex justify-content-between mt-1">
+                                    <small class="text-muted">$5.000</small>
+                                    <small class="text-primary fw-bold">$5.000</small>
+                                    <small class="text-muted">$50.000</small>
+                                </div>
+                            </div>
                         </div>
+
+                        <script>
+                            document.querySelector('.form-range').addEventListener('input', function (e) {
+                                const value = parseInt(e.target.value);
+                                const formatted = new Intl.NumberFormat('es-CL', {
+                                    minimumFractionDigits: 0
+                                }).format(value);
+                                e.target.nextElementSibling.children[1].textContent = `$${formatted}`;
+                            });
+                        </script>
 
                         <!-- FILTRO POR CALIFICACION -->
                         <div class="col-md-2">
@@ -127,7 +138,7 @@
                     </div>
 
                     <h2>FOTO</h2>
-                    
+
                     <div class="tutoring-description mb-2">
                         <p class="text-muted mb-2 small">{{ anuncio.descripcion }}</p>
                     </div>
@@ -149,7 +160,8 @@
                             <span class="badge bg-success bg-opacity-10 text-success x-small">Disponible</span>
                         </div>
                         <div class="d-grid gap-1">
-                            <a href="{% url 'tutoria:anunciotutor' anuncio.id %}" class="btn btn-outline-primary btn-sm py-1">Ver anuncio</a>
+                            <a href="{% url 'tutoria:anunciotutor' anuncio.id %}"
+                                class="btn btn-outline-primary btn-sm py-1">Ver anuncio</a>
                             <a href="{% url 'chat' %}" class="btn btn-primary btn-sm py-1">
                                 <i class="bi bi-chat-dots me-1"></i>Contactar
                             </a>
@@ -164,141 +176,170 @@
 </div>
 
 <style>
-.tutoring-card {
-    transition: all 0.3s ease;
-    border: 1px solid rgba(0,0,0,0.08);
-    border-radius: 10px;
-    overflow: hidden;
-    position: relative;
-}
-.tutoring-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
-}
-.tutoring-header {
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-}
-.subject-icon {
-    font-size: 1.2rem;
-    opacity: 0.9;
-}
-.tutoring-badge {
-    position: absolute;
-    top: 6px;
-    right: 6px;
-    border-radius: 12px;
-    font-size: 0.65rem;
-    padding: 0.25em 0.6em;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-}
-.tutoring-title {
-    padding-bottom: 0.5rem;
-}
-.tutor-info {
-    font-size: 0.75rem;
-}
-.tutoring-features {
-    background: rgba(0,0,0,0.02);
-    border-radius: 6px;
-    padding: 0.5rem;
-}
-.feature-item {
-    font-size: 0.75rem;
-}
-.tutoring-stats {
-    padding: 8px 0;
-}
-.stat-item {
-    flex: 1;
-}
-.stat-value {
-    font-size: 0.9rem;
-    line-height: 1.2;
-}
-.stat-label {
-    font-size: 0.65rem;
-    margin-top: 1px;
-}
-.x-small {
-    font-size: 0.65rem;
-}
-.btn {
-    border-radius: 6px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-    font-size: 0.8rem;
-}
-.btn:hover {
-    transform: translateY(-1px);
-}
-.badge {
-    font-size: 0.6rem;
-    font-weight: 500;
-    padding: 0.25em 0.6em;
-    border-radius: 6px;
-}
-.text-warning {
-    color: #ffc107 !important;
-}
-.alert h5 {
-    font-size: 1.2rem;
-}
-.form-label {
-    font-size: 0.75rem;
-    margin-bottom: 0.3rem;
-}
-@media (max-width: 768px) {
-    .display-5 { font-size: 1.9rem; }
-    .card-body { padding: 1rem !important; }
-    .tutoring-features {
-        padding: 0.4rem;
+    .tutoring-card {
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
     }
+
+    .tutoring-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    }
+
     .tutoring-header {
-        height: 35px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
     }
+
     .subject-icon {
-        font-size: 1rem;
+        font-size: 1.2rem;
+        opacity: 0.9;
     }
-    .col-md-1 {
-        margin-top: 0.5rem;
+
+    .tutoring-badge {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        border-radius: 12px;
+        font-size: 0.65rem;
+        padding: 0.25em 0.6em;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
     }
-}
+
+    .tutoring-title {
+        padding-bottom: 0.5rem;
+    }
+
+    .tutor-info {
+        font-size: 0.75rem;
+    }
+
+    .tutoring-features {
+        background: rgba(0, 0, 0, 0.02);
+        border-radius: 6px;
+        padding: 0.5rem;
+    }
+
+    .feature-item {
+        font-size: 0.75rem;
+    }
+
+    .tutoring-stats {
+        padding: 8px 0;
+    }
+
+    .stat-item {
+        flex: 1;
+    }
+
+    .stat-value {
+        font-size: 0.9rem;
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: 0.65rem;
+        margin-top: 1px;
+    }
+
+    .x-small {
+        font-size: 0.65rem;
+    }
+
+    .btn {
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        font-size: 0.8rem;
+    }
+
+    .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .badge {
+        font-size: 0.6rem;
+        font-weight: 500;
+        padding: 0.25em 0.6em;
+        border-radius: 6px;
+    }
+
+    .text-warning {
+        color: #ffc107 !important;
+    }
+
+    .alert h5 {
+        font-size: 1.2rem;
+    }
+
+    .form-label {
+        font-size: 0.75rem;
+        margin-bottom: 0.3rem;
+    }
+
+    @media (max-width: 768px) {
+        .display-5 {
+            font-size: 1.9rem;
+        }
+
+        .card-body {
+            padding: 1rem !important;
+        }
+
+        .tutoring-features {
+            padding: 0.4rem;
+        }
+
+        .tutoring-header {
+            height: 35px;
+        }
+
+        .subject-icon {
+            font-size: 1rem;
+        }
+
+        .col-md-1 {
+            margin-top: 0.5rem;
+        }
+    }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ Página de inicio cargada correctamente');
-    
-    // ANIMACION
-    const cards = document.querySelectorAll('.tutoring-card');
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
-            }
-        });
-    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
-    
-    cards.forEach((card, i) => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(15px)';
-        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        card.style.transitionDelay = `${i * 0.1}s`;
-        observer.observe(card);
-    });
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('✅ Página de inicio cargada correctamente');
 
-    // FILTROS
-    const filtros = document.querySelectorAll('select[name], input[name]');
-    filtros.forEach(filtro => {
-        filtro.addEventListener('change', function() {
-            console.log('🔍 Filtro aplicado:', this.name, this.value);
+        // ANIMACION
+        const cards = document.querySelectorAll('.tutoring-card');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+        cards.forEach((card, i) => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(15px)';
+            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            card.style.transitionDelay = `${i * 0.1}s`;
+            observer.observe(card);
+        });
+
+        // FILTROS
+        const filtros = document.querySelectorAll('select[name], input[name]');
+        filtros.forEach(filtro => {
+            filtro.addEventListener('change', function () {
+                console.log('🔍 Filtro aplicado:', this.name, this.value);
+            });
         });
     });
-});
 </script>
 {% endblock %}
