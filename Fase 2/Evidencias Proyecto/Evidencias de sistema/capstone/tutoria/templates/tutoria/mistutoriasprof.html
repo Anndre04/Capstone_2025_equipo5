@@ -11,8 +11,8 @@
     <div class="col-12">
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
         <div>
-          <h1 class="h2 mb-2 fw-bold text-dark">Mis Anuncios Publicados</h1>
-          <p class="text-muted mb-0">Gestiona tus anuncios activos y publica nuevos</p>
+          <h1 class="h2 mb-2 fw-bold text-dark">Mis Anuncios</h1>
+          <p class="text-muted mb-0">Gestiona tus anuncios y publica nuevos</p>
         </div>
         <!-- BOTÓN PUBLICAR NUEVA TUTORÍA -->
         <button class="btn btn-primary mt-3 mt-md-0" data-bs-toggle="modal" data-bs-target="#publicarTutoriaModal">
@@ -26,104 +26,217 @@
 
   {% if anuncios %}
     {% for anuncio in anuncios %}
-    <div class="row g-4">
-      <!-- TUTORÍA 1: MATEMÁTICAS AVANZADAS -->
-      <div class="col-12">
-        <div class="card border-0 shadow-sm hover-card">
-          <div class="card-body p-4">
-            <div class="row align-items-center">
-              <!-- INFORMACIÓN PRINCIPAL -->
-              <div class="col-12 col-md-8 col-lg-9">
-                <div class="d-flex align-items-start mb-3">
-                  <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
-                      style="width: 50px; height: 50px;">
-                    <i class="bi bi-calculator text-primary fs-5"></i>
-                  </div>
-                  <div class="flex-grow-1">
-                    <h5 class="card-title mb-1 fw-bold text-dark">{{ anuncio.titulo }}</h5>
-                    <div class="d-flex align-items-center flex-wrap gap-2 mt-2">
-                      <span class="badge bg-success bg-opacity-10 text-success border-0">
-                        <i class="bi bi-person-check me-1"></i>Con estudiante
-                      </span>
-                      <span class="badge bg-primary bg-opacity-10 text-primary border-0">Ana García</span>
-                      <span class="badge bg-secondary bg-opacity-10 text-secondary border-0">{{ anuncio.area }}</span>
+      {% if anuncio.estado == "Activo" or anuncio.estado == "Deshabilitado" %}
+      <div class="row g-4">
+        <div class="col-12">
+          <div class="card border-0 shadow-sm hover-card">
+            <div class="card-body p-4">
+              <div class="row align-items-center">
+                <!-- INFORMACIÓN PRINCIPAL -->
+                <div class="col-12 col-md-8 col-lg-9">
+                  <div class="d-flex align-items-start mb-3">
+                    <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
+                        style="width: 50px; height: 50px;">
+                      <i class="bi bi-calculator text-primary fs-5"></i>
                     </div>
-                  </div>
-                </div>
-                
-                <p class="text-muted mb-4">{{ anuncio.descripcion }}</p>
-                
-                <!-- INFORMACIÓN DETALLADA EN GRID MEJORADA -->
-                <div class="row g-3">
-                  <div class="col-6 col-sm-3">
-                    <div class="text-center">
-                      <div class="border rounded p-3">
-                        <h6 class="text-muted mb-2 small fw-normal">Precio</h6>
-                        <strong class="text-success fs-6">{{ anuncio.precio|clp }}/hr</strong>
+                    <div class="flex-grow-1">
+                      <h5 class="card-title mb-1 fw-bold text-dark">{{ anuncio.titulo }}</h5>
+                      <div class="d-flex align-items-center flex-wrap gap-2 mt-2">
+                        <span class="badge bg-success bg-opacity-10 text-success border-0">
+                          <i class="bi bi-person-check me-1"></i>Con estudiante
+                        </span>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border-0">{{ anuncio.tutor.usuario.get_full_name }}</span>
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border-0">{{ anuncio.area }}</span>
                       </div>
                     </div>
-                  </div>                
-                  <div class="col-6 col-sm-3">
-                    <div class="text-center">
-                      <div class="border rounded p-3">
-                        <h6 class="text-muted mb-2 small fw-normal">Rating</h6>
-                        <div>
-                          <span class="text-warning">
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-fill"></i>
-                            <i class="bi bi-star-half"></i>
-                          </span>
+                  </div>
+                  <p class="text-muted mb-4">{{ anuncio.descripcion }}</p>
+                  <div class="row g-3">
+                    <div class="col-6 col-sm-3">
+                      <div class="text-center">
+                        <div class="border rounded p-3">
+                          <h6 class="text-muted mb-2 small fw-normal">Precio</h6>
+                          <strong class="text-success fs-6">{{ anuncio.precio|clp }}/hr</strong>
+                        </div>
+                      </div>
+                    </div>                
+                    <div class="col-6 col-sm-3">
+                      <div class="text-center">
+                        <div class="border rounded p-3">
+                          <h6 class="text-muted mb-2 small fw-normal">Rating</h6>
+                          <div>
+                            <span class="text-warning">
+                              <i class="bi bi-star-fill"></i>
+                              <i class="bi bi-star-fill"></i>
+                              <i class="bi bi-star-fill"></i>
+                              <i class="bi bi-star-fill"></i>
+                              <i class="bi bi-star-half"></i>
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-                
-                <!-- FECHA Y ESTADO -->
-                <div class="mt-4 pt-3 border-top">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <small class="text-muted">
-                      <i class="bi bi-calendar me-1"></i>Publicado el 
-                    </small>
-                    {% if anuncio.activo %}
-                      <span class="badge bg-success bg-opacity-10 text-success border-0">
-                        <i class="bi bi-check-circle me-1"></i>Activo
-                      </span>
-                    {% else %}
-                      <span class="badge bg-warning bg-opacity-10 text-warning border-0">
-                        <i class="bi bi-clock me-1"></i>En espera
-                      </span>
-                    {% endif %}
+                  <div class="mt-4 pt-3 border-top">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <small class="text-muted">
+                        <i class="bi bi-calendar me-1"></i>Publicado el {{ anuncio.fecha_creacion }}
+                      </small>
+                      {% if anuncio.estado == "Activo" %}
+                        <span class="badge bg-success bg-opacity-10 text-success border-0">
+                          <i class="bi bi-check-circle me-1"></i>Activo
+                        </span>
+                      {% else %}
+                        <span class="badge bg-secondary bg-opacity-10 text-secondary border-0">
+                          <i class="bi bi-x-circle me-1"></i>Deshabilitado
+                        </span>
+                      {% endif %}
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <!-- ACCIONES -->
-              <div class="col-12 col-md-4 col-lg-3 mt-4 mt-md-0">
-                <div class="d-flex flex-column gap-2">
-                  <button class="btn btn-outline-primary">
-                    <i class="bi bi-pencil me-2"></i>Editar
-                  </button>
-                  <button class="btn btn-outline-secondary">
-                    <i class="bi bi-eye me-2"></i>Ver detalles
-                  </button>
-                  <button class="btn btn-outline-danger">
-                    <i class="bi bi-pause-circle me-2"></i>Pausar
-                  </button>
+                
+                <!-- ACCIONES -->
+                <div class="col-12 col-md-4 col-lg-3 mt-4 mt-md-0">
+                  <div class="d-flex flex-column gap-2">
+                      <!-- Botón Activar / Desactivar -->
+                      {% if anuncio.estado == "Activo" %}
+                          <form method="POST" action="{% url 'tutoria:estadoanuncio' anuncio.id %}">
+                              {% csrf_token %}
+                              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                              <input type="hidden" name="accion" value="cambiar_estado">
+                              <button type="submit" class="btn btn-outline-warning w-100">
+                                  <i class="bi bi-pause-circle me-2"></i>Deshabilitar
+                              </button>
+                          </form>
+                      {% elif anuncio.estado == "Deshabilitado" %}
+                          <form method="POST" action="{% url 'tutoria:estadoanuncio' anuncio.id %}">
+                              {% csrf_token %}
+                              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                              <input type="hidden" name="accion" value="cambiar_estado">
+                              <button type="submit" class="btn btn-outline-success w-100">
+                                  <i class="bi bi-play-circle me-2"></i>Activar
+                              </button>
+                          </form>
+                      {% endif %}
+
+                      <!-- Botón Editar (siempre) -->
+                      <a type="button" class="btn btn-outline-primary w-100"
+                        data-bs-toggle="modal" 
+                        data-bs-target="#editarTutoriaModal{{ anuncio.id }}">
+                        <i class="bi bi-pencil me-2"></i>Editar
+                      </a>
+
+                      <!-- Botón Eliminar (siempre) -->
+                      <form method="POST" action="{% url 'tutoria:eliminar_anuncio' anuncio.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" class="btn btn-outline-danger w-100"
+                                onclick="return confirm('¿ESTÁS SEGURO? Esta acción no se puede deshacer.');">
+                            <i class="bi bi-trash me-2"></i>Eliminar
+                        </button>
+                    </form>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <!-- Modal Editar Anuncio -->
+      <div class="modal fade" id="editarTutoriaModal{{ anuncio.id }}" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+          <div class="modal-content">
+            <form method="POST" action="{% url 'tutoria:editaranuncio' anuncio.id %}">
+              {% csrf_token %}
+              <div class="modal-header">
+                <h5 class="modal-title">Editar Anuncio</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+              </div>
+              <div class="modal-body">
+                <div class="mb-3">
+                  <label>Título</label>
+                  <input type="text" name="titulo" value="{{ anuncio.titulo }}" class="form-control">
+                </div>
+                <div class="mb-3">
+                  <label>Descripción</label>
+                  <textarea name="descripcion" class="form-control">{{ anuncio.descripcion }}</textarea>
+                </div>
+                <div class="mb-3">
+                  <label>Precio</label>
+                  <input type="number" name="precio" value="{{ anuncio.precio }}" class="form-control">
+                </div>
+                <div class="mb-3">
+                  <label>Área</label>
+                  <select name="area" class="form-select">
+                    {% for area in areastutor %}
+                      <option value="{{ area.id }}" {% if area == anuncio.area %}selected{% endif %}>{{ area.nombre }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <!-- Disponibilidades -->
+                <div class="col-12 border-top pt-4 mt-2">
+                      <label class="form-label fw-semibold mb-3 d-flex align-items-center">
+                        <i class="bi bi-calendar-week me-2 text-primary"></i>Disponibilidad de Clases
+                      </label>
+                      <div class="row g-2">
+                      {% for dia in dias_semana %}
+                        {% get_disponibilidad_dia anuncios_disponibilidades anuncio.id dia as dia_disp %}
+                        
+                        <div class="col-6 col-md-4 col-lg">
+                          <div class="card border day-card">
+                            <div class="card-body text-center p-2">
+                              <div class="form-check mb-2">
+                                <input class="form-check-input day-checkbox" type="checkbox" 
+                                      name="dias[]" value="{{ dia }}" 
+                                      id="dia{{ dia }}{{ anuncio.id }}" 
+                                      {% if dia_disp %}checked{% endif %}>
+                                <label class="form-check-label fw-medium small" 
+                                      for="dia{{ dia }}{{ anuncio.id }}">{{ dia }}</label>
+                              </div>
+                              <div class="d-flex justify-content-around">
+                                <div class="form-check">
+                                  <input class="form-check-input turno-check" type="checkbox" 
+                                        name="turnos_{{ dia }}[]" value="M" 
+                                        id="{{ dia }}Manana{{ anuncio.id }}" 
+                                        {% if dia_disp and dia_disp.mañana %}checked{% endif %}>
+                                  <label class="form-check-label small" for="{{ dia }}Manana{{ anuncio.id }}">M</label>
+                                </div>
+                                <div class="form-check">
+                                  <input class="form-check-input turno-check" type="checkbox" 
+                                        name="turnos_{{ dia }}[]" value="T" 
+                                        id="{{ dia }}Tarde{{ anuncio.id }}" 
+                                        {% if dia_disp and dia_disp.tarde %}checked{% endif %}>
+                                  <label class="form-check-label small" for="{{ dia }}Tarde{{ anuncio.id }}">T</label>
+                                </div>
+                                <div class="form-check">
+                                  <input class="form-check-input turno-check" type="checkbox" 
+                                        name="turnos_{{ dia }}[]" value="N" 
+                                        id="{{ dia }}Noche{{ anuncio.id }}" 
+                                        {% if dia_disp and dia_disp.noche %}checked{% endif %}>
+                                  <label class="form-check-label small" for="{{ dia }}Noche{{ anuncio.id }}">N</label>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar cambios</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endif %}
     {% endfor %}
   {% else %}
-
-  NO TIENES TUTORIAS
-
+    <p>No tienes anuncios.</p>
   {% endif %}
 </div>
 
@@ -338,53 +451,47 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const resumenDisponibilidad = document.getElementById('resumenDisponibilidad');
-    
-    // Función para actualizar el resumen de disponibilidad
+
+    // Lista de días y turnos según tus IDs en el HTML
+    const dias = [
+        { nombre: 'Lunes', idDia: 'diaLunes', turnos: ['LunesManana', 'LunesTarde', 'LunesNoche'] },
+        { nombre: 'Martes', idDia: 'diaMartes', turnos: ['MartesManana', 'MartesTarde', 'MartesNoche'] },
+        { nombre: 'Miércoles', idDia: 'diaMiercoles', turnos: ['MiercolesManana', 'MiercolesTarde', 'MiercolesNoche'] },
+        { nombre: 'Jueves', idDia: 'diaJueves', turnos: ['JuevesManana', 'JuevesTarde', 'JuevesNoche'] },
+        { nombre: 'Viernes', idDia: 'diaViernes', turnos: ['ViernesManana', 'ViernesTarde', 'ViernesNoche'] },
+        { nombre: 'Sábado', idDia: 'diaSabado', turnos: ['SabadoManana', 'SabadoTarde', 'SabadoNoche'] },
+        { nombre: 'Domingo', idDia: 'diaDomingo', turnos: ['DomingoManana', 'DomingoTarde', 'DomingoNoche'] }
+    ];
+
     function actualizarResumen() {
-        const dias = [
-            { id: 'diaLunes', nombre: 'Lunes', turnos: ['lunesManana', 'lunesTarde', 'lunesNoche'] },
-            { id: 'diaMartes', nombre: 'Martes', turnos: ['martesManana', 'martesTarde', 'martesNoche'] },
-            { id: 'diaMiercoles', nombre: 'Miércoles', turnos: ['miercolesManana', 'miercolesTarde', 'miercolesNoche'] },
-            { id: 'diaJueves', nombre: 'Jueves', turnos: ['juevesManana', 'juevesTarde', 'juevesNoche'] },
-            { id: 'diaViernes', nombre: 'Viernes', turnos: ['viernesManana', 'viernesTarde', 'viernesNoche'] },
-            { id: 'diaSabado', nombre: 'Sábado', turnos: ['sabadoManana', 'sabadoTarde', 'sabadoNoche'] },
-            { id: 'diaDomingo', nombre: 'Domingo', turnos: ['domingoManana', 'domingoTarde', 'domingoNoche'] }
-        ];
-        
         const diasSeleccionados = [];
         const turnosTotales = { manana: 0, tarde: 0, noche: 0 };
-        
+
         dias.forEach(dia => {
-            const diaCheckbox = document.getElementById(dia.id);
-            if (diaCheckbox.checked) {
-                // Verificar cuántos turnos tiene seleccionados
+            const diaCheckbox = document.getElementById(dia.idDia);
+            if (diaCheckbox && diaCheckbox.checked) {
                 let turnosDia = 0;
                 dia.turnos.forEach((turnoId, index) => {
                     const turnoCheckbox = document.getElementById(turnoId);
-                    if (turnoCheckbox.checked) {
+                    if (turnoCheckbox && turnoCheckbox.checked) {
                         turnosDia++;
-                        // Contar turnos totales
                         if (index === 0) turnosTotales.manana++;
                         else if (index === 1) turnosTotales.tarde++;
                         else if (index === 2) turnosTotales.noche++;
                     }
                 });
-                
-                if (turnosDia > 0) {
-                    diasSeleccionados.push(dia.nombre);
-                }
+                if (turnosDia > 0) diasSeleccionados.push(dia.nombre);
             }
         });
-        
-        // Generar resumen
+
         let resumen = 'No hay disponibilidad seleccionada';
-        
+
         if (diasSeleccionados.length > 0) {
             const turnosSeleccionados = [];
             if (turnosTotales.manana > 0) turnosSeleccionados.push('Mañana');
             if (turnosTotales.tarde > 0) turnosSeleccionados.push('Tarde');
             if (turnosTotales.noche > 0) turnosSeleccionados.push('Noche');
-            
+
             if (diasSeleccionados.length === 7) {
                 resumen = `Disponible todos los días en turnos de ${turnosSeleccionados.join(', ')}`;
             } else if (diasSeleccionados.length >= 5) {
@@ -393,36 +500,39 @@ document.addEventListener('DOMContentLoaded', function() {
                 resumen = `Disponible los ${diasSeleccionados.join(', ')} en turnos de ${turnosSeleccionados.join(', ')}`;
             }
         }
-        
+
         resumenDisponibilidad.textContent = resumen;
     }
-    
-    // Event listeners para todos los checkboxes
-    const allCheckboxes = document.querySelectorAll('.day-checkbox, .turno-check');
-    allCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', actualizarResumen);
-    });
-    
-    // Event listener para el checkbox del día (selecciona/deselecciona todos los turnos)
-    const dayCheckboxes = document.querySelectorAll('.day-checkbox');
-    dayCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            const dayId = this.id.replace('dia', '').toLowerCase();
-            const turnoCheckboxes = document.querySelectorAll(`[id^="${dayId}"]`);
-            
-            turnoCheckboxes.forEach(turnoCheckbox => {
-                turnoCheckbox.checked = this.checked;
-                turnoCheckbox.disabled = !this.checked;
+
+    // Añadir event listeners a todos los checkboxes de días y turnos
+    dias.forEach(dia => {
+        const diaCheckbox = document.getElementById(dia.idDia);
+        if (diaCheckbox) {
+            diaCheckbox.addEventListener('change', function() {
+                dia.turnos.forEach(turnoId => {
+                    const turnoCheckbox = document.getElementById(turnoId);
+                    if (turnoCheckbox) {
+                        turnoCheckbox.disabled = !this.checked;
+                        if (!this.checked) turnoCheckbox.checked = false;
+                    }
+                });
+                actualizarResumen();
             });
-            
-            actualizarResumen();
+        }
+
+        dia.turnos.forEach(turnoId => {
+            const turnoCheckbox = document.getElementById(turnoId);
+            if (turnoCheckbox) {
+                turnoCheckbox.addEventListener('change', actualizarResumen);
+            }
         });
     });
-    
-    // Inicializar el estado
+
+    // Actualizar resumen al cargar la página/modal
     actualizarResumen();
 });
 </script>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

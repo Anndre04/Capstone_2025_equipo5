@@ -3,12 +3,13 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.forms import AuthenticationForm
 from django.core.exceptions import ValidationError
 from datetime import date, datetime
+from PIL import Image
 import re
 from .models import Usuario, Pais, Region, Comuna, Ocupacion, AreaInteres
 
 def validar_edad(fecha_nacimiento):
     """
-    Valida que la edad esté entre 13 y 120 años
+    Valida que la edad esté entre 13 y 130 años
     y que no sea una fecha futura
     """
     if not fecha_nacimiento:
@@ -21,8 +22,8 @@ def validar_edad(fecha_nacimiento):
     if edad < 13:
         raise ValidationError('Debes tener al menos 13 años para registrarte.')
     
-    # Validar edad máxima (120 años)
-    if edad > 120:
+    # Validar edad máxima (130 años)
+    if edad > 130:
         raise ValidationError('Por favor ingresa una fecha de nacimiento válida.')
     
     # Validar que no sea fecha futura
@@ -44,8 +45,8 @@ def validar_rut(valor):
     """
     if valor:
         # Validar longitud máxima
-        if len(valor) > 18:
-            raise ValidationError('El RUT no puede tener más de 18 caracteres.')
+        if len(valor) > 10:
+            raise ValidationError('El RUT no puede tener más de 10 caracteres.')
         
         # Validar formato básico (números, k, K, guiones y puntos)
         if not re.match(r'^[0-9\.\-kK]+$', valor):
@@ -70,7 +71,7 @@ class RegistroForm(UserCreationForm):
     )
     s_apellido = forms.CharField(
         max_length=50,
-        required=False,
+        required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control form-control-sm', 
             'placeholder': 'Segundo apellido'
@@ -78,15 +79,17 @@ class RegistroForm(UserCreationForm):
     )
     run = forms.CharField(
         max_length=10,  # Cambiado de 10
+        required=True,
         widget=forms.TextInput(attrs={
             'class': 'form-control form-control-sm', 
-            'placeholder': 'RUN - Máx. 18 caracteres'
+            'placeholder': 'RUN - Máx. 10 caracteres'
         })
     )
     fecha_nac = forms.DateField(
-        required=False,
+        required=True,
         widget=forms.DateInput(attrs={
             'class': 'form-control form-control-sm', 
+            'id' : 'id_fecha_nac',
             'type': 'date'
         }),
         help_text="Debes tener al menos 13 años"
@@ -94,23 +97,23 @@ class RegistroForm(UserCreationForm):
     
     pais = forms.ModelChoiceField(
         queryset=Pais.objects.all(),
-        required=False,
+        required=True,
         widget=forms.Select(attrs={'class': 'form-control form-control-sm'})
     )
     region = forms.ModelChoiceField(
         queryset=Region.objects.all(),
-        required=False,
+        required=True,
         widget=forms.Select(attrs={'class': 'form-control form-control-sm'})
     )
     comuna = forms.ModelChoiceField(
         queryset=Comuna.objects.all(),
-        required=False,
+        required=True,
         widget=forms.Select(attrs={'class': 'form-control form-control-sm'})
     )
     
     ocupacion = forms.ModelMultipleChoiceField(
         queryset=Ocupacion.objects.all(),
-        required=False,
+        required=True,
         widget=forms.SelectMultiple(attrs={
             'class': 'form-control form-control-sm',
             'size': '3'
@@ -118,11 +121,20 @@ class RegistroForm(UserCreationForm):
     )
     areas_interes = forms.ModelMultipleChoiceField(
         queryset=AreaInteres.objects.all(),
-        required=False,
+        required=True,
         widget=forms.SelectMultiple(attrs={
             'class': 'form-control form-control-sm',
             'size': '3'
         })
+    )
+
+    foto = forms.ImageField(
+        required=False,
+        widget=forms.ClearableFileInput(attrs={
+            'class': 'form-control form-control-sm',
+            'accept': 'image/*'
+        }),
+        help_text="Sube una foto de perfil (opcional)"
     )
 
     class Meta:
@@ -209,6 +221,19 @@ class RegistroForm(UserCreationForm):
         # Por ejemplo, validar que si se selecciona región, también se seleccione país
         
         return cleaned_data
+    
+    def clean_foto(self):
+        foto = self.cleaned_data.get('foto')
+        if foto:
+            # Validar tamaño máximo 8MB
+            if foto.size > 8 * 1024 * 1024:
+                raise ValidationError("La imagen no puede pesar más de 8 MB.")
+
+            # Validar dimensiones mínimas 500x500 px
+            img = Image.open(foto)
+            if img.width > 500 or img.height > 500:
+                raise ValidationError("La imagen debe tener al menos 500px de ancho y alto.")
+        return foto
 
 class LoginForm(AuthenticationForm):
     username = forms.EmailField(

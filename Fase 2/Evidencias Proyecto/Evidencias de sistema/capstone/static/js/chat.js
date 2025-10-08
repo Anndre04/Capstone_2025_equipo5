@@ -1,22 +1,21 @@
+// static/js/chat.js
 let chatSocket = null;
-let notificacionSocket = null;
 let chatIdActual = null;
 
 document.addEventListener('DOMContentLoaded', function () {
-
     // ==========================
     // REFERENCIAS GLOBALES
     // ==========================
     const avatar = document.getElementById('chat-avatar');
     const nombre = document.getElementById('chat-contact-name');
-    const status = document.getElementById('chat-status');
     const mensajesDiv = document.getElementById('chat-messages');
     const chatContainer = document.getElementById('chat-container');
     const user = chatContainer ? chatContainer.dataset.user : null;
     const primeraChatId = chatContainer ? chatContainer.dataset.chatId : null;
-    const contadorGlobal = document.getElementById('contador-conversaciones');
     const $input = $('#message-input');
     const $btn = $('#btn-enviar');
+    const form = document.getElementById('message-form');
+    const input = document.getElementById('message-input');
 
     // ==========================
     // FUNCIONES AUXILIARES
@@ -49,6 +48,80 @@ document.addEventListener('DOMContentLoaded', function () {
         mensajesDiv.scrollTop = mensajesDiv.scrollHeight;
     }
 
+    function actualizarPlaceholderInput(esChatNuevo) {
+        if (input) {
+            input.placeholder = esChatNuevo ? 
+                "Escribe el primer mensaje..." : 
+                "Escribe tu mensaje...";
+        }
+    }
+
+    // ==========================
+    // CARGAR MENSAJES
+    // ==========================
+    function cargarMensajes(chatId) {
+        fetch(`/chat/mensajes/${chatId}/`)
+            .then(resp => {
+                if (!resp.ok) throw new Error(`Error: ${resp.status}`);
+                return resp.json();
+            })
+            .then(data => {
+                if (!mensajesDiv) return;
+                
+                mensajesDiv.innerHTML = '';
+                
+                if (data.chat_nuevo) {
+                    const div = document.createElement('div');
+                    div.className = 'text-center text-muted py-5';
+                    div.innerHTML = `
+                        <div class="mb-3">
+                            <i class="bi bi-chat-dots display-4"></i>
+                        </div>
+                        <h5>¡Comienza la conversación!</h5>
+                        <p class="mb-0">${data.info || 'Envía el primer mensaje'}</p>
+                    `;
+                    mensajesDiv.appendChild(div);
+                } else if (data.mensajes && data.mensajes.length > 0) {
+                    data.mensajes.forEach(msg => {
+                        appendMessage(msg.contenido, msg.es_mio, msg.fecha);
+                    });
+
+                    if (data.total_mensajes > data.mostrando_ultimos) {
+                        const mensajesFaltantes = data.total_mensajes - data.mostrando_ultimos;
+                        const div = document.createElement('div');
+                        div.className = 'text-center text-muted py-2';
+                        div.innerHTML = `<small>... ${mensajesFaltantes} mensajes anteriores</small>`;
+                        mensajesDiv.insertBefore(div, mensajesDiv.firstChild);
+                    }
+                } else {
+                    const div = document.createElement('div');
+                    div.className = 'text-center text-muted py-5';
+                    div.innerHTML = `
+                        <div class="mb-3">
+                            <i class="bi bi-chat-x display-4"></i>
+                        </div>
+                        <p>No hay mensajes en esta conversación</p>
+                    `;
+                    mensajesDiv.appendChild(div);
+                }
+                
+                actualizarPlaceholderInput(data.chat_nuevo);
+            })
+            .catch(err => {
+                if (mensajesDiv) {
+                    mensajesDiv.innerHTML = `
+                        <div class="alert alert-danger text-center">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <p class="mb-0">Error al cargar los mensajes</p>
+                        </div>
+                    `;
+                }
+            });
+    }
+
+    // ==========================
+    // MARCAR MENSAJES COMO LEÍDOS
+    // ==========================
     function marcarLeidos(chatId) {
         fetch(`/chat/marcar_leidos/${chatId}/`, {
             method: 'POST',
@@ -58,19 +131,19 @@ document.addEventListener('DOMContentLoaded', function () {
             },
             body: JSON.stringify({})
         })
-            .then(resp => resp.json())
-            .then(() => {
-                const chatElem = document.querySelector(`.conversation-item[data-id="${chatId}"]`);
-                if (chatElem) {
-                    const badge = chatElem.querySelector('.badge');
-                    if (badge) badge.remove();
-                }
-            })
-            .catch(err => console.error('❌ Error al marcar como leídos:', err));
+        .then(resp => resp.json())
+        .then(() => {
+            const elementos = document.querySelectorAll(`.conversation-item[data-id="${chatId}"]`);
+            elementos.forEach(elem => {
+                const badge = elem.querySelector('.badge');
+                if (badge) badge.remove();
+            });
+        })
+        .catch(err => console.error('Error al marcar como leídos:', err));
     }
 
     // ==========================
-    // CHAT SOCKET
+    // WEBSOCKET DEL CHAT
     // ==========================
     function abrirWebSocket(chatId) {
         if (chatSocket) chatSocket.close();
@@ -80,8 +153,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const url = `${ws_scheme}://${window.location.host}/ws/chat/${chatId}/`;
         chatSocket = new WebSocket(url);
 
-        chatSocket.onopen = () => console.log(`💬 Conectado al chat ${chatId}`);
-        chatSocket.onclose = () => console.log(`💬 Desconectado del chat ${chatId}`);
+        chatSocket.onopen = () => console.log(`Conectado al chat ${chatId}`);
+        chatSocket.onclose = () => console.log(`Desconectado del chat ${chatId}`);
 
         chatSocket.onmessage = function (e) {
             const data = JSON.parse(e.data);
@@ -89,251 +162,126 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     }
 
-    function cargarMensajes(chatId) {
-        fetch(`/chat/mensajes/${chatId}/`)
-            .then(resp => resp.json())
-            .then(data => {
-                if (!mensajesDiv) return;
-                mensajesDiv.innerHTML = '';
-                data.mensajes.forEach(msg => appendMessage(msg.contenido, msg.es_mio, msg.fecha));
-            });
-    }
-
+    // ==========================
+    // SELECCIONAR CHAT
+    // ==========================
     function seleccionarChat(chatId, contacto) {
         if (avatar && nombre) {
             avatar.textContent = contacto.slice(0, 2).toUpperCase();
             nombre.textContent = contacto;
         }
-        if (mensajesDiv) mensajesDiv.innerHTML = '';
 
         abrirWebSocket(chatId);
         cargarMensajes(chatId);
         marcarLeidos(chatId);
 
-
-        // ==========================
-        // MARCAR MENSAJES COMO LEÍDOS EN BACKEND
-        // ==========================
-        fetch(`/chat/marcar_leidos/${chatId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({})
-        })
-            .then(resp => resp.json())
-            .then(() => {
-                // ==========================
-                // ELIMINAR BADGE DEL CHAT ABIERTO
-                // ==========================
-                const chatElemDesktop = document.querySelector(`.conversation-item[data-id="${chatId}"]`);
-                if (chatElemDesktop) {
-                    const badge = chatElemDesktop.querySelector('.badge');
-                    if (badge) badge.remove();
-                }
-
-                const chatElemMobile = document.querySelector(`#lista-conversaciones-movil .conversation-item[data-id="${chatId}"]`);
-                if (chatElemMobile) {
-                    const badge = chatElemMobile.querySelector('.badge');
-                    if (badge) badge.remove();
-                }
-
-                // ==========================
-                // ACTUALIZAR CONTADOR GLOBAL
-                // ==========================
-                const contadorGlobal = document.getElementById('contador-conversaciones');
-                if (contadorGlobal) {
-                    let total = 0;
-                    document.querySelectorAll('.conversation-item .badge').forEach(b => {
-                        total += parseInt(b.textContent || 0);
-                    });
-                    contadorGlobal.textContent = total;
-                    if (total === 0) contadorGlobal.classList.add('d-none');
-                }
-            })
-            .catch(err => console.error('❌ Error al marcar como leídos:', err));
+        if (window.innerWidth <= 767) {
+            const offcanvasEl = document.getElementById('offcanvasConversaciones');
+            const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl) || new bootstrap.Offcanvas(offcanvasEl);
+            bsOffcanvas.hide();
+        }
     }
 
+    // ==========================
+    // ENVIAR MENSAJE
+    // ==========================
     function enviarMensaje(text) {
-        if (!text || !chatSocket) return;
+        if (!text || !chatSocket || chatSocket.readyState !== WebSocket.OPEN) return;
         appendMessage(text, true, new Date().toLocaleString());
         chatSocket.send(JSON.stringify({ message: text }));
     }
 
     // ==========================
-    // FORMULARIO DE MENSAJES
+    // MANEJO DEL FORMULARIO
     // ==========================
-    
+    function manejarEnvioMensaje(e) {
+        if (e) e.preventDefault();
+        
+        const mensaje = input.value.trim();
+        if (mensaje === '' || !chatSocket || chatSocket.readyState !== WebSocket.OPEN) return;
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const form = document.getElementById('message-form');
-        const input = document.getElementById('message-input');
+        enviarMensaje(mensaje);
+        input.value = '';
+        input.focus();
+    }
 
-        if (form && input) {  // Solo agrega el listener si existen
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
+    if (form && input) {
+        form.addEventListener('submit', manejarEnvioMensaje);
+    }
 
-                const mensaje = input.value.trim();
-                if (mensaje === '') return;
-
-                enviarMensaje(mensaje); // tu función para enviar el mensaje
-                input.value = '';
-                input.focus();
-            });
+    $input.on('keypress', function(e) {
+        if (e.which === 13) {
+            e.preventDefault();
+            manejarEnvioMensaje(e);
         }
     });
 
-    $input.on('keypress', e => { if (e.which === 13) form.dispatchEvent(new Event('submit')); });
-
-    $btn.on('click', () => form.dispatchEvent(new Event('submit')));
+    $btn.on('click', function(e) {
+        e.preventDefault();
+        manejarEnvioMensaje(e);
+    });
 
     // ==========================
-    // CLICK EN CONVERSACIONES
+    // EVENTOS DE CONVERSACIONES
     // ==========================
     document.querySelectorAll('.conversation-item').forEach(item => {
         item.addEventListener('click', function () {
             const chatId = this.dataset.id;
             const contacto = this.dataset.contacto;
-
-            // Selecciona el chat
             seleccionarChat(chatId, contacto);
-
-            // Si estamos en móvil y el chat está en el offcanvas, cerrarlo
-            if (window.innerWidth <= 767) {
-                const offcanvasEl = document.getElementById('offcanvasConversaciones');
-                const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl)
-                    || new bootstrap.Offcanvas(offcanvasEl);
-                bsOffcanvas.hide();
-            }
         });
     });
 
     // ==========================
-    // ABRIR PRIMER CHAT AUTOMÁTICAMENTE
+    // INICIALIZAR PRIMER CHAT
     // ==========================
-    if (primeraChatId) {
-        const primerItem = document.querySelector(`.conversation-item[data-id="${primeraChatId}"]`);
-        if (primerItem) primerItem.click();
+    function inicializarPrimerChat() {
+        if (primeraChatId) {
+            const primerItem = document.querySelector(`.conversation-item[data-id="${primeraChatId}"]`);
+            if (primerItem) {
+                const contacto = primerItem.dataset.contacto;
+                seleccionarChat(primeraChatId, contacto);
+            } else {
+                seleccionarChat(primeraChatId, 'Contacto');
+            }
+        }
     }
 
+    inicializarPrimerChat();
+
     // ==========================
-    // ACTUALIZAR LISTA DE CHATS (Desktop y Móvil)
+    // ACTUALIZAR LISTA DE CHATS
     // ==========================
     function actualizarChatLista(chatId, mensaje) {
-        console.log("🧩 Actualizando chat:", chatId);
+        const elementos = document.querySelectorAll(`.conversation-item[data-id="${chatId}"]`);
+        const esChatActual = chatIdActual === chatId;
 
-        // === PANEL DE ESCRITORIO ===
-        const listaDesktop = document.getElementById('lista-conversaciones');
-        if (listaDesktop) {
-            const chatElem = listaDesktop.querySelector(`.conversation-item[data-id="${chatId}"]`);
-            if (chatElem) {
-                console.log("💻 Chat encontrado en panel de escritorio:", chatElem);
+        elementos.forEach(chatElem => {
+            const ultimoMsg = chatElem.querySelector('.conversation-last-msg, .small');
+            if (ultimoMsg) ultimoMsg.textContent = mensaje;
 
-                // Actualiza último mensaje
-                const ultimoMsg = chatElem.querySelector('.conversation-last-msg');
-                if (ultimoMsg) ultimoMsg.textContent = mensaje;
-
-                // Si el chat no está activo, muestra o incrementa badge
-                if (chatIdActual != chatId) {
-                    let badge = chatElem.querySelector('.badge');
-                    if (!badge) {
-                        badge = document.createElement('span');
-                        badge.className = 'badge bg-danger rounded-pill position-absolute end-0 me-3';
-                        badge.textContent = "1";
-                        chatElem.appendChild(badge);
-                    } else {
-                        badge.textContent = parseInt(badge.textContent || 0) + 1;
-                    }
+            if (!esChatActual) {
+                let badge = chatElem.querySelector('.badge');
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'badge bg-danger rounded-pill position-absolute end-0 me-3';
+                    badge.textContent = "1";
+                    chatElem.appendChild(badge);
                 } else {
-                    const badge = chatElem.querySelector('.badge');
-                    if (badge) badge.remove();
+                    badge.textContent = parseInt(badge.textContent || 0) + 1;
                 }
-
-                // Mover chat al inicio de la lista
-                listaDesktop.prepend(chatElem);
             } else {
-                console.warn("⚠️ No se encontró chat en escritorio con id:", chatId);
+                const badge = chatElem.querySelector('.badge');
+                if (badge) badge.remove();
             }
-        }
 
-        // === PANEL OFFCANVAS (MÓVIL) ===
-        const listaMovil = document.getElementById('lista-conversaciones-movil');
-        if (listaMovil) {
-            const chatElemMobile = listaMovil.querySelector(`.conversation-item[data-id="${chatId}"]`);
-            if (chatElemMobile) {
-                const ultimoMsg = chatElemMobile.querySelector('.small');
-                if (ultimoMsg) ultimoMsg.textContent = mensaje;
-
-                if (chatIdActual != chatId) {
-                    let badge = chatElemMobile.querySelector('.badge');
-                    if (!badge) {
-                        badge = document.createElement('span');
-                        badge.className = 'badge bg-danger rounded-pill position-absolute end-0 me-3';
-                        badge.textContent = "1";
-                        chatElemMobile.appendChild(badge);
-                    } else {
-                        badge.textContent = parseInt(badge.textContent || 0) + 1;
-                    }
-                } else {
-                    const badge = chatElemMobile.querySelector('.badge');
-                    if (badge) badge.remove();
-                }
-
-                // Mover chat al inicio de la lista móvil
-                listaMovil.prepend(chatElemMobile);
-            }
-        }
-
-        // === CONTADOR GLOBAL (si existe) ===
-        const contadorGlobal = document.getElementById('contador-conversaciones');
-        if (contadorGlobal && chatIdActual != chatId) {
-            contadorGlobal.textContent = parseInt(contadorGlobal.textContent || 0) + 1;
-            contadorGlobal.classList.remove('d-none');
-        }
+            const lista = chatElem.closest('#lista-conversaciones, #lista-conversaciones-movil');
+            if (lista) lista.prepend(chatElem);
+        });
     }
 
     // ==========================
-    // WEBSOCKET DE NOTIFICACIONES
-    // ==========================
-    function conectarNotificaciones() {
-        const ws_scheme = window.location.protocol === "https:" ? "wss" : "ws";
-        const notificacionSocket = new WebSocket(`${ws_scheme}://${window.location.host}/ws/notificaciones/`);
-        console.log("🌐 Conectando WebSocket de notificaciones...");
-
-        notificacionSocket.onopen = () => console.log("🔔 WebSocket de notificacion conectado ");
-
-        notificacionSocket.onmessage = function (e) {
-            try {
-                const data = JSON.parse(e.data);
-                console.log("📩 Notificación recibida:", data);
-
-                actualizarChatLista(data.chat_id, data.mensaje);
-
-                if (chatIdActual == data.chat_id) {
-                    fetch(`/chat/marcar_leidos/${data.chat_id}/`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken')
-                        }
-                    }).catch(err => console.error('❌ Error al marcar como leídos:', err));
-                }
-            } catch (err) {
-                console.error('❌ Error procesando notificación:', err, e.data);
-            }
-        };
-
-        notificacionSocket.onclose = () => {
-            console.warn("🔔 WebSocket desconectado, reintentando en 5s...");
-            setTimeout(conectarNotificaciones, 5000);
-        };
-    }
-
-    conectarNotificaciones();
-    
-    // ==========================
-    // OFFCANVAS MÓVIL (≤767px)
+    // OFFCANVAS MÓVIL
     // ==========================
     const toggleBtn = document.getElementById('toggleConversations');
     if (toggleBtn) {
@@ -344,5 +292,37 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-});
 
+    // ==========================
+    // FUNCIÓN PARA NOTIFICACIONES
+    // ==========================
+    window.manejarNotificacionMensaje = function(notificacion) {
+        const chatId = notificacion.datos_extra?.chat_id;
+        const mensaje = notificacion.mensaje;
+        
+        if (!chatId) return;
+
+        // Actualizar lista de chats
+        actualizarChatLista(chatId, mensaje);
+
+        // Si el chat está abierto, marcar como leído
+        if (chatIdActual == chatId) {
+            fetch(`/chat/marcar_leidos/${chatId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            }).catch(err => console.error('Error al marcar como leídos:', err));
+            
+            // Mostrar mensaje en chat activo si es de otro usuario
+            const senderId = notificacion.datos_extra?.sender_id;
+            if (senderId && chatContainer) {
+                const currentUserId = chatContainer.dataset.user;
+                if (senderId != currentUserId) {
+                    appendMessage(mensaje, false, new Date().toLocaleString());
+                }
+            }
+        }
+    };
+});

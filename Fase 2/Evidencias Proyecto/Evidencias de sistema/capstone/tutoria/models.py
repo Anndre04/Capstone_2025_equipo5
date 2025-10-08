@@ -54,9 +54,20 @@ class Tutor(models.Model):
 
     
 class Archivo(models.Model):
+
+    estado = [
+        ("Revisado", "Revisado"),
+        ("Pendiente", "Pendiente"),
+        ("Rechazado", "Rechazado"),
+    ]
+
     nombre = models.CharField(max_length=80, null=True)
     contenido = models.CharField(max_length=200)
     tutor = models.ForeignKey(Tutor, on_delete=models.PROTECT, related_name="archivos", null=True)
+    estado = models.CharField(max_length=20, choices=estado, null=True)
+
+    def __str__(self):
+        return self.nombre
     
 class TutorArea(models.Model):
     tutor = models.ForeignKey(to=Tutor, on_delete=models.PROTECT, null=True)
@@ -72,6 +83,13 @@ class TutorArea(models.Model):
         return self.area.nombre
 
 class Anuncio(models.Model):
+
+    estado = [
+        ("Activo", "Activo"),
+        ("Deshabilitado", "Deshabilitado"),
+        ("Eliminado", "Eliminado"),
+    ]
+
     tutor = models.ForeignKey(to=Tutor, on_delete=models.PROTECT, related_name="anuncios")
     area = models.ForeignKey(to=TutorArea, on_delete=models.PROTECT, null=True)
     titulo = models.CharField(max_length=200)
@@ -81,13 +99,13 @@ class Anuncio(models.Model):
             MaxValueValidator(1000000)
         ])
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    activo = models.BooleanField(default=True)
+    estado = models.CharField(max_length=20, choices=estado)
 
     def clean(self):
         # Validar que el tutor no tenga otro anuncio con la misma área activo
-        if Anuncio.objects.filter(tutor=self.tutor, area=self.area, activo=True).exclude(id=self.id).exists():
+        if Anuncio.objects.filter(tutor=self.tutor, area=self.area, estado=['Activo', 'Deshabilitado']).exclude(id=self.id).exists():
             from django.core.exceptions import ValidationError
-            raise ValidationError(f"Ya existe un anuncio activo para el área {self.area}.")
+            raise ValidationError(f"Ya existe un anuncio creado para el área de: {self.area}.")
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -113,6 +131,9 @@ class Disponibilidad(models.Model):
     mañana = models.BooleanField(default=False)
     tarde = models.BooleanField(default=False)
     noche = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.anuncio.id} - {self.dia} - {self.mañana}"
     
 class Tutoria(models.Model):
     solicitud = models.OneToOneField(

@@ -3,6 +3,10 @@ from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
 from django.utils import timezone
 from .models import Mensaje
+from .filters import filtro_lenguaje
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ChatConsumer(WebsocketConsumer):
 
@@ -23,51 +27,43 @@ class ChatConsumer(WebsocketConsumer):
 
 
     def receive(self, text_data):
-        print("mensaje recibido")
-
         try:
             text_data_json = json.loads(text_data)
             message = text_data_json['message']
-
-            #se obtiene id del usuario que envia el msj
+            
+            # ... (tu código existente de validación y filtro)
+            
             if self.scope['user'].is_authenticated:
                 sender_id = self.scope['user'].id
-            else:
-                None
-
-            if sender_id:
-
-                # Se guarda en BD
+                
+                # Guardar mensaje en BD (código existente)
                 message_save = Mensaje.objects.create(
                     user_id=self.user.id,
                     chat_id=self.id,
-                    mensaje=message,
+                    mensaje=message,  # o mensaje_limpio si usas filtro
                     enviado=True,
                     leido=False
                 )
-                message_save.save()
-
-                # Sync y enviamos mensaje al chat
+                
+                # ✅ EL SIGNAL SE ENCARGARÁ DE LA NOTIFICACIÓN AUTOMÁTICAMENTE
+                # Ya no necesitas enviar notificación manual aquí
+                
+                # Solo enviar el mensaje al grupo del chat
                 async_to_sync(self.channel_layer.group_send)(
                     self.chat_name,
                     {
                         'type': 'chat_message',
                         'message': message,
-                        'username': self.user.email,
-                        'datetime': timezone.localtime(timezone.now()).strftime('%Y-%m-%d %H:%M:%S'),
+                        'username': self.user.get_username(),
+                        'datetime': timezone.localtime(timezone.now()).isoformat(),
                         'sender_id': sender_id,
-                        'chat_id': self.id  # <-- AGREGAR ESTO
+                        'message_id': message_save.id,
+                        'chat_id': self.id
                     }
                 )
-            else:
-                print("usuario no autenticado, ignorando mensaje")
-
-        except json.JSONDecodeError as e:
-            print("error al decodificad el json: ", e)
-        except KeyError as e:
-            print('Clave faltan en el json')
+                
         except Exception as e:
-            print("error desconocido: ", e)
+            logger.error(f"Error en receive: {e}")
 
         
     def chat_message(self, event):

@@ -4,15 +4,17 @@
 {% block title %}Chat - Tutorías Online{% endblock %}
 
 {% block content %}
+<!-- CHAT CONTAINER CORREGIDO - usar firstof para evitar valores vacíos -->
 <div id="chat-container" 
       data-user="{{ request.user.username }}" 
-      data-chat-id="{% if chat_data %}{{ chat_data.0.id }}{% endif %}">
-  </div>
+      data-chat-id="{% firstof chat_data.0.id '' %}">
+</div>
+
 <div class="container-fluid px-2 px-md-3 py-3 py-md-4">
   <div class="row g-3 g-md-4">
 
-    <!-- OFFCANVASS -->
-  <div class="offcanvas offcanvas-start d-block d-md-none" tabindex="-1" id="offcanvasConversaciones" aria-labelledby="offcanvasConversacionesLabel">
+    <!-- OFFCANVAS -->
+    <div class="offcanvas offcanvas-start d-block d-md-none" tabindex="-1" id="offcanvasConversaciones" aria-labelledby="offcanvasConversacionesLabel">
       <div class="offcanvas-header">
         <h5 class="offcanvas-title fw-bold" id="offcanvasConversacionesLabel">Conversaciones</h5>
         <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
@@ -29,11 +31,15 @@
             </div>
             <div class="flex-grow-1 min-width-0">
               <h6 class="mb-0 fw-bold text-truncate">{{ chat.contacto }}</h6>
-              <p class="mb-0 text-truncate small">{{ chat.ultimo_mensaje }}</p>
+              <p class="mb-0 text-truncate small">{{ chat.ultimo_mensaje|default:"Sin mensajes" }}</p>
             </div>
             {% if chat.no_leidos > 0 %}
             <span class="badge bg-danger rounded-pill ms-2">{{ chat.no_leidos }}</span>
             {% endif %}
+          </div>
+          {% empty %}
+          <div class="text-center py-5">
+            <p class="text-muted">No tienes conversaciones</p>
           </div>
           {% endfor %}
         </div>
@@ -62,19 +68,21 @@
               </div>
               <div class="flex-grow-1 min-width-0">
                 <h6 class="mb-0 fw-bold text-truncate conversation-name">{{ chat.contacto }}</h6>
-                <p class="mb-0 text-truncate small conversation-last-msg">{{ chat.ultimo_mensaje }}</p>
+                <p class="mb-0 text-truncate small conversation-last-msg">{{ chat.ultimo_mensaje|default:"Sin mensajes" }}</p>
               </div>
               {% if chat.no_leidos > 0 %}
                 <span class="badge bg-danger rounded-pill ms-2" id="badge-{{ chat.id }}">{{ chat.no_leidos }}</span>
               {% endif %}
             </div>
           </div>
+          {% empty %}
+          <div class="text-center py-5">
+            <p class="text-muted">No tienes conversaciones</p>
+          </div>
           {% endfor %}
         </div>
       </div>
     </div>
-
-    
 
     <!-- PANEL PRINCIPAL - CHAT -->
     <div class="col-12 col-md-7 col-lg-8 col-xl-9">
@@ -89,18 +97,19 @@
                   data-bs-toggle="offcanvas" 
                   data-bs-target="#offcanvasConversaciones" 
                   aria-controls="offcanvasConversaciones">
-            <i class="bi bi-list"></i>
-          </button>
-
+              <i class="bi bi-list"></i>
+            </button>
             
             <div class="d-flex align-items-center flex-grow-1">
-              <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
+              <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
                    style="width: 45px; height: 45px;">
-                <span class="text-white fw-bold" id="chat-avatar"></span>
+                <span class="text-white fw-bold" id="chat-avatar">?</span>
               </div>
               <div class="min-width-0">
-                <h5 class="mb-0 fw-bold text-truncate" id="chat-contact-name"></h5>
-                <small class="text-muted text-truncate d-block" id="chat-contact-subject"><span id="chat-status"></span></small>
+                <h5 class="mb-0 fw-bold text-truncate" id="chat-contact-name">Selecciona una conversación</h5>
+                <small class="text-muted text-truncate d-block" id="chat-status">
+                  <span id="estado-conexion">Desconectado</span>
+                </small>
               </div>
             </div>
             
@@ -114,24 +123,31 @@
         <!-- ÁREA DE MENSAJES -->
         <div class="card-body p-0 d-flex flex-column">
           <div id="chat-messages" class="p-3 p-md-4 flex-grow-1" style="min-height: 400px; max-height: 60vh; overflow-y: auto;">
-            <!-- Los mensajes se cargan dinámicamente vía JS -->
+            <!-- ESTADO INICIAL -->
+            <div class="h-100 d-flex flex-column align-items-center justify-content-center text-center text-muted">
+              <div class="mb-3">
+                <i class="bi bi-chat-dots display-4"></i>
+              </div>
+              <h5>Selecciona una conversación</h5>
+              <p class="mb-0">Elige un chat para comenzar a enviar mensajes</p>
+            </div>
           </div>
 
-          <!-- INPUT PARA ENVIAR MENSAJES -->
+          <!-- INPUT PARA ENVIAR MENSAJES - CORREGIDO -->
           <div class="border-top p-3 p-md-4">
-            <form id="message-form" class="d-flex gap-2 gap-md-3 align-items-center">
-                {% csrf_token %}
+            <!-- FORMULARIO CORREGIDO: sin csrf_token y con action javascript:void(0) -->
+            <form id="message-form" class="d-flex gap-2 gap-md-3 align-items-center" action="javascript:void(0)">
                 <div class="flex-grow-1">
                     <input type="text" 
                           class="form-control form-control-md" 
-                          placeholder="Escribe tu mensaje..." 
+                          placeholder="Selecciona una conversación para enviar mensajes..." 
                           id="message-input">
                 </div>
                 <button type="submit" class="btn btn-primary px-3 px-md-4 flex-shrink-0" id="btn-enviar">
                     <i class="bi bi-send"></i>
                 </button>
             </form>
-        </div>
+          </div>
         </div>
       </div>
     </div>
@@ -140,17 +156,15 @@
 </div>
 
 <style>
-/* Contenedor del nombre + último mensaje */
 .conversation-item .flex-grow-1 {
-    min-width: 0; /* clave para que el texto se trunque correctamente */
+    min-width: 0;
     max-width: 70%;
 }
 
-/* Último mensaje truncado con ... */
 .conversation-item .conversation-last-msg {
-    white-space: nowrap;        /* No permitir saltos de línea */
-    overflow: hidden;           /* Oculta el contenido que se sale */
-    text-overflow: ellipsis;    /* Muestra ... al final */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     margin: 0;
 }
 
@@ -165,10 +179,7 @@
 
 .conversation-item.active {
   background-color: #e3f2fd !important;
-}
-
-.quick-msg {
-  transition: all 0.2s ease;
+  border-left: 3px solid #0d6efd;
 }
 
 .mensaje-nuevo {
@@ -186,35 +197,17 @@
   }
 }
 
-/* Estilos para panel móvil */
-.mobile-conversations {
-  position: fixed;
-  top: 0;
-  left: -100%;
-  width: 85%;
-  height: 100%;
-  z-index: 1050;
-  transition: left 0.3s ease;
-  background: white;
+/* Indicador de estado de conexión */
+#estado-conexion.text-success::before {
+  content: "🟢 ";
 }
 
-.mobile-conversations.show {
-  left: 0;
+#estado-conexion.text-danger::before {
+  content: "🔴 ";
 }
 
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.5);
-  z-index: 1040;
-  display: none;
-}
-
-.overlay.show {
-  display: block;
+#estado-conexion.text-muted::before {
+  content: "⚫ ";
 }
 
 /* Mejoras de responsividad para móviles */
@@ -228,20 +221,17 @@
     max-height: 65vh;
     padding: 1rem;
   }
-  
-  #quick-buttons {
-    justify-content: center;
-  }
-  
-  .quick-msg {
-    font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-  }
 }
+
 @media (min-width: 768px) {
   #offcanvasConversaciones {
     display: none !important;
   }
+}
+
+/* Estados iniciales */
+.text-muted i {
+  opacity: 0.5;
 }
 </style>
 {% endblock %}
