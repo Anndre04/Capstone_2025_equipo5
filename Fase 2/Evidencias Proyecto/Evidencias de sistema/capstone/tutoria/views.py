@@ -203,28 +203,35 @@ def enviar_solicitud(request, anuncio_id):
         return redirect('tutoria:anunciotutor', anuncio_id=anuncio.id)
 
     # Validar que no se envíe solicitud a sí mismo
-    if anuncio.tutor == request.user:
+    if anuncio.tutor.usuario == request.user:
         messages.error(request, "No puedes enviarte una solicitud a ti mismo.")
         return redirect('tutoria:anunciotutor', anuncio_id=anuncio.id)
 
-    # Validar solicitud duplicada
-    if Solicitud.objects.filter(usuarioenvia=request.user, anuncio=anuncio).exists():
-        messages.error(request, "Ya enviaste una solicitud a este tutor.")
+    # Buscar solicitudes existentes que NO estén canceladas ni rechazadas
+    solicitud_existente = Solicitud.objects.filter(
+        usuarioenvia=request.user,
+        usuarioreceive=anuncio.tutor.usuario
+    ).exclude(estado__in=["Cancelada", "Rechazada"]).first()
+
+    if solicitud_existente:
+        messages.error(request, "Ya tienes una solicitud activa para este tutor.")
         return redirect('tutoria:anunciotutor', anuncio_id=anuncio.id)
 
-    # Crear solicitud
+    # Crear nueva solicitud
     tipo, _ = TipoSolicitud.objects.get_or_create(nombre="Alumno")
     mensaje = request.POST.get("mensaje", "").strip()
+
     Solicitud.objects.create(
         usuarioenvia=request.user,
         usuarioreceive=anuncio.tutor.usuario,
         tipo=tipo,
         mensaje=mensaje,
-        anuncio=anuncio
+        anuncio=anuncio,
+        estado="Pendiente"
     )
+
     messages.success(request, "Solicitud enviada correctamente.")
-    
-    return redirect('tutoria:anunciotutor', anuncio_id=anuncio.id)
+    return redirect('solicitudesusuario', user_id=request.user.id)
 
 @login_required
 def solicitudesprof(request, user_id):
@@ -275,10 +282,12 @@ def gestortutorias(request):
     
     return render(request, 'tutoria/gestortutorias.html',)
 
-def perfil(request):
-    
-    return render(request, 'tutoria/perfil.html',)
+def perfiltutor(request, tutor_id):
 
-def perfilusuario(request):
+    tutor = get_object_or_404(Tutor, id=tutor_id)
+
+    contexto = {
+        'tutor' : tutor
+    }
     
-    return render(request, 'tutoria/perfilusuario.html',)
+    return render(request, 'tutoria/perfiltutor.html', contexto)

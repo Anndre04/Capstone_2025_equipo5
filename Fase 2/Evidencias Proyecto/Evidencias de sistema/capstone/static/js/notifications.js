@@ -384,5 +384,14 @@ class NotificationManager {
 
 // Inicializar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
-    window.notificationManager = new NotificationManager();
+     // Verificar si hay CSRF token
+    function getCookie(name) {
+        let value = `; ${document.cookie}`;
+        let parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+    
+    if (getCookie('csrftoken')) {
+        window.notificationManager = new NotificationManager();
+    }
 });

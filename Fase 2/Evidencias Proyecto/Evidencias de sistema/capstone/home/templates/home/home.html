@@ -9,18 +9,15 @@
 
     <!-- BANNER -->
     {% if not user.is_authenticated %}
-    <div class="alert alert-primary border-0 rounded-3 shadow-sm mb-5 text-center position-relative overflow-hidden"
-        style="background: linear-gradient(135deg, #0056b3, #0088cc); color: white; min-height: 140px; display: flex; align-items: center;">
-        <div class="position-relative z-2 w-100">
-            <h5 class="fw-semibold mb-2">¿Aún no tienes una cuenta?</h5>
-            <p class="mb-3">Únete gratis y comienza a conectar con tutores expertos en línea.</p>
-            <a href="{% url 'registro' %}" class="btn btn-light fw-semibold shadow-sm px-4">
-                <i class="bi bi-person-plus me-2"></i>Registrarme ahora
-            </a>
+    <a href="{% url 'registro' %}">
+        <div class="alert alert-primary border-0 rounded-3 shadow-sm mb-5 text-center position-relative overflow-hidden"
+            style="background: linear-gradient(135deg, #0056b3, #0088cc); color: white; min-height: 140px; display: flex; align-items: center;">
+            <div class="position-relative z-2 w-100">
+                <h5 class="fw-semibold mb-2">¿Aún no tienes una cuenta?</h5>
+                <p class="mb-3">Únete gratis y comienza a conectar con tutores expertos en línea.</p>
+            </div>
         </div>
-        <div class="position-absolute top-0 start-0 w-100 h-100" style="background: center/cover; opacity: 0.15;">
-        </div>
-    </div>
+    </a>
     {% endif %}
 
     <!-- HERO -->

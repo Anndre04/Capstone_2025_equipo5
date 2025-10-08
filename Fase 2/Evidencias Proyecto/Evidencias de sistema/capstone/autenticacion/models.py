@@ -39,7 +39,7 @@ class Ocupacion(models.Model):
     nombre = models.CharField(max_length=100)
 
     def __str__(self):
-        return self.nombre
+        return f"{self.nombre}, ID: {str(self.id)}"
 
 class Institucion(models.Model):
     nombre = models.CharField(max_length=200)
@@ -81,7 +81,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     region = models.ForeignKey(to=Region, on_delete=models.PROTECT, null=True, blank=True)
     comuna = models.ForeignKey(to=Comuna, on_delete=models.PROTECT, null=True, blank=True)
     fecha_nac = models.DateField(null=True, blank=True)
-    ocupacion = models.ManyToManyField(to=Ocupacion)
+    ocupacion = models.ForeignKey(to=Ocupacion, on_delete=models.PROTECT, null=True, blank=True)
     institucion = models.ForeignKey(to=Institucion, on_delete=models.PROTECT, null=True, blank=True)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)

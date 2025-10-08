@@ -1,25 +1,31 @@
-# home/consumers.py (o donde tengas tu NotificacionConsumer)
+# home/consumers.py
 import json
 import logging
 from channels.generic.websocket import WebsocketConsumer
 from asgiref.sync import async_to_sync
-from .models import Notificacion
+from django.contrib.auth.models import AnonymousUser
 
 logger = logging.getLogger(__name__)
 
 class NotificacionConsumer(WebsocketConsumer):
     def connect(self):
-        self.user = self.scope['user']
-        if self.user.is_authenticated:
-            self.group_name = f'notificaciones_{self.user.id}'
-            async_to_sync(self.channel_layer.group_add)(
-                self.group_name,
-                self.channel_name
-            )
-            self.accept()
-            logger.info(f"Usuario {self.user.id} conectado a notificaciones")
-        else:
+        # Verificar autenticación
+        if self.scope["user"].is_anonymous:
+            logger.warning("❌ Usuario anónimo intentó conectar a notificaciones")
             self.close()
+            return
+        
+        self.user = self.scope["user"]
+        self.group_name = f'notificaciones_{self.user.id}'
+        
+        # Unirse al grupo de notificaciones del usuario
+        async_to_sync(self.channel_layer.group_add)(
+            self.group_name,
+            self.channel_name
+        )
+        
+        self.accept()
+        logger.info(f"✅ Usuario {self.user.id} conectado a notificaciones")
 
     def disconnect(self, close_code):
         if hasattr(self, 'group_name'):
@@ -27,12 +33,17 @@ class NotificacionConsumer(WebsocketConsumer):
                 self.group_name,
                 self.channel_name
             )
-            logger.info(f"Usuario {self.user.id} desconectado de notificaciones")
+            logger.info(f"🔌 Usuario {self.user.id} desconectado de notificaciones")
+
+    def receive(self, text_data):
+        try:
+            data = json.loads(text_data)
+            logger.info(f"📨 Mensaje recibido de usuario {self.user.id}: {data}")
+        except json.JSONDecodeError:
+            logger.error("❌ Error decodificando JSON")
 
     def send_notificacion(self, event):
-        """
-        Handler para enviar notificaciones al WebSocket
-        """
+        """Handler para enviar notificaciones al WebSocket"""
         try:
             self.send(text_data=json.dumps({
                 "type": "notificacion",
@@ -48,4 +59,4 @@ class NotificacionConsumer(WebsocketConsumer):
                 "datos_extra": event["datos_extra"]
             }))
         except Exception as e:
-            logger.error(f"Error enviando notificación por WebSocket: {e}")
+            logger.error(f"❌ Error enviando notificación: {e}")

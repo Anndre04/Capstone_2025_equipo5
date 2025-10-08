@@ -25,14 +25,20 @@ class Solicitud(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     estado = models.CharField(
         max_length=20,
-        choices=[("Pendiente", "Pendiente"), ("Aceptada", "Aceptada"), ("Rechazada", "Rechazada")],
+        choices=[("Pendiente", "Pendiente"), ("Aceptada", "Aceptada"), ("Rechazada", "Rechazada"), ("Cancelada", "Cancelada")],
         default="Pendiente"
     )
 
     anuncio = models.ForeignKey("Anuncio", on_delete=models.PROTECT, null=True, blank=True)
 
     class Meta:
-        unique_together = ('usuarioenvia', 'usuarioreceive') 
+        constraints = [
+            models.UniqueConstraint(
+                fields=['usuarioenvia', 'usuarioreceive'],
+                condition=models.Q(estado__in=['Pendiente', 'Aceptada']),
+                name='unique_solicitud_activa'
+            )
+        ]
 
     def __str__(self):
         return f"Solicitud {self.tipo.nombre} de {self.usuarioenvia.email}"

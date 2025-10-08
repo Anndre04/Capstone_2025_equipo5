@@ -111,21 +111,15 @@ class RegistroForm(UserCreationForm):
         widget=forms.Select(attrs={'class': 'form-control form-control-sm'})
     )
     
-    ocupacion = forms.ModelMultipleChoiceField(
+    ocupacion = forms.ModelChoiceField(
         queryset=Ocupacion.objects.all(),
         required=True,
-        widget=forms.SelectMultiple(attrs={
-            'class': 'form-control form-control-sm',
-            'size': '3'
-        })
+        widget=forms.Select(attrs={'class': 'form-control form-control-sm'})
     )
     areas_interes = forms.ModelMultipleChoiceField(
         queryset=AreaInteres.objects.all(),
         required=True,
-        widget=forms.SelectMultiple(attrs={
-            'class': 'form-control form-control-sm',
-            'size': '3'
-        })
+        widget=forms.SelectMultiple(attrs={'class': 'form-control form-control-sm', 'size': 5})
     )
 
     foto = forms.ImageField(

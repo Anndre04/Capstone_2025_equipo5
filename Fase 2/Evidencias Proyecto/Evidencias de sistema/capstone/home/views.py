@@ -1,9 +1,12 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
+from django.contrib import messages
+from autenticacion.models import Usuario
 from tutoria.models import Anuncio, Tutor
 from django.contrib.auth.decorators import login_required
 from autenticacion.models import AreaInteres
 from .models import Notificacion
+from tutoria.models import Solicitud, Anuncio, Tutor
 
 # Create your views here.
 
@@ -90,3 +93,45 @@ def marcar_todas_leidas(request):
     """Marca todas las notificaciones como leídas"""
     Notificacion.objects.filter(usuario=request.user, leida=False).update(leida=True)
     return JsonResponse({'success': True})
+
+@login_required
+def perfilusuario(request, user_id):
+
+    usuario = get_object_or_404(Usuario, id=user_id)
+
+    contexto = {
+        'usuario': usuario
+    }
+
+    return render(request, 'home/perfilusuario.html', contexto)
+
+@login_required
+def solicitudesusuario(request, user_id):
+
+    usuario = get_object_or_404(Usuario, id=user_id)
+    
+    solicitudes = Solicitud.objects.filter(usuarioenvia=usuario, estado__in=["Aceptada", "Pendiente", "Rechazada"])
+
+    print(solicitudes)
+    
+    contexto = {
+        'solicitudes': solicitudes,
+    }
+    
+    return render(request, 'home/solicitudesusuario.html', contexto)
+
+@login_required
+def cancelarsolicitud(request, solicitud_id):
+    solicitud = get_object_or_404(Solicitud, id=solicitud_id)
+
+    # Validar que el usuario sea quien la envió
+    if solicitud.usuarioenvia != request.user:
+        messages.error(request, "No tienes permiso para cancelar esta solicitud.")
+        return redirect('home')  # Cambia a tu URL real
+
+    if request.method == 'POST':
+        solicitud.estado = "Cancelada"
+        solicitud.save()
+
+    messages.success(request, "Solicitud cancelada exitosamente.")
+    return redirect('solicitudesusuario', user_id=request.user.id )

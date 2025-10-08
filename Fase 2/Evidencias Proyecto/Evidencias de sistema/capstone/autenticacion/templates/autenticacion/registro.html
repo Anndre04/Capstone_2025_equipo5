@@ -118,54 +118,25 @@
               </div>
             </div>
 
-            <!-- OCUPACIÓN - NUEVO DISEÑO CON RADIO BUTTONS -->
             <div class="mb-3">
-              <label class="form-label fw-semibold small">Ocupación</label>
-              <div class="ocupacion-container">
-                <div class="form-check mb-2">
-                  <input class="form-check-input ocupacion-radio" type="radio" name="ocupacion_radio" id="ocupacion_estudiante" value="estudiante">
-                  <label class="form-check-label" for="ocupacion_estudiante">
-                    Estudiante
-                  </label>
-                </div>
-                <div class="form-check mb-2">
-                  <input class="form-check-input ocupacion-radio" type="radio" name="ocupacion_radio" id="ocupacion_trabajador" value="trabajador">
-                  <label class="form-check-label" for="ocupacion_trabajador">
-                    Trabajador
-                  </label>
-                </div>
-                <div class="form-check mb-2">
-                  <input class="form-check-input ocupacion-radio" type="radio" name="ocupacion_radio" id="ocupacion_ambos" value="ambos">
-                  <label class="form-check-label" for="ocupacion_ambos">
-                    Ambos (Estudiante y Trabajador)
-                  </label>
-                </div>
-                <div class="form-check">
-                  <input class="form-check-input ocupacion-radio" type="radio" name="ocupacion_radio" id="ocupacion_ninguno" value="ninguno">
-                  <label class="form-check-label" for="ocupacion_ninguno">
-                    Ninguno
-                  </label>
-                </div>
-              </div>
-              <input type="hidden" name="ocupacion" id="ocupacionInput" value="">
-              {% if form.ocupacion.errors %}
-                <div class="text-danger small">{{ form.ocupacion.errors }}</div>
-              {% endif %}
+              <label for="ocupacion" class="form-label fw-semibold small">Ocupación</label>
+              <select name="ocupacion" id="ocupacion" class="form-select form-select-sm">
+                {% for ocup in ocupaciones %}
+                  <option value="{{ ocup.id }}"
+                    {% if form.data.ocupacion and ocup.id|stringformat:"s" == form.data.ocupacion %}selected{% endif %}>
+                    {{ ocup.nombre }}
+                  </option>
+                {% endfor %}
+              </select>
             </div>
 
             <!-- AREAS DE INTERES - NUEVO DISEÑO -->
             <div class="mb-3">
-              <label class="form-label fw-semibold small">Áreas de Interés (Puedes seleccionar varias)</label>
-              <div class="areas-interes-container">
-                <div class="areas-grid" id="areasGrid">
-                  <!-- Las áreas se cargarán aquí dinámicamente -->
-                </div>
-                <div class="selected-tags-container mt-3" id="selectedTags">
-                  <!-- Las etiquetas seleccionadas aparecerán aquí -->
-                </div>
-                <input type="hidden" name="areas_interes" id="areasInteresInput" value="">
-              </div>
-              <div class="form-text small">Haz clic en las áreas que te interesen</div>
+                <label class="form-label fw-semibold small">Áreas de Interés (Puedes seleccionar varias)</label>
+                {{ form.areas_interes }}
+                {% if form.areas_interes.errors %}
+                    <div class="text-danger small">{{ form.areas_interes.errors }}</div>
+                {% endif %}
             </div>
 
             <!-- CONTRASEÑAS MEJORADAS -->
@@ -354,201 +325,81 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // ===== GESTIÓN DE OCUPACIÓN =====
-  const ocupacionRadios = document.querySelectorAll('.ocupacion-radio');
-  const ocupacionInput = document.getElementById('ocupacionInput');
-  const originalOcupacionSelect = document.getElementById('{{ form.ocupacion.id_for_label }}');
-  
-  // Ocultar el select original de ocupación
-  if (originalOcupacionSelect) {
-    originalOcupacionSelect.style.display = 'none';
-  }
-  
-  // Manejar cambios en los radio buttons
-  ocupacionRadios.forEach(radio => {
-    radio.addEventListener('change', function() {
-      updateOcupacionInput();
-    });
-  });
-  
-  // Función para actualizar el input oculto con los valores seleccionados
-  function updateOcupacionInput() {
-    const selectedRadio = document.querySelector('.ocupacion-radio:checked');
-    
-    if (selectedRadio) {
-      const value = selectedRadio.value;
-      
-      // Mapear los valores a IDs que coincidan con el select original
-      let ocupacionValues = [];
-      
-      switch(value) {
-        case 'estudiante':
-          ocupacionValues = ['1']; // Asumiendo que '1' es el ID para Estudiante
-          break;
-        case 'trabajador':
-          ocupacionValues = ['2']; // Asumiendo que '2' es el ID para Trabajador
-          break;
-        case 'ambos':
-          ocupacionValues = ['1', '2']; // Ambos IDs
-          break;
-        case 'ninguno':
-          ocupacionValues = []; // Ninguna selección
-          break;
-      }
-      
-      ocupacionInput.value = ocupacionValues.join(',');
-    } else {
-      ocupacionInput.value = '';
-    }
-  }
-  
-  // Si hay valores preseleccionados en el select original, establecer los radio buttons
-  if (originalOcupacionSelect) {
-    const selectedValues = Array.from(originalOcupacionSelect.selectedOptions).map(option => option.value);
-    
-    if (selectedValues.length === 0) {
-      // Ninguno seleccionado
-      document.getElementById('ocupacion_ninguno').checked = true;
-    } else if (selectedValues.includes('1') && selectedValues.includes('2')) {
-      // Ambos seleccionados
-      document.getElementById('ocupacion_ambos').checked = true;
-    } else if (selectedValues.includes('1')) {
-      // Solo estudiante
-      document.getElementById('ocupacion_estudiante').checked = true;
-    } else if (selectedValues.includes('2')) {
-      // Solo trabajador
-      document.getElementById('ocupacion_trabajador').checked = true;
-    }
-    
-    updateOcupacionInput();
-  }
-  
   // ===== GESTIÓN DE ÁREAS DE INTERÉS =====
-  // Obtener las opciones del select original (si está disponible)
-  const originalSelect = document.getElementById('{{ form.areas_interes.id_for_label }}');
   const areasGrid = document.getElementById('areasGrid');
   const selectedTagsContainer = document.getElementById('selectedTags');
   const areasInteresInput = document.getElementById('areasInteresInput');
-  
-  // Si no existe el select original, usar opciones predeterminadas
-  let areasOptions = [];
-  
-  if (originalSelect) {
-    // Obtener las opciones del select original
-    for (let option of originalSelect.options) {
-      if (option.value) {
-        areasOptions.push({
-          id: option.value,
-          text: option.text
-        });
+
+  // Inicializar etiquetas según áreas preseleccionadas
+  if (areasInteresInput.value) {
+    const preselectedIds = areasInteresInput.value.split(',').filter(id => id !== '');
+    preselectedIds.forEach(id => {
+      const option = areasGrid.querySelector(`.area-option[data-id="${id}"]`);
+      if (option) {
+        option.classList.add('selected');
+        addTag(id, option.textContent);
       }
-    }
-    // Ocultar el select original
-    originalSelect.style.display = 'none';
-  } else {
-    // Opciones predeterminadas si no hay select original
-    areasOptions = [
-      { id: '1', text: 'Matemáticas' },
-      { id: '2', text: 'Ciencias' },
-      { id: '3', text: 'Lenguaje' },
-      { id: '4', text: 'Historia' },
-      { id: '5', text: 'Inglés' },
-      { id: '6', text: 'Programación' },
-      { id: '7', text: 'Arte' },
-      { id: '8', text: 'Música' },
-      { id: '9', text: 'Deportes' },
-      { id: '10', text: 'Tecnología' }
-    ];
-  }
-  
-  // Crear las opciones visuales
-  areasOptions.forEach(area => {
-    const optionElement = document.createElement('div');
-    optionElement.className = 'area-option';
-    optionElement.textContent = area.text;
-    optionElement.dataset.id = area.id;
-    
-    optionElement.addEventListener('click', function() {
-      toggleAreaSelection(this);
     });
-    
-    areasGrid.appendChild(optionElement);
-  });
-  
-  // Función para alternar la selección de un área
-  function toggleAreaSelection(element) {
-    const areaId = element.dataset.id;
-    const areaText = element.textContent;
-    
-    if (element.classList.contains('selected')) {
-      // Deseleccionar
-      element.classList.remove('selected');
-      removeTag(areaId);
-    } else {
-      // Seleccionar
-      element.classList.add('selected');
-      addTag(areaId, areaText);
-    }
-    
-    updateAreasInteresInput();
   }
-  
+
+  // Manejar click en cada opción
+  areasGrid.querySelectorAll('.area-option').forEach(option => {
+    option.addEventListener('click', function() {
+      const id = this.dataset.id;
+      const text = this.textContent;
+
+      this.classList.toggle('selected');
+
+      if (this.classList.contains('selected')) {
+        addTag(id, text);
+      } else {
+        removeTag(id);
+      }
+
+      updateAreasInteresInput();
+    });
+  });
+
   // Función para agregar una etiqueta
   function addTag(id, text) {
+    if (selectedTagsContainer.querySelector(`.tag[data-id="${id}"]`)) return;
+
     const tag = document.createElement('div');
-    tag.className = 'tag';
+    tag.className = 'tag badge bg-primary me-2 mb-2 d-inline-flex align-items-center';
     tag.dataset.id = id;
-    
     tag.innerHTML = `
       ${text}
-      <span class="tag-remove">&times;</span>
+      <span class="tag-remove ms-2" style="cursor: pointer; font-weight: bold;">&times;</span>
     `;
-    
+
     tag.querySelector('.tag-remove').addEventListener('click', function(e) {
       e.stopPropagation();
       removeTag(id);
-      
-      // También deseleccionar la opción en la cuadrícula
-      const option = document.querySelector(`.area-option[data-id="${id}"]`);
-      if (option) {
-        option.classList.remove('selected');
-      }
+
+      const option = areasGrid.querySelector(`.area-option[data-id="${id}"]`);
+      if (option) option.classList.remove('selected');
+
+      updateAreasInteresInput();
     });
-    
+
     selectedTagsContainer.appendChild(tag);
   }
-  
+
   // Función para eliminar una etiqueta
   function removeTag(id) {
-    const tag = document.querySelector(`.tag[data-id="${id}"]`);
-    if (tag) {
-      tag.remove();
-    }
+    const tag = selectedTagsContainer.querySelector(`.tag[data-id="${id}"]`);
+    if (tag) tag.remove();
   }
-  
-  // Función para actualizar el input oculto con los valores seleccionados
+
+  // Actualizar input oculto
   function updateAreasInteresInput() {
-    const selectedIds = Array.from(document.querySelectorAll('.tag'))
-      .map(tag => tag.dataset.id);
-    
+    const selectedIds = Array.from(selectedTagsContainer.querySelectorAll('.tag'))
+                             .map(tag => tag.dataset.id);
     areasInteresInput.value = selectedIds.join(',');
-  }
-  
-  // Si hay valores preseleccionados (en caso de edición), seleccionarlos
-  if (originalSelect && originalSelect.value) {
-    const selectedValues = Array.from(originalSelect.selectedOptions).map(option => option.value);
-    
-    selectedValues.forEach(value => {
-      const option = document.querySelector(`.area-option[data-id="${value}"]`);
-      if (option) {
-        option.classList.add('selected');
-        addTag(value, option.textContent);
-      }
-    });
-    
-    updateAreasInteresInput();
+    console.log('IDs seleccionados:', areasInteresInput.value);
   }
 });
 </script>
+
 
 {% endblock %}

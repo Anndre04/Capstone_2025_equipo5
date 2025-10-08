@@ -3,7 +3,7 @@ from django.contrib.auth import login, authenticate
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .forms import RegistroForm, LoginForm
-from .models import Rol, Usuario
+from .models import Rol, Usuario, AreaInteres, Ocupacion
 from PIL import Image
 from django.core.signing import Signer, BadSignature, TimestampSigner, SignatureExpired
 from django.core.mail import send_mail
@@ -45,63 +45,60 @@ def verificar_email(request, token):
         messages.error(request, "El link de activación no es válido.")
     return redirect("login")
 
-
 def registro_view(request):
     if request.method == 'POST':
         form = RegistroForm(request.POST, request.FILES)
+
         if form.is_valid():
             try:
-                # Obtener la foto antes de guardar
-                foto = form.cleaned_data.get('foto')
+                # Crear usuario sin guardar aún
+                user = form.save(commit=False)
+                user.is_active = False
+                user.estado = 'Deshabilitado'
 
+                # Guardar foto si hay
+                foto = form.cleaned_data.get('foto')
                 if foto:
                     # Validar extensión
                     valid_extensions = ['jpg', 'jpeg', 'png']
                     extension = foto.name.split('.')[-1].lower()
                     if extension not in valid_extensions:
-                        messages.error(request, "La imagen debe ser en formato JPG, JPEG o PNG.")
-                        return render(request, 'autenticacion/registro.html', {'form': form})
+                        messages.error(request, "La imagen debe ser JPG, JPEG o PNG.")
+                        raise ValueError("Extensión inválida")
                     # Validar tamaño máximo 8MB
                     if foto.size > 8 * 1024 * 1024:
                         messages.error(request, "La imagen no puede pesar más de 8 MB.")
-                        return render(request, 'autenticacion/registro.html', {'form': form})
-
-                    # Validar dimensiones mínimo 500x500
+                        raise ValueError("Imagen demasiado grande")
+                    # Validar dimensiones máximo 500x500
                     img = Image.open(foto)
                     if img.width > 500 or img.height > 500:
-                        messages.error(request, "La imagen debe tener menos de 500px de ancho y alto.")
-                        return render(request, 'autenticacion/registro.html', {'form': form})
-
-                # Si pasa la validación, crear el usuario
-                user = form.save(commit=False)
-                user.is_active = False
-                user.estado = 'Deshabilitado'
-
-                if foto:
-                    # Guardar la foto en binario
+                        messages.error(request, "La imagen debe tener máximo 500px de ancho y alto.")
+                        raise ValueError("Dimensiones inválidas")
                     user.foto = foto.read()
 
-                # Guardar usuario y relaciones
                 user.save()
+
+                # Guardar campos ManyToMany del form (áreas de interés)
                 form.save_m2m()
-
-                # Asignar rol
-                rol_estudiante, _ = Rol.objects.get_or_create(nombre='Estudiante')
-                user.roles.add(rol_estudiante)
-
-                enviar_verificacion_email(user, request)
 
                 messages.success(request, "Registro exitoso. Revisa tu correo para activar tu cuenta.")
                 return redirect('login')
 
             except Exception as e:
-                messages.error(request, f'Error al crear el usuario: {str(e)}')
+                messages.error(request, f"Error al crear el usuario: {str(e)}")
         else:
-            messages.error(request, 'Por favor corrige los errores en el formulario.')
+            messages.error(request, "Por favor corrige los errores en el formulario.")
     else:
         form = RegistroForm()
 
-    return render(request, 'autenticacion/registro.html', {'form': form})
+    areas = AreaInteres.objects.all()
+    ocupaciones = Ocupacion.objects.all()  # Para el template si quieres mostrar un select personalizado
+
+    return render(request, 'autenticacion/registro.html', {
+        'form': form,
+        'areas': areas,
+        'ocupaciones': ocupaciones
+    })
 
 
 def seleccionar_rol(request):
