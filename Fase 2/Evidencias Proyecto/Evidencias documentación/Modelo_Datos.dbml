@@ -1,0 +1,338 @@
+Table Usuario [headercolor: #175e7a] {
+	id_usuario integer [ pk, increment, not null, unique ]
+	Nombre varchar(255) [ not null ]
+	p_apellido varchar(255) [ not null ]
+	s_apellido varchar(255) [ not null ]
+	run varchar(255) [ not null, unique ]
+	correo varchar(255) [ not null, unique ]
+	fecha_nac date [ not null ]
+	"contraseña" varchar(255) [ not null ]
+	genero char(1) [ not null ]
+	fecha_registro date [ not null ]
+	estado varchar(255) [ not null ]
+	foto_perfil varchar(255) [ not null ]
+	id_nivel_educacional integer [ not null ]
+	id_institucion integer [ not null ]
+}
+
+Table rol [headercolor: #175e7a] {
+	id_rol integer [ pk, increment, not null, unique ]
+	nombre varchar(255) [ not null, unique ]
+}
+
+Table Area_interes [headercolor: #175e7a] {
+	id_area_conocimiento integer [ pk, increment, not null, unique ]
+	nombre varchar(255) [ not null, unique ]
+}
+
+Table usuario_area [headercolor: #175e7a] {
+	id_usuario integer [ pk, not null, unique ]
+	id_area_conocimiento integer [ pk, not null, unique ]
+}
+
+Table chat [headercolor: #175e7a] {
+	id_chat integer [ pk, increment, not null, unique ]
+	fecha_creacion date [ not null ]
+	estado varchar(255) [ not null ]
+}
+
+Table rol_usuario [headercolor: #175e7a] {
+	id_usuario integer [ pk, increment, not null, unique ]
+	id_rol integer [ pk, not null ]
+}
+
+Table usuario_chat [headercolor: #175e7a] {
+	id_usuario integer [ pk, increment, not null, unique ]
+	id_chat integer [ pk, not null ]
+}
+
+Table mensajes [headercolor: #175e7a] {
+	id_mensaje integer [ pk, increment, not null, unique ]
+	contenido varchar(255) [ not null ]
+	enviado boolean [ not null ]
+	leido boolean [ not null ]
+	id_chat integer [ not null ]
+	id_usuario integer [ not null ]
+}
+
+Table tutoria [headercolor: #175e7a] {
+	id_tutoria integer [ pk, increment, not null, unique ]
+	fecha_realizada date [ not null ]
+	hora_inicio time [ not null ]
+	hora_termino time [ not null ]
+	estado varchar(255) [ not null ]
+	id_anuncio integer [ not null ]
+	id_videollamada integer [ not null ]
+	id_usuario_estu integer [ not null ]
+	id_usuario_tutor integer [ not null ]
+	id_evaluacion integer [ not null ]
+	id_eva_tutor integer [ not null ]
+}
+
+Table archivo [headercolor: #175e7a] {
+	id_archivo integer [ pk, increment, not null, unique ]
+	nombre varchar(255) [ not null ]
+	estado varchar(255) [ not null ]
+	fecha_subida date [ not null ]
+	id_tutor integer [ not null ]
+}
+
+Table Evaluacion [headercolor: #175e7a] {
+	id_evaluacion integer [ pk, increment, not null, unique ]
+	puntaje integer [ not null ]
+	fecha_creacion date [ not null ]
+	id_pregunta integer [ not null ]
+}
+
+Table Anuncio [headercolor: #175e7a] {
+	id_anuncio integer [ pk, increment, not null, unique ]
+	titulo varchar(255) [ not null ]
+	"descripción" varchar(255) [ not null ]
+	duracion integer [ not null ]
+	precio integer [ not null ]
+	fecha_creacion date [ not null ]
+	estado varchar(255) [ not null ]
+	id_disponibilidad integer [ not null ]
+}
+
+Table Pregunta [headercolor: #175e7a] {
+	id_pregunta integer [ pk, increment, not null, unique ]
+	puntos integer [ not null ]
+	contenido varchar(255) [ not null ]
+	id_evaluacion integer [ not null ]
+	id_respuesta integer [ not null ]
+	id_tipo_preg integer [ not null ]
+}
+
+Table Respuesta [headercolor: #175e7a] {
+	id_respuesta integer [ pk, increment, not null, unique ]
+	respuesta varchar(255) [ not null ]
+	correcto boolean [ not null ]
+}
+
+Table tipo_pregunta [headercolor: #175e7a] {
+	id_tipo_preg integer [ pk, increment, not null, unique ]
+	nom_tipo_pregunta varchar(255) [ not null ]
+}
+
+Table solicitud [headercolor: #175e7a] {
+	id_solicitud integer [ pk, increment, not null, unique ]
+	contenido varchar(255) [ not null ]
+	fecha_creacion date [ not null ]
+	estado varchar(255) [ not null ]
+	id_tipo_solicitud integer [ not null ]
+	id_usuario integer [ not null ]
+	id_anuncio integer
+}
+
+Table notificacion [headercolor: #175e7a] {
+	id_notificacion integer [ pk, increment, not null, unique ]
+	contenido varchar(255) [ not null ]
+	id_tipo_notif integer [ not null ]
+	id_usuario integer [ not null ]
+}
+
+Table tipo_notificacion [headercolor: #175e7a] {
+	id_tipo_noti integer [ pk, increment, not null, unique ]
+	nombre varchar(255) [ not null ]
+}
+
+Table tipo_solicitud [headercolor: #175e7a] {
+	id_tipo_solicitud integer [ pk, increment, not null, unique ]
+	nombre varchar(255) [ not null ]
+}
+
+Table Disponibilidad_horario [headercolor: #175e7a] {
+	id_disponibilidad_horario integer [ pk, increment, not null, unique ]
+	dia varchar(255) [ not null ]
+	maniana boolean [ not null ]
+	tarde boolean [ not null ]
+	noche boolean [ not null ]
+}
+
+Table tutor [headercolor: #175e7a] {
+	id_tutor integer [ pk, increment, not null, unique ]
+	id_usuario integer [ not null ]
+	id_anuncio integer [ not null ]
+}
+
+Table tutor_area [headercolor: #175e7a] {
+	id_tutor integer [ pk, increment, not null, unique ]
+	id_area_conocimiento integer [ not null ]
+}
+
+Table evaluacion_estrella [headercolor: #175e7a] {
+	id_eva_estrella integer [ pk, increment, not null, unique ]
+	cant_estrellas integer [ not null ]
+}
+
+Table videollamada [headercolor: #175e7a] {
+	id_videollamada integer [ pk, increment, not null, unique ]
+	contenido varchar(255) [ not null ]
+}
+
+Table Ocupacion [headercolor: #175e7a] {
+	id_ocupacion integer [ pk, increment, not null, unique ]
+	nombre varchar(150) [ not null ]
+}
+
+Table Nivel_educacional [headercolor: #175e7a] {
+	id_nivel_educacional integer [ pk, increment, not null, unique ]
+	nombre varchar(255) [ not null ]
+}
+
+Table usuario_ocup [headercolor: #175e7a] {
+	id_ocupacion integer [ pk, not null ]
+	id_usuario integer [ pk, increment, not null, unique ]
+}
+
+Table Institucion [headercolor: #175e7a] {
+	id_institucion integer [ pk, increment, not null, unique ]
+	nombre varchar(150) [ not null ]
+}
+
+Table evaluacion_comentarios [headercolor: #175e7a] {
+	id_comentarios integer [ pk, increment, not null, unique ]
+	id_tutoria integer [ pk, not null ]
+}
+
+Table comentarios_predefindos [headercolor: #175e7a] {
+	id_comentario integer [ pk, increment, not null, unique ]
+	comentario varchar(255) [ not null ]
+}
+
+Ref fk_Usuario_id_usuario_usuario_area {
+	Usuario.id_usuario < usuario_area.id_usuario [ delete: no action, update: no action ]
+}
+
+Ref fk_Area_conocimiento_id_area_conocimiento_usuario_area {
+	Area_interes.id_area_conocimiento < usuario_area.id_area_conocimiento [ delete: no action, update: no action ]
+}
+
+Ref fk_rol_usuario_id_usuario_Usuario {
+	rol_usuario.id_usuario > Usuario.id_usuario [ delete: no action, update: no action ]
+}
+
+Ref fk_rol_usuario_id_rol_rol {
+	rol_usuario.id_rol > rol.id_rol [ delete: no action, update: no action ]
+}
+
+Ref fk_Usuario_id_usuario_usuario_chat {
+	Usuario.id_usuario - usuario_chat.id_usuario [ delete: no action, update: no action ]
+}
+
+Ref fk_chat_id_chat_usuario_chat {
+	chat.id_chat - usuario_chat.id_chat [ delete: no action, update: no action ]
+}
+
+Ref fk_Usuario_id_usuario_mensajes {
+	Usuario.id_usuario < mensajes.id_usuario [ delete: no action, update: no action ]
+}
+
+Ref fk_chat_id_chat_mensajes {
+	chat.id_chat < mensajes.id_chat [ delete: no action, update: no action ]
+}
+
+Ref fk_Evaluacion_id_pregunta_Pregunta {
+	Evaluacion.id_pregunta > Pregunta.id_pregunta [ delete: no action, update: no action ]
+}
+
+Ref fk_tipo_pregunta_id_tipo_preg_Pregunta {
+	tipo_pregunta.id_tipo_preg < Pregunta.id_tipo_preg [ delete: no action, update: no action ]
+}
+
+Ref fk_Respuesta_id_respuesta_Pregunta {
+	Respuesta.id_respuesta < Pregunta.id_respuesta [ delete: no action, update: no action ]
+}
+
+Ref fk_Usuario_id_usuario_tutoria {
+	Usuario.id_usuario < tutoria.id_usuario_estu [ delete: no action, update: no action ]
+}
+
+Ref fk_Evaluacion_id_evaluacion_tutoria {
+	Evaluacion.id_evaluacion < tutoria.id_evaluacion [ delete: no action, update: no action ]
+}
+
+Ref fk_notificacion_id_tipo_notif_tipo_notificacion {
+	notificacion.id_tipo_notif > tipo_notificacion.id_tipo_noti [ delete: no action, update: no action ]
+}
+
+Ref fk_tipo_solicitud_id_tipo_solicitud_solicitud {
+	tipo_solicitud.id_tipo_solicitud < solicitud.id_tipo_solicitud [ delete: no action, update: no action ]
+}
+
+Ref fk_tutor_area_id_area_conocimiento_Area_conocimiento {
+	tutor_area.id_area_conocimiento > Area_interes.id_area_conocimiento [ delete: no action, update: no action ]
+}
+
+Ref fk_tutor_id_tutor_tutor_area {
+	tutor.id_tutor - tutor_area.id_tutor [ delete: no action, update: no action ]
+}
+
+Ref fk_tutor_id_tutor_tutoria {
+	tutor.id_tutor < tutoria.id_usuario_tutor [ delete: no action, update: no action ]
+}
+
+Ref fk_tutor_id_usuario_Usuario {
+	tutor.id_usuario > Usuario.id_usuario [ delete: no action, update: no action ]
+}
+
+Ref fk_tutoria_id_eva_tutor_evaluacion_tutor {
+	tutoria.id_eva_tutor > evaluacion_estrella.id_eva_estrella [ delete: no action, update: no action ]
+}
+
+Ref fk_videollamada_id_videollamada_tutoria {
+	videollamada.id_videollamada < tutoria.id_videollamada [ delete: no action, update: no action ]
+}
+
+Ref fk_usuario_ocup_id_usuario_Usuario {
+	usuario_ocup.id_usuario < Usuario.id_usuario [ delete: no action, update: no action ]
+}
+
+Ref fk_usuario_ocup_id_ocupacion_Ocupacion {
+	usuario_ocup.id_ocupacion < Ocupacion.id_ocupacion [ delete: no action, update: no action ]
+}
+
+Ref fk_tutor_id_anuncio_Anuncio {
+	tutor.id_anuncio < Anuncio.id_anuncio [ delete: no action, update: no action ]
+}
+
+Ref fk_Usuario_id_nivel_educacional_Nivel_educacional {
+	Usuario.id_nivel_educacional > Nivel_educacional.id_nivel_educacional [ delete: no action, update: no action ]
+}
+
+Ref fk_Usuario_id_usuario_notificacion {
+	Usuario.id_usuario < notificacion.id_usuario [ delete: no action, update: no action ]
+}
+
+Ref fk_Usuario_id_usuario_solicitud {
+	Usuario.id_usuario < solicitud.id_usuario [ delete: no action, update: no action ]
+}
+
+Ref fk_Usuario_id_institucion_Institucion {
+	Usuario.id_institucion > Institucion.id_institucion [ delete: no action, update: no action ]
+}
+
+Ref fk_comentarios_predefindos_id_comentario_evaluacion_comentarios {
+	comentarios_predefindos.id_comentario < evaluacion_comentarios.id_comentarios [ delete: no action, update: no action ]
+}
+
+Ref fk_tutoria_id_tutoria_evaluacion_comentarios {
+	tutoria.id_tutoria < evaluacion_comentarios.id_tutoria [ delete: no action, update: no action ]
+}
+
+Ref fk_Disponibilidad_horario_id_disponibilidad_horario_Anuncio {
+	Disponibilidad_horario.id_disponibilidad_horario < Anuncio.id_disponibilidad [ delete: no action, update: no action ]
+}
+
+Ref fk_Anuncio_id_anuncio_tutoria {
+	Anuncio.id_anuncio < tutoria.id_anuncio [ delete: no action, update: no action ]
+}
+
+Ref fk_Anuncio_id_anuncio_solicitud {
+	Anuncio.id_anuncio < solicitud.id_anuncio [ delete: no action, update: no action ]
+}
+
+Ref fk_archivo_id_tutor_tutor {
+	archivo.id_tutor > tutor.id_tutor [ delete: no action, update: no action ]
+}
