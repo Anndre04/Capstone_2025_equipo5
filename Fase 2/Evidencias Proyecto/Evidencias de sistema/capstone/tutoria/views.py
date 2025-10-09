@@ -1,13 +1,19 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Anuncio, TipoSolicitud, Solicitud, Usuario, Tutor, TutorArea, Disponibilidad
+from .models import Anuncio, TipoSolicitud, Solicitud, Usuario, Tutor, TutorArea, Disponibilidad, Archivo
+from .forms import TutorRegistrationForm
+from autenticacion.models import AreaInteres, Rol
 
 dias_semana = [d[0] for d in Disponibilidad.DIAS_SEMANA]
 
 @login_required
 def misanunciosprof(request, user_id):
-    anuncios = Anuncio.objects.filter(tutor__usuario=request.user)
+    # Obtener el tutor logueado
+    tutor = get_object_or_404(Tutor, usuario=request.user)
+
+    # Anuncios del tutor
+    anuncios = Anuncio.objects.filter(tutor=tutor)
 
     # Preparar disponibilidades por anuncio
     anuncios_disponibilidades = {}
@@ -19,12 +25,12 @@ def misanunciosprof(request, user_id):
                 disponibilidades.append(disp)
         anuncios_disponibilidades[anuncio.id] = disponibilidades
 
-
-    
+    # Áreas del tutor
+    areastutor = TutorArea.objects.filter(tutor=tutor)
 
     contexto = {
         "anuncios": anuncios,
-        "areastutor": TutorArea.objects.all(),
+        "areastutor": areastutor,
         "dias_semana": dias_semana,
         "anuncios_disponibilidades": anuncios_disponibilidades,
     }
@@ -292,6 +298,61 @@ def perfiltutor(request, tutor_id):
     
     return render(request, 'tutoria/perfiltutor.html', contexto)
 
+@login_required
 def registrotutor(request):
-    
-    return render(request, 'tutoria/registrotutor.html',)
+    user = request.user
+    print(f"[DEBUG] Usuario logueado: {user}")
+
+    # Evitar registro duplicado
+    if hasattr(user, 'tutor'):
+        print("[DEBUG] Ya existe un tutor para este usuario")
+        messages.warning(request, "Ya estás registrado como tutor")
+        return render(request, 'tutoria/registrotutor.html', {'form': None})
+
+    # Crear instancia del formulario
+    form = TutorRegistrationForm(request.POST or None, request.FILES or None)
+    print(f"[DEBUG] request.method: {request.method}")
+    print(f"[DEBUG] Archivos subidos: {request.FILES}")
+
+    if request.method == 'POST':
+        print(f"[DEBUG] Form data: {request.POST}")
+        if form.is_valid():
+            print("[DEBUG] Formulario válido")
+
+            # 1️⃣ Crear tutor
+            tutor = Tutor.objects.create(
+                usuario=user,
+                estado='Activo'
+            )
+            print(f"[DEBUG] Tutor creado: {tutor}")
+
+            try:
+                rol_tutor = Rol.objects.get(nombre="Tutor")
+                user.roles.add(rol_tutor)
+            except Rol.DoesNotExist:
+                print("No existe el rol")
+
+            # 2️⃣ Asociar áreas seleccionadas
+            areas_ids = form.cleaned_data['areas']
+            print(f"[DEBUG] Áreas seleccionadas: {areas_ids}")
+            for area_id in areas_ids:
+                area = AreaInteres.objects.get(id=area_id)
+                TutorArea.objects.create(tutor=tutor, area=area)
+                print(f"[DEBUG] Área asociada: {area.nombre}")
+
+            # 3️⃣ Guardar PDF (solo uno)
+            archivo = form.cleaned_data.get('certificacion')
+            if archivo:
+                Archivo.objects.create(
+                    nombre=archivo.name,
+                    contenido=archivo.read(),
+                    tutor=tutor,
+                    estado='Pendiente'
+                )
+                print(f"[DEBUG] Archivo guardado: {archivo.name}")
+
+            messages.success(request, "Registro exitoso")
+        else:
+            print(f"[DEBUG] Formulario NO válido: {form.errors}")
+
+    return render(request, 'tutoria/registrotutor.html', {'form': form})

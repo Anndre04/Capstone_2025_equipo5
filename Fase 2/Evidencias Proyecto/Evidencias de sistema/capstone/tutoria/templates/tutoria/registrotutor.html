@@ -1,115 +1,69 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Registro de Tutor{% endblock %}
+
 {% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+      <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-primary text-white text-center rounded-top-4 py-3">
+          <h3 class="mb-0 fw-semibold">Registro de Tutor</h3>
+        </div>
 
-
- 
-
-    <script>
-        // Manejo de la subida de archivos
-        const fileUploadArea = document.getElementById('fileUploadArea');
-        const fileInput = document.getElementById('certificaciones');
-        const fileList = document.getElementById('fileList');
-
-        fileUploadArea.addEventListener('click', () => {
-            fileInput.click();
-        });
-
-        fileUploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            fileUploadArea.style.borderColor = '#667eea';
-            fileUploadArea.style.background = '#f0f4ff';
-        });
-
-        fileUploadArea.addEventListener('dragleave', () => {
-            fileUploadArea.style.borderColor = '#ddd';
-            fileUploadArea.style.background = '#f8f9ff';
-        });
-
-        fileUploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            fileUploadArea.style.borderColor = '#ddd';
-            fileUploadArea.style.background = '#f8f9ff';
+        <div class="card-body p-4">
+          <form method="POST" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
             
-            const files = e.dataTransfer.files;
-            handleFiles(files);
-        });
+            <!-- Áreas de conocimiento -->
+            <div class="mb-4">
+              <label class="form-label fw-semibold">{{ form.areas.label }}</label>
+              <div class="d-flex flex-wrap gap-3">
+                {% for checkbox in form.areas %}
+                  <div class="form-check">
+                    {{ checkbox.tag }}
+                    <label class="form-check-label">{{ checkbox.choice_label }}</label>
+                  </div>
+                {% endfor %}
+              </div>
+              {% if form.areas.errors %}
+                <div class="text-danger small">{{ form.areas.errors }}</div>
+              {% endif %}
+            </div>
 
-        fileInput.addEventListener('change', (e) => {
-            handleFiles(e.target.files);
-        });
+            <!-- Certificaciones -->
+            <div class="mb-4">
+                <label for="{{ form.certificacion.id_for_label }}" class="form-label fw-semibold">
+                    {{ form.certificacion.label }}
+                </label>
+                <input 
+                    type="file" 
+                    name="{{ form.certificacion.name }}" 
+                    id="{{ form.certificacion.id_for_label }}" 
+                    class="form-control"
+                    accept="application/pdf"
+                >
+                <div class="form-text text-muted">Sube un archivo PDF válido.</div>
+                {% if form.certificacion.errors %}
+                    <div class="text-danger small">{{ form.certificacion.errors }}</div>
+                {% endif %}
+            </div>
 
-        function handleFiles(files) {
-            const maxFiles = 5;
-            const maxSize = 10 * 1024 * 1024; // 10MB
-            
-            if (files.length + fileList.children.length > maxFiles) {
-                alert(`Solo puede subir un máximo de ${maxFiles} archivos`);
-                return;
-            }
+            <!-- Botón -->
+            <div class="text-center">
+              <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 shadow-sm">
+                <i class="bi bi-person-check"></i> Registrar
+              </button>
+            </div>
+          </form>
+        </div>
 
-            Array.from(files).forEach(file => {
-                if (file.type !== 'application/pdf') {
-                    alert('Solo se permiten archivos PDF');
-                    return;
-                }
-
-                if (file.size > maxSize) {
-                    alert('El archivo excede el tamaño máximo de 10MB');
-                    return;
-                }
-
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-                fileItem.innerHTML = `
-                    <span class="file-name">${file.name}</span>
-                    <button type="button" class="remove-file">Eliminar</button>
-                `;
-
-                fileItem.querySelector('.remove-file').addEventListener('click', () => {
-                    fileItem.remove();
-                });
-
-                fileList.appendChild(fileItem);
-            });
-
-            // Limpiar el input file para permitir subir el mismo archivo otra vez
-            fileInput.value = '';
-        }
-
-        // Manejo del envío del formulario
-        document.getElementById('tutorRegistrationForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Validaciones básicas
-            const areasSeleccionadas = document.querySelectorAll('input[name="areas"]:checked');
-            const archivosSubidos = fileList.children.length;
-            
-            if (areasSeleccionadas.length === 0) {
-                alert('Debe seleccionar al menos un área de conocimiento');
-                return;
-            }
-
-            if (archivosSubidos === 0) {
-                alert('Debe subir al menos un archivo PDF de certificación');
-                return;
-            }
-
-            // Aquí iría la lógica para enviar los datos al servidor
-            alert('Formulario enviado correctamente. Será redirigido una vez que se complete el procesamiento.');
-            
-            // Simular envío
-            console.log('Datos del formulario:', {
-                nombre: document.getElementById('nombre').value,
-                email: document.getElementById('email').value,
-                telefono: document.getElementById('telefono').value,
-                areas: Array.from(areasSeleccionadas).map(area => area.value),
-                archivos: archivosSubidos
-            });
-        });
-    </script>
-{% endblock  %}
-
-
-
+        <div class="card-footer text-center text-muted small">
+          <i class="bi bi-info-circle"></i> Asegúrate de subir documentos válidos (PDF).
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

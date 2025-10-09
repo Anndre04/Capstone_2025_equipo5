@@ -1,25 +1,26 @@
-# forms.py
 from django import forms
+from autenticacion.models import AreaInteres
+from .models import Archivo
+
+# Widget que permite subir varios archivos
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
 
 class TutorRegistrationForm(forms.Form):
-    nombre = forms.CharField(label='Nombre completo', max_length=100)
-    email = forms.EmailField(label='Correo electrónico')
-    telefono = forms.CharField(label='Teléfono', max_length=15)
     areas = forms.MultipleChoiceField(
         label='Áreas de Conocimiento',
-        choices=[
-            ('Matemáticas', 'Matemáticas'),
-            ('Física', 'Física'),
-            ('Química', 'Química'),
-            ('Programación', 'Programación'),
-            ('Biología', 'Biología'),
-            ('Historia', 'Historia')
-        ],
         widget=forms.CheckboxSelectMultiple
     )
-    certificaciones = forms.FileField(
-        label='Subir certificaciones (PDF)',
-        widget=forms.ClearableFileInput(attrs={'multiple': True}),
-        required=False
+
+    certificacion = forms.FileField(
+        label='Subir certificación (PDF)',
+        required=True   # Por defecto FileField es obligatorio
     )
-    terminos = forms.BooleanField(label='Acepto los términos y condiciones', required=True)
+
+    # Cargamos las áreas desde el modelo
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['areas'].choices = [
+            (area.id, area.nombre) for area in AreaInteres.objects.all()
+        ]
