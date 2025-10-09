@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+
+ 
+
+    <script>
+        // Manejo de la subida de archivos
+        const fileUploadArea = document.getElementById('fileUploadArea');
+        const fileInput = document.getElementById('certificaciones');
+        const fileList = document.getElementById('fileList');
+
+        fileUploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.style.borderColor = '#667eea';
+            fileUploadArea.style.background = '#f0f4ff';
+        });
+
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.style.borderColor = '#ddd';
+            fileUploadArea.style.background = '#f8f9ff';
+        });
+
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.style.borderColor = '#ddd';
+            fileUploadArea.style.background = '#f8f9ff';
+            
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            const maxFiles = 5;
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            
+            if (files.length + fileList.children.length > maxFiles) {
+                alert(`Solo puede subir un máximo de ${maxFiles} archivos`);
+                return;
+            }
+
+            Array.from(files).forEach(file => {
+                if (file.type !== 'application/pdf') {
+                    alert('Solo se permiten archivos PDF');
+                    return;
+                }
+
+                if (file.size > maxSize) {
+                    alert('El archivo excede el tamaño máximo de 10MB');
+                    return;
+                }
+
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <span class="file-name">${file.name}</span>
+                    <button type="button" class="remove-file">Eliminar</button>
+                `;
+
+                fileItem.querySelector('.remove-file').addEventListener('click', () => {
+                    fileItem.remove();
+                });
+
+                fileList.appendChild(fileItem);
+            });
+
+            // Limpiar el input file para permitir subir el mismo archivo otra vez
+            fileInput.value = '';
+        }
+
+        // Manejo del envío del formulario
+        document.getElementById('tutorRegistrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Validaciones básicas
+            const areasSeleccionadas = document.querySelectorAll('input[name="areas"]:checked');
+            const archivosSubidos = fileList.children.length;
+            
+            if (areasSeleccionadas.length === 0) {
+                alert('Debe seleccionar al menos un área de conocimiento');
+                return;
+            }
+
+            if (archivosSubidos === 0) {
+                alert('Debe subir al menos un archivo PDF de certificación');
+                return;
+            }
+
+            // Aquí iría la lógica para enviar los datos al servidor
+            alert('Formulario enviado correctamente. Será redirigido una vez que se complete el procesamiento.');
+            
+            // Simular envío
+            console.log('Datos del formulario:', {
+                nombre: document.getElementById('nombre').value,
+                email: document.getElementById('email').value,
+                telefono: document.getElementById('telefono').value,
+                areas: Array.from(areasSeleccionadas).map(area => area.value),
+                archivos: archivosSubidos
+            });
+        });
+    </script>
+{% endblock  %}
+
+
+

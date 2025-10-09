@@ -105,7 +105,7 @@ class Anuncio(models.Model):
             MaxValueValidator(1000000)
         ])
     fecha_creacion = models.DateTimeField(auto_now_add=True)
-    estado = models.CharField(max_length=20, choices=estado)
+    estado = models.CharField(max_length=20, choices=estado, null=True)
 
     def clean(self):
         # Validar que el tutor no tenga otro anuncio con la misma área activo

@@ -291,3 +291,7 @@ def perfiltutor(request, tutor_id):
     }
     
     return render(request, 'tutoria/perfiltutor.html', contexto)
+
+def registrotutor(request):
+    
+    return render(request, 'tutoria/registrotutor.html',)

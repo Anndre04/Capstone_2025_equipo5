@@ -14,10 +14,27 @@
             style="background: linear-gradient(135deg, #0056b3, #0088cc); color: white; min-height: 140px; display: flex; align-items: center;">
             <div class="position-relative z-2 w-100">
                 <h5 class="fw-semibold mb-2">¿Aún no tienes una cuenta?</h5>
-                <p class="mb-3">Únete gratis y comienza a conectar con tutores expertos en línea.</p>
+                <p class="mb-3">Únete gratis seleccionando este banner y comienza a conectar con tutores expertos en línea.</p>
+                <div href="{% url 'registro' %}" class="btn btn-light btn-sm px-4 py-2 rounded-pill fw-semibold" style="color: #0056b3;"> Regístrate Ahora </div>
             </div>
         </div>
     </a>
+    {% endif %}
+
+    <!-- BANNER PARA TUTOR -->
+    {% if user.is_authenticated %}
+        {% if "Tutor" not in user.roles.values_list|stringformat:"s" %}
+        <a href="{% url 'tutoria:registrotutor' %}">
+            <div class="alert alert-primary border-0 rounded-3 shadow-sm mb-5 text-center position-relative overflow-hidden"
+                style="background: linear-gradient(135deg, #0056b3, #0088cc); color: white; min-height: 140px; display: flex; align-items: center;">
+                <div class="position-relative z-2 w-100">
+                    <h5 class="fw-semibold mb-2">Conviertete en tutor</h5>
+                    <p class="mb-3">Comienza a realizar tutorías y genera ingresos extras</p>
+                    <div href="{% url 'tutoria:registrotutor' %}" class="btn btn-light btn-sm px-4 py-2 rounded-pill fw-semibold" style="color: #0056b3;"> Regístrarse como tutor </div>
+                </div>
+            </div>
+        </a>
+        {% endif %}
     {% endif %}
 
     <!-- HERO -->
@@ -325,7 +342,7 @@
 
         cards.forEach((card, i) => {
             card.style.opacity = '0';
-            card.style.transform = 'translateY(15px)';
+            card.style.transform = 'translateY(15px)';  
             card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
             card.style.transitionDelay = `${i * 0.1}s`;
             observer.observe(card);
