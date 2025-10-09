@@ -54,7 +54,6 @@ def registro_view(request):
                 # Crear usuario sin guardar aún
                 user = form.save(commit=False)
                 user.is_active = False
-                user.estado = 'Deshabilitado'
 
                 # Guardar foto si hay
                 foto = form.cleaned_data.get('foto')
@@ -78,6 +77,14 @@ def registro_view(request):
 
                 user.save()
 
+                try:
+                    rol_estudiante = Rol.objects.get(nombre="Estudiante")
+                    user.roles.add(rol_estudiante)
+                except Rol.DoesNotExist:
+                    print("No existe el rol")
+
+                enviar_verificacion_email(user, request)
+
                 # Guardar campos ManyToMany del form (áreas de interés)
                 form.save_m2m()
 
@@ -85,7 +92,8 @@ def registro_view(request):
                 return redirect('login')
 
             except Exception as e:
-                messages.error(request, f"Error al crear el usuario: {str(e)}")
+                messages.error(request, f"Hubo un error en su solicitud")
+                print("Error al crear usuario: ", e)
         else:
             messages.error(request, "Por favor corrige los errores en el formulario.")
     else:
@@ -94,11 +102,13 @@ def registro_view(request):
     areas = AreaInteres.objects.all()
     ocupaciones = Ocupacion.objects.all()  # Para el template si quieres mostrar un select personalizado
 
-    return render(request, 'autenticacion/registro.html', {
+    contexto = {
         'form': form,
         'areas': areas,
         'ocupaciones': ocupaciones
-    })
+    }
+
+    return render(request, 'autenticacion/registro.html', contexto)
 
 
 def seleccionar_rol(request):
@@ -109,6 +119,8 @@ def seleccionar_rol(request):
 
     roles = request.session.get('roles_disponibles', [])
     return render(request, "autenticacion/seleccionar_rol.html", {"roles": roles})
+
+
 
 def login_view(request):
     if request.method == 'POST':
@@ -123,6 +135,7 @@ def login_view(request):
                 
                 # Consultar los roles del usuario
                 roles = list(user.roles.values_list('nombre', flat=True))
+                print(roles)
 
                 if "Tutor" in roles and "Estudiante" in roles:
                     # Usuario tiene ambos roles -> mostrar modal

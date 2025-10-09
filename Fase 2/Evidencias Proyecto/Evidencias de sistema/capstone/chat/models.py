@@ -16,7 +16,7 @@ class Chat(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.nombre
+        return str(self.id)
     
 class Mensaje(models.Model):
     user = models.ForeignKey(Usuario, on_delete=models.PROTECT, verbose_name="Usuario")
