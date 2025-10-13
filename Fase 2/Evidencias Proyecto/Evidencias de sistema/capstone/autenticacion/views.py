@@ -1,13 +1,15 @@
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .forms import RegistroForm, LoginForm
+from .forms import RegistroForm, LoginForm, validar_foto
 from .models import Rol, Usuario, AreaInteres, Ocupacion
 from PIL import Image
 from django.core.signing import Signer, BadSignature, TimestampSigner, SignatureExpired
 from django.core.mail import send_mail
 
+logger = logging.getLogger(__name__)
 
 signer = Signer()
 
@@ -45,6 +47,7 @@ def verificar_email(request, token):
         messages.error(request, "El link de activación no es válido.")
     return redirect("login")
 
+
 def registro_view(request):
     if request.method == 'POST':
         form = RegistroForm(request.POST, request.FILES)
@@ -55,34 +58,22 @@ def registro_view(request):
                 user = form.save(commit=False)
                 user.is_active = False
 
-                # Guardar foto si hay
+                # Validar y guardar foto si hay
                 foto = form.cleaned_data.get('foto')
                 if foto:
-                    # Validar extensión
-                    valid_extensions = ['jpg', 'jpeg', 'png']
-                    extension = foto.name.split('.')[-1].lower()
-                    if extension not in valid_extensions:
-                        messages.error(request, "La imagen debe ser JPG, JPEG o PNG.")
-                        raise ValueError("Extensión inválida")
-                    # Validar tamaño máximo 8MB
-                    if foto.size > 8 * 1024 * 1024:
-                        messages.error(request, "La imagen no puede pesar más de 8 MB.")
-                        raise ValueError("Imagen demasiado grande")
-                    # Validar dimensiones máximo 500x500
-                    img = Image.open(foto)
-                    if img.width > 500 or img.height > 500:
-                        messages.error(request, "La imagen debe tener máximo 500px de ancho y alto.")
-                        raise ValueError("Dimensiones inválidas")
-                    user.foto = foto.read()
+                    try:
+                        validar_foto(foto)
+                        user.foto = foto.read()
+                    except ValueError as e:
+                        messages.error(request, str(e))
 
                 user.save()
 
-                try:
-                    rol_estudiante = Rol.objects.get(nombre="Estudiante")
-                    user.roles.add(rol_estudiante)
-                except Rol.DoesNotExist:
-                    print("No existe el rol")
+                # Asignar rol estudiante
+                rol_estudiante = Rol.objects.get(nombre="Estudiante")
+                user.roles.add(rol_estudiante)
 
+                # Enviar correo de verificación
                 enviar_verificacion_email(user, request)
 
                 # Guardar campos ManyToMany del form (áreas de interés)
@@ -91,16 +82,17 @@ def registro_view(request):
                 messages.success(request, "Registro exitoso. Revisa tu correo para activar tu cuenta.")
                 return redirect('login')
 
-            except Exception as e:
-                messages.error(request, f"Hubo un error en su solicitud")
-                print("Error al crear usuario: ", e)
+            except Exception:
+                messages.error(request, "Hubo un error en el registro")
+                logger.error("Error creando usuario", exc_info=True)
+
         else:
             messages.error(request, "Por favor corrige los errores en el formulario.")
     else:
         form = RegistroForm()
 
     areas = AreaInteres.objects.all()
-    ocupaciones = Ocupacion.objects.all()  # Para el template si quieres mostrar un select personalizado
+    ocupaciones = Ocupacion.objects.all()
 
     contexto = {
         'form': form,
@@ -110,17 +102,25 @@ def registro_view(request):
 
     return render(request, 'autenticacion/registro.html', contexto)
 
-
+@login_required
 def seleccionar_rol(request):
-    if request.method == "POST":
-        rol_seleccionado = request.POST.get("rol")
-        request.session['rol_actual'] = rol_seleccionado
+    try:
+        if request.method == "POST":
+            rol_seleccionado = request.POST.get("rol")
+            request.session['rol_actual'] = rol_seleccionado
+
+            messages.success(request, f'¡Bienvenido de nuevo, {request.user.nombre}!')
+            logger.info(f"Usuario {request.user.id} seleccionó el rol {rol_seleccionado}")
+            return redirect('home')
+
+        roles = request.session.get('roles_disponibles', [])
+        contexto = {"roles": roles}
+        return render(request, "autenticacion/seleccionar_rol.html", contexto)
+
+    except Exception as e:
+        messages.error(request, "Ocurrió un error al seleccionar el rol")
+        logger.error(f"Error en seleccionar_rol para usuario {request.user.id}: {e}", exc_info=True)
         return redirect('home')
-
-    roles = request.session.get('roles_disponibles', [])
-    return render(request, "autenticacion/seleccionar_rol.html", {"roles": roles})
-
-
 
 def login_view(request):
     if request.method == 'POST':
@@ -128,25 +128,28 @@ def login_view(request):
         if form.is_valid():
             email = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-            user = authenticate(request, email=email, password=password)
-            
-            if user is not None:
-                login(request, user)
+            try:
+                user = authenticate(request, email=email, password=password)
                 
-                # Consultar los roles del usuario
-                roles = list(user.roles.values_list('nombre', flat=True))
-                print(roles)
+                if user is not None:
+                    login(request, user)
+                    
+                    # Consultar los roles del usuario
+                    roles = list(user.roles.values_list('nombre', flat=True))
+                    print(roles)
 
-                if "Tutor" in roles and "Estudiante" in roles:
-                    # Usuario tiene ambos roles -> mostrar modal
-                    request.session['roles_disponibles'] = roles
-                    messages.success(request, f'¡Bienvenido de nuevo, {user.nombre}!')
-                    return redirect('seleccionar_rol')
-                else:
-                    # Usuario tiene solo un rol -> guardar en sesión
-                    request.session['rol_actual'] = roles[0]
-                    return redirect('home')
-
+                    if "Tutor" in roles and "Estudiante" in roles:
+                        # Usuario tiene ambos roles -> mostrar modal
+                        request.session['roles_disponibles'] = roles
+                        return redirect('seleccionar_rol')
+                    else:
+                        # Usuario tiene solo un rol -> guardar en sesión
+                        request.session['rol_actual'] = roles[0]
+                        return redirect('home')
+            except Exception:
+                messages.error(request, 'Hubo un error al inicar sesión. Inténtalo nuevamente.')
+                logger.error(f'Hubo un error al iniciar sesión', exc_info=True)
+                return redirect("login")
             else:
                 messages.error(request, 'Correo o contraseña incorrectos.')
         else:

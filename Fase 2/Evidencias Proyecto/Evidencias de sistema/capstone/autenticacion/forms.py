@@ -51,6 +51,26 @@ def validar_rut(valor):
         # Validar formato básico (números, k, K, guiones y puntos)
         if not re.match(r'^[0-9\.\-kK]+$', valor):
             raise ValidationError('El RUT solo puede contener números, puntos, guiones y la letra K.')
+        
+
+def validar_foto(foto):
+    """Valida la foto subida: extensión, tamaño y dimensiones"""
+    # Validar extensión
+    valid_extensions = ['jpg', 'jpeg', 'png']
+    extension = foto.name.split('.')[-1].lower()
+    if extension not in valid_extensions:
+        raise ValueError("La imagen debe ser JPG, JPEG o PNG.")
+    
+    # Validar tamaño máximo 8MB
+    if foto.size > 8 * 1024 * 1024:
+        raise ValueError("La imagen no puede pesar más de 8 MB.")
+    
+    # Validar dimensiones máximo 500x500
+    img = Image.open(foto)
+    if img.width > 500 or img.height > 500:
+        raise ValueError("La imagen debe tener máximo 500px de ancho y alto.")
+    
+    return True
 
 class RegistroForm(UserCreationForm):
     nombre = forms.CharField(

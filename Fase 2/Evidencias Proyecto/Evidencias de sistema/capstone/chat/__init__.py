@@ -9,4 +9,4 @@ class ChatConfig(AppConfig):
     name = 'chat'
     
     def ready(self):
-        import chat.signals  # ← IMPORTAR LOS SIGNALS
+        import notificaciones.signals  # ← IMPORTAR LOS SIGNALS

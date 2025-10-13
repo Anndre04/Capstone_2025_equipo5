@@ -7,6 +7,7 @@ from autenticacion import views as auth_views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('home.urls')),
+    path('notificaciones/', include('notificaciones.urls')),
     path('auth/', include('autenticacion.urls')),
     path('tutoria/', include('tutoria.urls')),
     path('chat/', include('chat.urls')),

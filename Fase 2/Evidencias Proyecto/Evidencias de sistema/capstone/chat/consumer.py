@@ -31,7 +31,7 @@ class ChatConsumer(WebsocketConsumer):
         )
 
         self.accept()  # Aceptar la conexión
-        logger.info(f"✅ Usuario {self.user.id} conectado al chat {self.chat_id}")
+        logger.info(f"Usuario {self.user.id} conectado al chat {self.chat_id}")
 
     def disconnect(self, close_code):
         """Se ejecuta al desconectar el cliente."""
@@ -40,7 +40,7 @@ class ChatConsumer(WebsocketConsumer):
                 self.room_group_name,
                 self.channel_name
             )
-            logger.info(f"🔌 Usuario {self.user.id} desconectado del chat {self.chat_id}")
+            logger.info(f"Usuario {self.user.id} desconectado del chat {self.chat_id}")
 
     def receive(self, text_data):
         """
@@ -76,7 +76,7 @@ class ChatConsumer(WebsocketConsumer):
                 }
             )
 
-            logger.info(f"💬 Usuario {self.user.id} envió mensaje al chat {self.chat_id}")
+            logger.info(f" Usuario {self.user.id} envió mensaje al chat {self.chat_id}")
 
         except Chat.DoesNotExist:
             logger.error(f"❌ Chat {self.chat_id} no encontrado")
