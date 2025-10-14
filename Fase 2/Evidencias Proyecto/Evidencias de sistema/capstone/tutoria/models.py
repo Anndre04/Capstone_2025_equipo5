@@ -68,12 +68,12 @@ class Archivo(models.Model):
     ]
 
     nombre = models.CharField(max_length=80, null=True)
-    contenido = models.CharField(max_length=200)
+    contenido = models.BinaryField()
     tutor = models.ForeignKey(Tutor, on_delete=models.PROTECT, related_name="archivos", null=True)
     estado = models.CharField(max_length=20, choices=estado, null=True)
 
     def __str__(self):
-        return self.nombre
+        return self.nombre or "Archivo sin nombre"
     
 class TutorArea(models.Model):
     tutor = models.ForeignKey(to=Tutor, on_delete=models.PROTECT, null=True)

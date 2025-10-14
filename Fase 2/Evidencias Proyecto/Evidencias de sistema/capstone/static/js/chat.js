@@ -74,23 +74,43 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function abrirWebSocket(id) {
-        // Cerrar socket anterior si existe
-        if (chatSocket) chatSocket.close();
+        // Si ya hay un WebSocket abierto, cerrarlo primero
+        if (chatSocket && chatSocket.readyState !== WebSocket.CLOSED) {
+            console.log(`🔌 Cerrando WebSocket anterior...`);
+            try {
+                chatSocket.close();
+            } catch (e) {
+                console.error("⚠️ Error al cerrar WebSocket anterior:", e);
+            }
+            chatSocket = null;
+        }
 
         const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
-        chatSocket = new WebSocket(`${wsScheme}://${window.location.host}/ws/chat/${id}/`);
+        const wsUrl = `${wsScheme}://${window.location.host}/ws/chat/${id}/`;
+
+        console.log(`🔗 Conectando WebSocket al chat ${id}...`);
+        chatSocket = new WebSocket(wsUrl);
+
+        chatSocket.onopen = function () {
+            console.log(`✅ WebSocket conectado correctamente al chat ${id}`);
+        };
 
         chatSocket.onmessage = function (e) {
-            const data = JSON.parse(e.data);
-            appendMessage(data.message, data.user_id == userId, data.timestamp);
+            try {
+                const data = JSON.parse(e.data);
+                appendMessage(data.message, data.user_id == userId, data.timestamp);
+            } catch (err) {
+                console.error("⚠️ Error al procesar mensaje recibido:", err);
+            }
         };
 
         chatSocket.onclose = function (e) {
-            console.log('❌ WebSocket cerrado', e);
+            console.log(`❌ WebSocket cerrado (${id})`, e);
+            chatSocket = null;
         };
 
         chatSocket.onerror = function (err) {
-            console.error('❌ Error WebSocket', err);
+            console.error("🚨 Error en WebSocket:", err);
         };
     }
 
@@ -125,8 +145,17 @@ document.addEventListener('DOMContentLoaded', function () {
         input.focus();
     }
 
-    btn.addEventListener('click', () => enviarMensaje(input.value.trim()));
-    input.addEventListener('keypress', e => { if (e.key === 'Enter') { e.preventDefault(); enviarMensaje(input.value.trim()); } });
+    if (btn && input) {
+        btn.addEventListener('click', () => enviarMensaje(input.value.trim()));
+        input.addEventListener('keypress', e => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                enviarMensaje(input.value.trim());
+            }
+        });
+    } else {
+        console.warn('⚠️ No se encontraron elementos del input o botón de enviar.');
+    }
 
     // Cargar primer chat y abrir su WebSocket
     if (chatId) {
