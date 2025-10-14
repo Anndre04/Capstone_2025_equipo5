@@ -1,0 +1,132 @@
+   .tutoring-card {
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .tutoring-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .tutoring-header {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .subject-icon {
+        font-size: 1.2rem;
+        opacity: 0.9;
+    }
+
+    .tutoring-badge {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        border-radius: 12px;
+        font-size: 0.65rem;
+        padding: 0.25em 0.6em;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .tutoring-title {
+        padding-bottom: 0.5rem;
+    }
+
+    .tutor-info {
+        font-size: 0.75rem;
+    }
+
+    .tutoring-features {
+        background: rgba(0, 0, 0, 0.02);
+        border-radius: 6px;
+        padding: 0.5rem;
+    }
+
+    .feature-item {
+        font-size: 0.75rem;
+    }
+
+    .tutoring-stats {
+        padding: 8px 0;
+    }
+
+    .stat-item {
+        flex: 1;
+    }
+
+    .stat-value {
+        font-size: 0.9rem;
+        line-height: 1.2;
+    }
+
+    .stat-label {
+        font-size: 0.65rem;
+        margin-top: 1px;
+    }
+
+    .x-small {
+        font-size: 0.65rem;
+    }
+
+    .btn {
+        border-radius: 6px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        font-size: 0.8rem;
+    }
+
+    .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .badge {
+        font-size: 0.6rem;
+        font-weight: 500;
+        padding: 0.25em 0.6em;
+        border-radius: 6px;
+    }
+
+    .text-warning {
+        color: #ffc107 !important;
+    }
+
+    .alert h5 {
+        font-size: 1.2rem;
+    }
+
+    .form-label {
+        font-size: 0.75rem;
+        margin-bottom: 0.3rem;
+    }
+
+    @media (max-width: 768px) {
+        .display-5 {
+            font-size: 1.9rem;
+        }
+
+        .card-body {
+            padding: 1rem !important;
+        }
+
+        .tutoring-features {
+            padding: 0.4rem;
+        }
+
+        .tutoring-header {
+            height: 35px;
+        }
+
+        .subject-icon {
+            font-size: 1rem;
+        }
+
+        .col-md-1 {
+            margin-top: 0.5rem;
+        }
+    }
