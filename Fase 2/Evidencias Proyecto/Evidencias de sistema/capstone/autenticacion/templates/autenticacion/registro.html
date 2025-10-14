@@ -4,6 +4,10 @@
 {% block title %}Registro - Tutorías Online{% endblock %}
 
 {% block content %}
+
+<link rel="stylesheet" href="{% static 'css/css_autenticacion/autenticacion.css' %}">
+
+
 <div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
   <div class="row justify-content-center">
     <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
@@ -200,206 +204,10 @@
 
         </div>
       </div>
-    </div>
+    </div>  
   </div>
 </div>
 
-<style>
-/* Estilos para mejorar la apariencia de los selects múltiples */
-.form-select[multiple] {
-  min-height: 100px;
-}
-
-/* Mejorar la apariencia de los campos */
-.form-control, .form-select {
-  border-radius: 0.375rem;
-  border: 1px solid #dee2e6;
-  padding: 0.5rem 0.75rem;
-}
-
-.form-control:focus, .form-select:focus {
-  border-color: #86b7fe;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-}
-
-/* NUEVOS ESTILOS PARA EL SELECTOR DE ÁREAS DE INTERÉS */
-.areas-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.area-option {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #dee2e6;
-  border-radius: 0.375rem;
-  background-color: #f8f9fa;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-align: center;
-  font-size: 0.875rem;
-  user-select: none;
-}
-
-.area-option:hover {
-  background-color: #e9ecef;
-  border-color: #adb5bd;
-}
-
-.area-option.selected {
-  background-color: #0d6efd;
-  color: white;
-  border-color: #0d6efd;
-}
-
-.selected-tags-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  min-height: 2.5rem;
-  padding: 0.5rem;
-  border: 1px solid #dee2e6;
-  border-radius: 0.375rem;
-  background-color: #f8f9fa;
-}
-
-.tag {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25rem 0.5rem;
-  background-color: #0d6efd;
-  color: white;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.tag-remove {
-  margin-left: 0.25rem;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-/* ESTILOS PARA LOS RADIO BUTTONS DE OCUPACIÓN */
-.ocupacion-container {
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 0.375rem;
-  padding: 1rem;
-}
-
-.form-check-input:checked {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
-}
-
-.form-check-input:focus {
-  border-color: #86b7fe;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-}
-
-/* Responsive adjustments */
-@media (max-width: 576px) {
-  .card-body {
-    padding: 1rem !important;
-  }
-  
-  .btn-lg {
-    padding: 0.75rem 1rem;
-    font-size: 1rem;
-  }
-  
-  .areas-grid {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  }
-  
-  .ocupacion-container {
-    padding: 0.75rem;
-  }
-}
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // ===== GESTIÓN DE ÁREAS DE INTERÉS =====
-  const areasGrid = document.getElementById('areasGrid');
-  const selectedTagsContainer = document.getElementById('selectedTags');
-  const areasInteresInput = document.getElementById('areasInteresInput');
-
-  // Inicializar etiquetas según áreas preseleccionadas
-  if (areasInteresInput.value) {
-    const preselectedIds = areasInteresInput.value.split(',').filter(id => id !== '');
-    preselectedIds.forEach(id => {
-      const option = areasGrid.querySelector(`.area-option[data-id="${id}"]`);
-      if (option) {
-        option.classList.add('selected');
-        addTag(id, option.textContent);
-      }
-    });
-  }
-
-  // Manejar click en cada opción
-  areasGrid.querySelectorAll('.area-option').forEach(option => {
-    option.addEventListener('click', function() {
-      const id = this.dataset.id;
-      const text = this.textContent;
-
-      this.classList.toggle('selected');
-
-      if (this.classList.contains('selected')) {
-        addTag(id, text);
-      } else {
-        removeTag(id);
-      }
-
-      updateAreasInteresInput();
-    });
-  });
-
-  // Función para agregar una etiqueta
-  function addTag(id, text) {
-    if (selectedTagsContainer.querySelector(`.tag[data-id="${id}"]`)) return;
-
-    const tag = document.createElement('div');
-    tag.className = 'tag badge bg-primary me-2 mb-2 d-inline-flex align-items-center';
-    tag.dataset.id = id;
-    tag.innerHTML = `
-      ${text}
-      <span class="tag-remove ms-2" style="cursor: pointer; font-weight: bold;">&times;</span>
-    `;
-
-    tag.querySelector('.tag-remove').addEventListener('click', function(e) {
-      e.stopPropagation();
-      removeTag(id);
-
-      const option = areasGrid.querySelector(`.area-option[data-id="${id}"]`);
-      if (option) option.classList.remove('selected');
-
-      updateAreasInteresInput();
-    });
-
-    selectedTagsContainer.appendChild(tag);
-  }
-
-  // Función para eliminar una etiqueta
-  function removeTag(id) {
-    const tag = selectedTagsContainer.querySelector(`.tag[data-id="${id}"]`);
-    if (tag) tag.remove();
-  }
-
-  // Actualizar input oculto
-  function updateAreasInteresInput() {
-    const selectedIds = Array.from(selectedTagsContainer.querySelectorAll('.tag'))
-                             .map(tag => tag.dataset.id);
-    areasInteresInput.value = selectedIds.join(',');
-    console.log('IDs seleccionados:', areasInteresInput.value);
-  }
-});
-</script>
-
+<script src="{% static 'js/js_autenticacion/autenticacion.js' %}"></script>
 
 {% endblock %}
