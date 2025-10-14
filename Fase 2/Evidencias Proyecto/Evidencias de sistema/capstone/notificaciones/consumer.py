@@ -11,29 +11,34 @@ class NotificacionConsumer(WebsocketConsumer):
     def connect(self):
         try:
             self.user = self.scope['user']
-            print("👀 Usuario en connect:", self.user)
+            logger.debug(f"👀 Usuario intentando conectar al WS: {self.user}")
+
             if self.user.is_authenticated:
+                # Crear nombre del grupo basado en usuario
                 self.group_name = f'notificaciones_{self.user.id}'
                 async_to_sync(self.channel_layer.group_add)(
                     self.group_name,
                     self.channel_name
                 )
                 self.accept()
-                print(f"✅ Usuario {self.user.id} aceptado en WebSocket")
+                logger.info(f"✅ Usuario {self.user.id} aceptado en WebSocket de notificaciones")
             else:
-                print("❌ Usuario no autenticado, cerrando WebSocket")
+                logger.warning("❌ Usuario no autenticado, cerrando WebSocket")
                 self.close()
         except Exception as e:
-            print("❌ Error en connect:", e)
+            logger.exception(f"❌ Error en connect: {e}")
             self.close()
 
     def disconnect(self, close_code):
-        if hasattr(self, 'group_name'):
-            async_to_sync(self.channel_layer.group_discard)(
-                self.group_name,
-                self.channel_name
-            )
-            logger.info(f"🔌 Usuario {self.user.id} desconectado de notificaciones")
+        try:
+            if hasattr(self, 'group_name'):
+                async_to_sync(self.channel_layer.group_discard)(
+                    self.group_name,
+                    self.channel_name
+                )
+                logger.info(f"🔌 Usuario {self.user.id} desconectado de notificaciones")
+        except Exception as e:
+            logger.exception(f"❌ Error en disconnect: {e}")
 
     def receive(self, text_data):
         try:
@@ -44,7 +49,7 @@ class NotificacionConsumer(WebsocketConsumer):
 
     def send_notificacion(self, event):
         try:
-            print("📢 Llega notificación al consumer:", event)  # Solo para debug
+            logger.debug(f"📢 Notificación recibida en consumer para enviar: {event}")  # <-- log agregado
             self.send(text_data=json.dumps({
                 "id": event["id"],
                 "tipo": event.get("tipo", "test"),
@@ -54,5 +59,6 @@ class NotificacionConsumer(WebsocketConsumer):
                 "fecha_creacion": event.get("fecha_creacion"),
                 "leida": event.get("leida", False)
             }))
+            logger.info(f"📨 Notificación enviada al cliente {self.user.id}")
         except Exception as e:
-            print("❌ Error enviando notificación:", e)
+            logger.exception(f"❌ Error enviando notificación: {e}")

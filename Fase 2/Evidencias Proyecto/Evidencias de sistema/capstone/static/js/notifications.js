@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Actualiza el badge con el conteo de no leídas
     // --------------------
     function actualizarBadge() {
-        fetch("notificaciones/no-leidas/")
+        fetch("/notificaciones/no-leidas/")
             .then(response => response.json())
             .then(data => {
                 const badge = document.getElementById("notification-count");
@@ -151,7 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Marca una notificación como leída
     // --------------------
     function marcarNotificacionLeida(id, elemento) {
-        fetch(`/${id}/marcar-leida/`)
+        fetch(`/notificaciones/${id}/marcar-leida/`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {

@@ -142,13 +142,6 @@ class Disponibilidad(models.Model):
         return f"{self.anuncio.id} - {self.dia} - {self.mañana}"
     
 class Tutoria(models.Model):
-    solicitud = models.OneToOneField(
-        to=Solicitud,
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        related_name="tutoria"
-    )
     anuncio = models.ForeignKey(
         to=Anuncio,
         on_delete=models.PROTECT,
@@ -174,6 +167,7 @@ class Tutoria(models.Model):
             ("Confirmada", "Confirmada"),
             ("Completada", "Completada"),
             ("Cancelada", "Cancelada"),
+            ("En curso", "En curso"),
         ],
         default="Pendiente"
     )

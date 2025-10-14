@@ -64,6 +64,31 @@
 </div>
 {% endif %}
 
+{% comment %} <script>
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("rolForm");
+    const modal = document.getElementById("rolModal");
+
+    form.addEventListener("submit", () => {
+        const selectedRol = form.querySelector("input[name='rol']:checked").value;
+
+        // Guardar en sessionStorage del navegador
+        sessionStorage.setItem("rol_actual", selectedRol);
+        console.log("Rol guardado en sessionStorage:", selectedRol);
+
+        // Aquí podrías cerrar el modal de inmediato si quieres
+        // modal.style.display = "none";
+    });
+
+    // Si ya existe rol en Django (rol_actual), lo ponemos en sessionStorage
+    {% if rol_actual %}
+        sessionStorage.setItem("rol_actual", "{{ rol_actual }}");
+    {% endif %}
+});
+</script> {% endcomment %}
+
+
+
 <style>
 .custom-rol-modal {
   background-color: rgba(10, 25, 41, 0.7);

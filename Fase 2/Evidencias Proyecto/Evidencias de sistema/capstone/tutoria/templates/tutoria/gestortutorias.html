@@ -23,32 +23,36 @@
       <div class="card border-0 shadow-sm">
         <div class="card-body p-4">
           <div class="row g-3 align-items-end">
-            <!-- TUTORÍA -->
+            <!-- TUTORIA -->
             <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Tutoría</label>
-              <select class="form-select border" id="selectTutoria">
-                <option value="">Selecciona tutoría</option>
-                <option value="matematicas">Matemáticas Avanzadas</option>
-                <option value="calculo">Cálculo Diferencial</option>
-                <option value="fisica">Física General</option>
+              <label class="form-label fw-semibold">Anuncio</label>
+              <select class="form-select border" id="selectAnuncio">
+                <option value="">Selecciona Anuncio</option>
+                {% for solicitud in solicitudes %}
+                  {% if solicitud.anuncio %}
+                    <option value="{{ solicitud.anuncio.id }}">
+                      {{ solicitud.anuncio.titulo }}
+                    </option>
+                  {% endif %}
+                {% empty %}
+                  <option value="">No hay anuncios disponibles</option>
+                {% endfor %}
               </select>
             </div>
 
-            <!-- ALUMNO -->
+            <!-- SOLICITUDES -->
             <div class="col-12 col-md-4">
-              <label class="form-label fw-semibold">Alumno</label>
-              <select class="form-select border" id="selectAlumno">
-                <option value="">Selecciona alumno</option>
-                <option value="ana">Ana García</option>
-                <option value="carlos">Carlos López</option>
-                <option value="maria">María Rodríguez</option>
+              <label class="form-label fw-semibold">Solicitud</label>
+              <!-- 🔹 Inicialmente deshabilitado -->
+              <select class="form-select border" id="selectSolicitud">
+                <option value="">Selecciona Solicitud</option>
               </select>
             </div>
 
             <!-- BOTÓN -->
             <div class="col-12 col-md-4">
-              <button class="btn btn-primary w-100" id="btnIniciar" disabled>
-                <i class="bi bi-camera-video me-2"></i>Iniciar Sesión
+              <button class="btn btn-primary w-100" id="btnIniciar">
+                <i class="bi bi-camera-video me-2"></i>Iniciar Tutoria
               </button>
             </div>
           </div>
@@ -56,6 +60,108 @@
       </div>
     </div>
   </div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+      const selectAnuncio = document.getElementById("selectAnuncio");
+      const selectSolicitud = document.getElementById("selectSolicitud");
+      const btnIniciar = document.getElementById("btnIniciar");
+
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                cookie = cookie.trim();
+                if (cookie.startsWith(name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+      }
+        
+      // Inicialmente deshabilitado
+      selectSolicitud.disabled = true;
+      btnIniciar.disabled = true;
+
+      selectAnuncio.addEventListener("change", async () => {
+          const anuncioId = selectAnuncio.value;
+          if (!anuncioId) {
+              selectSolicitud.disabled = true;
+              selectSolicitud.innerHTML = `<option value="">Selecciona Solicitud</option>`;
+              return;
+          }
+
+          try {
+              const response = await fetch(`/tutoria/obtener-alumnos/${anuncioId}/`);
+              const data = await response.json();
+
+              if (data.alumnos && data.alumnos.length > 0) {
+                  selectSolicitud.disabled = false;
+                  selectSolicitud.innerHTML = `
+                      <option value="">Selecciona Solicitud</option>
+                      ${data.alumnos.map(a => `<option value="${a.id}">${a.nombre} ${a.p_apellido} ${a.s_apellido}</option>`).join("")}
+                  `;
+              } else {
+                  selectSolicitud.disabled = true;
+                  selectSolicitud.innerHTML = `<option value="">No hay solicitudes aprobadas</option>`;
+              }
+          } catch (err) {
+              console.error("Error cargando solicitudes:", err);
+              selectSolicitud.disabled = true;
+              selectSolicitud.innerHTML = `<option value="">Error al cargar</option>`;
+          }
+      });
+      function actualizarBoton() {
+          // Habilitar solo si hay anuncio y solicitud seleccionados
+          
+          btnIniciar.disabled = !(selectAnuncio.value && selectSolicitud.value);
+      }
+
+      selectAnuncio.addEventListener("change", actualizarBoton);
+      selectSolicitud.addEventListener("change", actualizarBoton);
+
+      btnIniciar.addEventListener("click", async () => {
+        const anuncioId = selectAnuncio.value;
+        const alumnoId = selectSolicitud.value;
+
+        if (!anuncioId || !alumnoId) {
+            alert("Selecciona un anuncio y un alumno");
+            return;
+        }
+
+        try {
+            const response = await fetch("/tutoria/crear-solicitud-tutoria/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCookie("csrftoken")
+                },
+                body: JSON.stringify({
+                    anuncio_id: anuncioId,
+                    alumno_id: alumnoId
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                alert("✅ Solicitud de tutoria enviada correctamente");
+                // Opcional: deshabilitar botón hasta que se refresque o cambiar estado
+                btnIniciar.disabled = true;
+            } else {
+                alert("❌ Error: " + (data.error || "No se pudo crear la solicitud"));
+            }
+        } catch (err) {
+            console.error("Error enviando solicitud:", err);
+            alert("❌ Error al enviar la solicitud");
+        }
+    });
+  });
+</script>
+
 
   <!-- TUTORÍAS -->
   <div class="row g-4">

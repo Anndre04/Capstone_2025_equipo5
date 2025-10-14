@@ -1,9 +1,12 @@
+import json
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import Anuncio, TipoSolicitud, Solicitud, Usuario, Tutor, TutorArea, Disponibilidad, Archivo
 from .forms import TutorRegistrationForm
 from autenticacion.models import AreaInteres, Rol
+from notificaciones.services import NotificationService
 
 dias_semana = [d[0] for d in Disponibilidad.DIAS_SEMANA]
 
@@ -270,6 +273,7 @@ def aceptar_solicitud(request, solicitud_id):
     
     return redirect('tutoria:solicitudesprof', user_id=request.user.id)
 
+@login_required
 def rechazar_solicitud(request, solicitud_id):
     solicitud = get_object_or_404(Solicitud, id=solicitud_id)
 
@@ -284,10 +288,49 @@ def rechazar_solicitud(request, solicitud_id):
     messages.success(request, f"Solicitud de {solicitud.usuarioenvia.nombre} rechazada.")
     return redirect('tutoria:solicitudesprof', user_id=request.user.id)
 
-def gestortutorias(request):
-    
-    return render(request, 'tutoria/gestortutorias.html',)
+@login_required
+def gestortutorias(request, user_id):
+    solicitudes = Solicitud.objects.filter(
+        usuarioreceive__id=user_id,
+        tipo__nombre='Alumno',
+        estado='Aceptada'
+    )
 
+    context = {
+        'solicitudes': solicitudes
+    }
+    
+    return render(request, 'tutoria/gestortutorias.html', context)
+
+@login_required
+def obtener_alumnos_anuncio(request, anuncio_id):
+    try:
+        # Filtrar solicitudes aprobadas del anuncio
+        solicitudes = Solicitud.objects.filter(
+            anuncio_id=anuncio_id,
+            estado="Aceptada",
+            tipo__nombre="Alumno"
+        ).select_related("usuarioenvia")
+
+        alumnos = [
+            {
+                "id": s.usuarioenvia.id,
+                "nombre": s.usuarioenvia.nombre,
+                "p_apellido": s.usuarioenvia.p_apellido,
+                "s_apellido": s.usuarioenvia.s_apellido,
+                "email": s.usuarioenvia.email
+            }
+            for s in solicitudes
+            if s.usuarioenvia
+        ]
+
+        return JsonResponse({"alumnos": alumnos}, status=200)
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+    
+
+@login_required
 def perfiltutor(request, tutor_id):
 
     tutor = get_object_or_404(Tutor, id=tutor_id)
@@ -356,3 +399,49 @@ def registrotutor(request):
             print(f"[DEBUG] Formulario NO válido: {form.errors}")
 
     return render(request, 'tutoria/registrotutor.html', {'form': form})
+
+@login_required
+def crear_solicitud_tutoria(request):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)
+    
+    try:
+        data = json.loads(request.body)
+        anuncio_id = data.get("anuncio_id")
+        alumno_id = data.get("alumno_id")
+
+        if not anuncio_id or not alumno_id:
+            return JsonResponse({"success": False, "error": "Faltan datos"})
+
+        anuncio = get_object_or_404(Anuncio, id=anuncio_id)
+        alumno = get_object_or_404(Usuario, id=alumno_id)
+
+        # Obtener el tipo de solicitud "Tutoria" (o crear si no existe)
+        tipo, _ = TipoSolicitud.objects.get_or_create(nombre="Tutoria")
+
+        solicitud = Solicitud.objects.create(
+            usuarioenvia=request.user,  # tutor
+            usuarioreceive=alumno,
+            tipo=tipo,
+            mensaje=f"{request.user.nombre} te ha enviado una solicitud de tutoría.",
+            estado="Pendiente",
+            anuncio=anuncio
+        )
+
+        # 🔹 Solo enviar notificación si el alumno tiene rol activo "estudiante"
+        if alumno.session.get('rol_actual') == "estudiante":
+            NotificationService.crear_notificacion(
+                usuario=alumno,
+                codigo_tipo="solicitud_recibida",
+                titulo="Nueva solicitud de tutoría",
+                mensaje=f"{request.user.nombre} te ha enviado una solicitud de tutoría.",
+                datos_extra={
+                    "solicitud_id": solicitud.id,
+                    "url": f"tutoria/solicitudes/{solicitud.id}/"
+                }
+            )
+
+        return JsonResponse({"success": True, "solicitud_id": solicitud.id})
+    
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)})

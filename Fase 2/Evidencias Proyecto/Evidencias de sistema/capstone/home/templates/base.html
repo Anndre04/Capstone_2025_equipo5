@@ -455,7 +455,7 @@
           <!-- GESTOR -->
           <li class="nav-item">
             <a class="nav-link smooth-transition {% if request.path == '/tutoria/gestortutorias/' %}active{% endif %}"
-              href="#">
+              href="{% url "tutoria:gestortutorias" request.user.id %}">
               <i class="bi bi-person-check me-1"></i>Gestor Tutorías 
             </a>
           </li>
@@ -869,6 +869,18 @@
 
 <script src="{% static 'js/notifications.js' %}"></script>
 <script src="{% static 'js/chat.js' %}"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Inicializa el sessionStorage con el rol guardado en Django
+    {% if request.session.rol_actual %}
+        sessionStorage.setItem("rol_actual", "{{ request.session.rol_actual }}");
+    {% else %}
+        sessionStorage.removeItem("rol_actual");
+    {% endif %}
+});
+</script>
+
 
 </body>
 </html>
