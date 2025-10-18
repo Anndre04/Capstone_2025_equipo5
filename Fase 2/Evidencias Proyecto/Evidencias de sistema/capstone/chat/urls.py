@@ -6,4 +6,4 @@ urlpatterns = [
     path('mensajes/<int:chat_id>/', mensajes_view, name='obtener_mensajes'),
     path('crearchat/<int:user_id>/', crear_chat, name='crearchat'),
     path('marcar_leidos/<int:chat_id>/', marcar_leidos, name='marcar_leidos'),
-]   
+]

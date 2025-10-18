@@ -62,12 +62,12 @@
   </div>
 
 <script>
-  document.addEventListener("DOMContentLoaded", () => {
-      const selectAnuncio = document.getElementById("selectAnuncio");
-      const selectSolicitud = document.getElementById("selectSolicitud");
-      const btnIniciar = document.getElementById("btnIniciar");
+document.addEventListener("DOMContentLoaded", () => {
+    const selectAnuncio = document.getElementById("selectAnuncio");
+    const selectSolicitud = document.getElementById("selectSolicitud");
+    const btnIniciar = document.getElementById("btnIniciar");
 
-      function getCookie(name) {
+    function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
             const cookies = document.cookie.split(';');
@@ -80,55 +80,59 @@
             }
         }
         return cookieValue;
-      }
-        
-      // Inicialmente deshabilitado
-      selectSolicitud.disabled = true;
-      btnIniciar.disabled = true;
+    }
 
-      selectAnuncio.addEventListener("change", async () => {
-          const anuncioId = selectAnuncio.value;
-          if (!anuncioId) {
-              selectSolicitud.disabled = true;
-              selectSolicitud.innerHTML = `<option value="">Selecciona Solicitud</option>`;
-              return;
-          }
+    // Inicialmente deshabilitado
+    selectSolicitud.disabled = true;
+    btnIniciar.disabled = true;
 
-          try {
-              const response = await fetch(`/tutoria/obtener-alumnos/${anuncioId}/`);
-              const data = await response.json();
+    selectAnuncio.addEventListener("change", async () => {
+        const anuncioId = selectAnuncio.value;
+        if (!anuncioId) {
+            selectSolicitud.disabled = true;
+            selectSolicitud.innerHTML = `<option value="">Selecciona Solicitud</option>`;
+            return;
+        }
 
-              if (data.alumnos && data.alumnos.length > 0) {
-                  selectSolicitud.disabled = false;
-                  selectSolicitud.innerHTML = `
-                      <option value="">Selecciona Solicitud</option>
-                      ${data.alumnos.map(a => `<option value="${a.id}">${a.nombre} ${a.p_apellido} ${a.s_apellido}</option>`).join("")}
-                  `;
-              } else {
-                  selectSolicitud.disabled = true;
-                  selectSolicitud.innerHTML = `<option value="">No hay solicitudes aprobadas</option>`;
-              }
-          } catch (err) {
-              console.error("Error cargando solicitudes:", err);
-              selectSolicitud.disabled = true;
-              selectSolicitud.innerHTML = `<option value="">Error al cargar</option>`;
-          }
-      });
-      function actualizarBoton() {
-          // Habilitar solo si hay anuncio y solicitud seleccionados
-          
-          btnIniciar.disabled = !(selectAnuncio.value && selectSolicitud.value);
-      }
+        try {
+            const response = await fetch(`/tutoria/obtener-alumnos/${anuncioId}/`);
+            const data = await response.json();
 
-      selectAnuncio.addEventListener("change", actualizarBoton);
-      selectSolicitud.addEventListener("change", actualizarBoton);
+            if (data.alumnos && data.alumnos.length > 0) {
+                selectSolicitud.disabled = false;
+                selectSolicitud.innerHTML = `
+                    <option value="">Selecciona Solicitud</option>
+                    ${data.alumnos.map(a => `<option value="${a.id}">${a.nombre} ${a.p_apellido} ${a.s_apellido}</option>`).join("")}
+                `;
+            } else {
+                selectSolicitud.disabled = true;
+                selectSolicitud.innerHTML = `<option value="">No hay solicitudes aprobadas</option>`;
+            }
+        } catch (err) {
+            console.error("Error cargando solicitudes:", err);
+            selectSolicitud.disabled = true;
+            selectSolicitud.innerHTML = `<option value="">Error al cargar</option>`;
+        }
+    });
 
-      btnIniciar.addEventListener("click", async () => {
+    function actualizarBoton() {
+        btnIniciar.disabled = !(selectAnuncio.value && selectSolicitud.value);
+    }
+
+    selectAnuncio.addEventListener("change", actualizarBoton);
+    selectSolicitud.addEventListener("change", actualizarBoton);
+
+    // 🔹 Enviar solicitud
+    btnIniciar.addEventListener("click", async () => {
         const anuncioId = selectAnuncio.value;
         const alumnoId = selectSolicitud.value;
 
         if (!anuncioId || !alumnoId) {
-            alert("Selecciona un anuncio y un alumno");
+            Swal.fire({
+                icon: "warning",
+                title: "Faltan datos",
+                text: "Selecciona un anuncio y un alumno antes de continuar"
+            });
             return;
         }
 
@@ -148,19 +152,64 @@
             const data = await response.json();
 
             if (data.success) {
-                alert("✅ Solicitud de tutoria enviada correctamente");
-                // Opcional: deshabilitar botón hasta que se refresque o cambiar estado
-                btnIniciar.disabled = true;
+                // 🔹 Mostrar modal en espera
+                Swal.fire({
+                    title: "Solicitud enviada",
+                    html: `
+                        <p class="fs-5 text-center">Esperando que el alumno responda...</p>
+                        <div class="spinner-border text-primary mt-3" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                    `,
+                    allowOutsideClick: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        // Polling cada 2 segundos para verificar el estado
+                        const interval = setInterval(async () => {
+                            try {
+                                const res = await fetch(`/tutoria/estado-solicitud/${data.solicitud_id}/`);
+                                const estadoData = await res.json();
+
+                                if (estadoData.estado === "Aceptada") {
+                                    clearInterval(interval);
+                                    Swal.fire({
+                                        icon: "success",
+                                        title: "¡Tutoría aceptada!",
+                                        text: "El alumno ha aceptado la solicitud."
+                                    }).then(() => window.location.reload());
+                                } else if (estadoData.estado === "Rechazada") {
+                                    clearInterval(interval);
+                                    Swal.fire({
+                                        icon: "error",
+                                        title: "Tutoría rechazada",
+                                        text: "El alumno ha rechazado la solicitud."
+                                    });
+                                }
+                            } catch (e) {
+                                console.error("Error consultando estado:", e);
+                            }
+                        }, 2000);
+                    }
+                });
             } else {
-                alert("❌ Error: " + (data.error || "No se pudo crear la solicitud"));
+                Swal.fire({
+                    icon: "error",
+                    title: "Error",
+                    text: data.error || "No se pudo crear la solicitud"
+                });
             }
         } catch (err) {
             console.error("Error enviando solicitud:", err);
-            alert("❌ Error al enviar la solicitud");
+            Swal.fire({
+                icon: "error",
+                title: "Error de red",
+                text: "No se pudo enviar la solicitud"
+            });
         }
     });
-  });
+});
 </script>
+
 
 
   <!-- TUTORÍAS -->

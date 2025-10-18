@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Videollamada: {{ tutoria }}</h2>
+<p>Email: {{ request.user.email }}</p>
+
+<p id="status" style="font-weight: bold; color: green;">Conectando...</p>
+
+<div id="video-container" style="
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+">
+  <div style="position: relative;">
+    <video id="localVideo" autoplay muted playsinline 
+      style="width: 300px; height: 200px; border-radius: 10px; background: #000; object-fit: cover;">
+    </video>
+    <span style="position: absolute; bottom: 8px; left: 10px; color: white; font-size: 14px;">Tú</span>
+  </div>
+
+  <div style="position: relative;">
+    <video id="remoteVideo" autoplay playsinline 
+      style="width: 300px; height: 200px; border-radius: 10px; background: #000; object-fit: cover;">
+    </video>
+    <span style="position: absolute; bottom: 8px; left: 10px; color: white; font-size: 14px;">Otro usuario</span>
+  </div>
+</div>
+
+<div style="margin-top: 1.5rem; text-align: center;">
+  <button id="toggleCam">🎥 Cámara</button>
+  <button id="toggleMic">🎤 Micrófono</button>
+</div>
+
+<script>
+const TUTORIA_ID = "{{ tutoria.id }}";
+const USER_ID = "{{ request.user.id }}";
+const ROLE = "{% if request.user == tutoria.tutor.usuario %}tutor{% else %}estudiante{% endif %}";
+
+const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+const wsPath = `${wsScheme}://${window.location.host}/ws/tutoria/${TUTORIA_ID}/`;
+let socket;
+
+let localStream;
+let peerConnection;
+const remoteVideo = document.getElementById("remoteVideo");
+const localVideo = document.getElementById("localVideo");
+const statusEl = document.getElementById("status");
+
+const configuration = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+
+// 🚀 Inicializa cámara/micrófono
+async function initMedia() {
+    try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        localVideo.srcObject = localStream;
+    } catch (err) {
+        console.error("Error accediendo a cámara/micrófono:", err);
+    }
+}
+
+// ⚙️ Crea una nueva conexión peer
+function createPeerConnection() {
+    peerConnection = new RTCPeerConnection(configuration);
+
+    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+    peerConnection.ontrack = e => {
+        console.log("🎥 Recibido video remoto");
+        remoteVideo.srcObject = e.streams[0];
+    };
+
+    peerConnection.onicecandidate = event => {
+        if (event.candidate) {
+            socket.send(JSON.stringify({ type: "ice-candidate", candidate: event.candidate }));
+        }
+    };
+
+    peerConnection.onconnectionstatechange = () => {
+        if (peerConnection.connectionState === "disconnected") {
+            statusEl.textContent = "Desconectado ❌";
+            statusEl.style.color = "red";
+        }
+        if (peerConnection.connectionState === "connected") {
+            statusEl.textContent = "Conectado ✅";
+            statusEl.style.color = "green";
+        }
+    };
+}
+
+// 🔄 Configurar WebSocket y reconexión automática
+function connectWebSocket() {
+    socket = new WebSocket(wsPath);
+
+    socket.onopen = () => {
+        console.log("✅ Conectado al WebSocket");
+        statusEl.textContent = "Conectado ✅";
+        statusEl.style.color = "green";
+        socket.send(JSON.stringify({ type: "join", user_id: USER_ID, role: ROLE }));
+    };
+
+    socket.onclose = () => {
+        console.warn("⚠️ WebSocket cerrado. Intentando reconectar...");
+        statusEl.textContent = "Reconectando...";
+        statusEl.style.color = "orange";
+        setTimeout(connectWebSocket, 2000);
+    };
+
+    socket.onmessage = async (event) => {
+        const data = JSON.parse(event.data);
+        console.log("📩 Mensaje recibido:", data);
+
+        switch (data.type) {
+            case "user_joined":
+                if (!peerConnection) {
+                    createPeerConnection();
+                    if (ROLE === "tutor") {
+                        const offer = await peerConnection.createOffer();
+                        await peerConnection.setLocalDescription(offer);
+                        socket.send(JSON.stringify({ type: "offer", sdp: offer }));
+                    }
+                }
+                break;
+
+            case "offer":
+                if (!peerConnection) createPeerConnection();
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp));
+                const answer = await peerConnection.createAnswer();
+                await peerConnection.setLocalDescription(answer);
+                socket.send(JSON.stringify({ type: "answer", sdp: answer }));
+                break;
+
+            case "answer":
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.sdp));
+                break;
+
+            case "ice-candidate":
+                if (data.candidate) await peerConnection.addIceCandidate(data.candidate);
+                break;
+
+            case "user_left":
+                remoteVideo.srcObject = null;
+                statusEl.textContent = "El otro usuario salió ❌";
+                statusEl.style.color = "red";
+                break;
+        }
+    };
+}
+
+// 🧹 Cerrar cámara y conexión al salir o recargar
+window.addEventListener("beforeunload", () => {
+    if (localStream) localStream.getTracks().forEach(track => track.stop());
+    if (peerConnection) peerConnection.close();
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: "leave", user_id: USER_ID }));
+        socket.close();
+    }
+});
+
+// 🎥 Botones cámara y micrófono
+document.getElementById("toggleCam").addEventListener("click", () => {
+    localStream.getVideoTracks().forEach(track => track.enabled = !track.enabled);
+});
+document.getElementById("toggleMic").addEventListener("click", () => {
+    localStream.getAudioTracks().forEach(track => track.enabled = !track.enabled);
+});
+
+// Iniciar
+initMedia().then(connectWebSocket);
+</script>
+{% endblock %}

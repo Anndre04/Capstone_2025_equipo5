@@ -1,9 +1,10 @@
 import json
+from django.forms import ValidationError
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Anuncio, TipoSolicitud, Solicitud, Usuario, Tutor, TutorArea, Disponibilidad, Archivo
+from .models import Anuncio, TipoSolicitud, Solicitud, Usuario, Tutor, TutorArea, Disponibilidad, Archivo, Tutoria  
 from .forms import TutorRegistrationForm
 from autenticacion.models import AreaInteres, Rol
 from notificaciones.services import NotificationService
@@ -411,15 +412,15 @@ def crear_solicitud_tutoria(request):
         alumno_id = data.get("alumno_id")
 
         if not anuncio_id or not alumno_id:
-            return JsonResponse({"success": False, "error": "Faltan datos"})
+            return JsonResponse({"success": False, "error": "Faltan datos"}, status=400)
 
         anuncio = get_object_or_404(Anuncio, id=anuncio_id)
         alumno = get_object_or_404(Usuario, id=alumno_id)
 
-        # Obtener el tipo de solicitud "Tutoria" (o crear si no existe)
+        # Tipo de solicitud "Tutoria"
         tipo, _ = TipoSolicitud.objects.get_or_create(nombre="Tutoria")
 
-        solicitud = Solicitud.objects.create(
+        solicitud = Solicitud(
             usuarioenvia=request.user,  # tutor
             usuarioreceive=alumno,
             tipo=tipo,
@@ -428,20 +429,41 @@ def crear_solicitud_tutoria(request):
             anuncio=anuncio
         )
 
-        # 🔹 Solo enviar notificación si el alumno tiene rol activo "estudiante"
-        if alumno.session.get('rol_actual') == "estudiante":
-            NotificationService.crear_notificacion(
-                usuario=alumno,
-                codigo_tipo="solicitud_recibida",
-                titulo="Nueva solicitud de tutoría",
-                mensaje=f"{request.user.nombre} te ha enviado una solicitud de tutoría.",
-                datos_extra={
-                    "solicitud_id": solicitud.id,
-                    "url": f"tutoria/solicitudes/{solicitud.id}/"
+        # Validación de tutoría activa
+        try:
+            solicitud.clean()
+        except ValidationError as ve:
+            return JsonResponse({"success": False, "error": ve.message}, status=400)
+
+        solicitud.save()
+
+        NotificationService.crear_notificacion(
+            usuario=alumno,
+            codigo_tipo="Solicitud_tutoria",
+            titulo="Nueva solicitud de tutoría",
+            mensaje=f"{request.user.nombre} {request.user.p_apellido} te ha enviado una solicitud para iniciar una tutoría.",
+            datos_extra={
+                "solicitud_id": solicitud.id,
+                "rol_requerido": "Estudiante",
                 }
-            )
+        )
 
         return JsonResponse({"success": True, "solicitud_id": solicitud.id})
     
     except Exception as e:
-        return JsonResponse({"success": False, "error": str(e)})
+        return JsonResponse({"success": False, "error": str(e)}, status=500)
+
+@login_required
+def estado_solicitud_tutoria(request, solicitud_id):
+    """
+    Devuelve el estado actual de una solicitud de tutoría.
+    """
+    solicitud = get_object_or_404(Solicitud, id=solicitud_id)
+
+    # Solo el tutor que envió la solicitud puede consultar su estado
+    if solicitud.usuarioenvia != request.user:
+        return JsonResponse({"error": "No tienes permisos para ver esta solicitud."}, status=403)
+
+    return JsonResponse({
+        "estado": solicitud.estado
+    })

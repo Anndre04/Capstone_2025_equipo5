@@ -1,4 +1,5 @@
 from django.db import models
+from django.forms import ValidationError
 from autenticacion.models import AreaInteres, Usuario
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.conf import settings
@@ -31,14 +32,57 @@ class Solicitud(models.Model):
 
     anuncio = models.ForeignKey("Anuncio", on_delete=models.PROTECT, null=True, blank=True)
 
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['usuarioenvia', 'usuarioreceive'],
-                condition=models.Q(estado__in=['Pendiente', 'Aceptada']),
-                name='unique_solicitud_activa'
+    def clean(self):
+        """
+        Llama a las validaciones específicas según el tipo de solicitud.
+        """
+        self.validar_solicitudes_normales()
+        self.validar_tutorias_activas()
+
+    def validar_solicitudes_normales(self):
+        """
+        Valida que no haya otra solicitud activa del mismo tipo entre los mismos usuarios
+        (excepto si es 'Tutoria').
+        """
+        if self.tipo.nombre.lower() == "tutoria":
+            return  # no aplica para tutorías
+
+        qs = Solicitud.objects.filter(
+            usuarioenvia=self.usuarioenvia,
+            usuarioreceive=self.usuarioreceive,
+            tipo=self.tipo,
+            estado__in=["Pendiente", "Aceptada"]
+        )
+        if self.pk:
+            qs = qs.exclude(pk=self.pk)
+        if qs.exists():
+            raise ValidationError(
+                f"Ya existe una solicitud activa de tipo '{self.tipo.nombre}' entre estos usuarios."
             )
-        ]
+
+    def validar_tutorias_activas(self):
+        """
+        Valida que no exista una tutoría en curso entre los mismos usuarios.
+        """
+        if self.tipo.nombre.lower() != "tutoria":
+            return  # solo aplica para tutorías
+
+        from .models import Tutoria  # evitar import circular
+        tutor = self.usuarioenvia.tutor
+        estudiante = self.usuarioreceive
+
+        tutoria_activa = Tutoria.objects.filter(
+            tutor=tutor,
+            estudiante=estudiante,
+            estado__in=["Pendiente", "En curso"]
+        )
+        if self.pk:
+            tutoria_activa = tutoria_activa.exclude(solicitud__pk=self.pk)
+
+        if tutoria_activa.exists():
+            raise ValidationError(
+                "Ya existe una tutoría activa entre estos usuarios."
+            )
 
     def __str__(self):
         return f"Solicitud {self.tipo.nombre} de {self.usuarioenvia.email}"
@@ -142,6 +186,7 @@ class Disponibilidad(models.Model):
         return f"{self.anuncio.id} - {self.dia} - {self.mañana}"
     
 class Tutoria(models.Model):
+    solicitud = models.ForeignKey(Solicitud, on_delete=models.PROTECT, related_name="tutoria_creada", null=True)
     anuncio = models.ForeignKey(
         to=Anuncio,
         on_delete=models.PROTECT,
@@ -163,8 +208,6 @@ class Tutoria(models.Model):
     estado = models.CharField(
         max_length=20,
         choices=[
-            ("Pendiente", "Pendiente"),
-            ("Confirmada", "Confirmada"),
             ("Completada", "Completada"),
             ("Cancelada", "Cancelada"),
             ("En curso", "En curso"),

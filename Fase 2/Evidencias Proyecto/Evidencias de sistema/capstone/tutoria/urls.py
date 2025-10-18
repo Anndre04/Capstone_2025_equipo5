@@ -20,4 +20,5 @@ urlpatterns = [
     path('gestortutorias/<int:user_id>', views.gestortutorias, name='gestortutorias'),
     path("obtener-alumnos/<int:anuncio_id>/", views.obtener_alumnos_anuncio, name="obtener_alumnos_por_anuncio"),
     path('crear-solicitud-tutoria/', views.crear_solicitud_tutoria, name='crear_solicitud_tutoria'),
+    path('estado-solicitud/<int:solicitud_id>/', views.estado_solicitud_tutoria, name='estado_solicitud_tutoria'),
 ]

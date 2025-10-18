@@ -1,8 +1,11 @@
+from datetime import datetime, timedelta
 import logging
+from django.forms import ValidationError
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from tutoria.models import Anuncio
+from tutoria.models import Anuncio, Tutoria
 from autenticacion.models import AreaInteres, Usuario
 from tutoria.models import Anuncio, Solicitud
 
@@ -102,3 +105,59 @@ def cancelarsolicitud(request, solicitud_id):
         messages.error(request, "Hubo un error procesando su solicitud")
         logger.error("Error cancelando las solicitudes del usuario", exc_info=True)
         return redirect("solicitudesusuario", request.user.id)
+
+@login_required
+def aceptar_solicitud_tutoria(request, solicitud_id):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)
+
+    solicitud = get_object_or_404(Solicitud, id=solicitud_id)
+
+    # Solo el usuario receptor puede aceptar
+    if solicitud.usuarioreceive != request.user:
+        return JsonResponse({"success": False, "error": "No tienes permisos"}, status=403)
+
+    # Marcar la solicitud como aceptada
+    solicitud.estado = "Aceptada"
+    
+    # Validar tutorías activas SOLO si es tipo tutoria
+    if solicitud.tipo.nombre.lower() == "tutoria":
+        try:
+            solicitud.clean()  # lanza ValidationError si hay tutoría activa
+        except ValidationError as e:
+            return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+    solicitud.save()
+
+    # Solo crear tutoría si es de tipo "tutoria"
+    if solicitud.tipo.nombre.lower() == "tutoria":
+        dt_inicio = datetime.now()  # o tomar de request.POST si querés fecha personalizada
+        dt_fin = dt_inicio + timedelta(minutes=60)
+
+        tutoria = Tutoria.objects.create(
+            solicitud=solicitud,
+            anuncio=solicitud.anuncio,
+            tutor=solicitud.usuarioenvia.tutor,
+            estudiante=solicitud.usuarioreceive,
+            fecha=dt_inicio.date(),
+            hora_inicio=dt_inicio.time(),
+            hora_fin=dt_fin.time(),
+            estado="Pendiente"
+        )
+
+        return JsonResponse({"success": True, "tutoria_id": tutoria.id})
+
+    return JsonResponse({"success": True, "info": "Solicitud aceptada, no es tutoría."})
+
+@login_required
+def rechazar_solicitud_tutoria(request, solicitud_id):
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "Método no permitido"}, status=405)
+
+    solicitud = get_object_or_404(Solicitud, id=solicitud_id)
+    if solicitud.usuarioreceive != request.user:
+        return JsonResponse({"success": False, "error": "No tienes permisos"}, status=403)
+
+    solicitud.estado = "Rechazada"
+    solicitud.save()
+    return JsonResponse({"success": True})

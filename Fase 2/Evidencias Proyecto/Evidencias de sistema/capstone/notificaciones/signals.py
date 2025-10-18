@@ -44,9 +44,7 @@ def notificacion_mensaje_chat(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=Solicitud)
 def notificar_nueva_solicitud(sender, instance, created, **kwargs):
-    """
-    Envía una notificación cuando se crea una nueva solicitud.
-    """
+    print("🚨 Signal ejecutado: notificar_nueva_solicitud")  # 👈
     if created:
         try:
             print(f"✅ Nueva solicitud creada por {instance.usuarioenvia.nombre} para {instance.usuarioreceive.nombre}")
@@ -58,6 +56,7 @@ def notificar_nueva_solicitud(sender, instance, created, **kwargs):
                 mensaje=f"{instance.usuarioenvia.nombre} te ha enviado una solicitud.",
                 datos_extra={
                     "solicitud_id": instance.id,
+                    # REVISAR
                     "url" : f"tutoria/solicitudesprof/{instance.usuarioreceive.id}"
                     },
             )

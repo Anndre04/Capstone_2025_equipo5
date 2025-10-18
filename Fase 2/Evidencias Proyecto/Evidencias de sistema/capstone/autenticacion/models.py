@@ -17,7 +17,7 @@ class Region(models.Model):
         return self.nombre
 
 class Comuna(models.Model):
-    nombre = models.CharField(max_length=100)
+    nombre = models.CharField(max_length=150)
     region = models.ForeignKey(Region, on_delete=models.PROTECT, related_name="comunas")
 
     def __str__(self):

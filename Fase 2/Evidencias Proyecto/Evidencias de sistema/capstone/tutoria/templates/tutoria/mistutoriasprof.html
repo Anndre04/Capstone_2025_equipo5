@@ -171,7 +171,7 @@
                   <label>Área</label>
                   <select name="area" class="form-select">
                     {% for area in areastutor %}
-                      <option value="{{ area.id }}" {% if area == anuncio.area %}selected{% endif %}>{{ area.nombre }}</option>
+                      <option value="{{ area.id }}" {% if area == anuncio.area %}selected{% endif %}>{{ area.area.nombre }}</option>
                     {% endfor %}
                   </select>
                 </div>
