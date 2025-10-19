@@ -8,4 +8,5 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='login'), name='logout'),
     path('seleccionar-rol/', views.seleccionar_rol, name='seleccionar_rol'),
+    path('obtener_comunas/<int:region_id>/', views.obtener_comunas, name='obtener_comunas'),
 ]

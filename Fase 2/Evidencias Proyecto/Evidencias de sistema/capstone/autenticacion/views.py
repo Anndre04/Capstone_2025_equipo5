@@ -1,10 +1,11 @@
 import logging
+from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .forms import RegistroForm, LoginForm, validar_foto
-from .models import Rol, Usuario, AreaInteres, Ocupacion
+from .models import Comuna, Rol, Usuario, AreaInteres, Ocupacion
 from PIL import Image
 from django.core.signing import Signer, BadSignature, TimestampSigner, SignatureExpired
 from django.core.mail import send_mail
@@ -159,3 +160,10 @@ def login_view(request):
     
     return render(request, 'autenticacion/login.html', {'form': form})
 
+def obtener_comunas(request, region_id):
+    try:
+        comunas = Comuna.objects.filter(region_id=region_id).values('id', 'nombre')
+        return JsonResponse(list(comunas), safe=False)
+    except Exception as e:
+        print("Error en obtener_comunas:", e)
+        return JsonResponse({"error": str(e)}, status=500)

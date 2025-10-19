@@ -41,16 +41,38 @@ def validar_solo_letras(valor):
 
 def validar_rut(valor):
     """
-    Valida que el RUT no exceda los 18 caracteres y tenga formato básico
+    Valida un RUT chileno completo: formato y dígito verificador.
     """
-    if valor:
-        # Validar longitud máxima
-        if len(valor) > 10:
-            raise ValidationError('El RUT no puede tener más de 10 caracteres.')
-        
-        # Validar formato básico (números, k, K, guiones y puntos)
-        if not re.match(r'^[0-9\.\-kK]+$', valor):
-            raise ValidationError('El RUT solo puede contener números, puntos, guiones y la letra K.')
+    if not rut:
+        raise ValidationError("El RUT es obligatorio.")
+
+    # Limpiar puntos y guion
+    rut = rut.replace(".", "").replace("-", "").upper()
+    
+    if not re.match(r'^\d{7,8}[0-9K]$', rut):
+        raise ValidationError("RUT con formato inválido.")
+    
+    # Separar cuerpo y dígito verificador
+    cuerpo = rut[:-1]
+    dv = rut[-1]
+
+    suma = 0
+    multiplicador = 2
+    for c in reversed(cuerpo):
+        suma += int(c) * multiplicador
+        multiplicador += 1
+        if multiplicador > 7:
+            multiplicador = 2
+    dv_calculado = 11 - (suma % 11)
+    if dv_calculado == 11:
+        dv_calculado = "0"
+    elif dv_calculado == 10:
+        dv_calculado = "K"
+    else:
+        dv_calculado = str(dv_calculado)
+
+    if dv != dv_calculado:
+        raise ValidationError("RUT inválido, dígito verificador incorrecto.")
         
 
 def validar_foto(foto):
@@ -105,6 +127,21 @@ class RegistroForm(UserCreationForm):
             'placeholder': 'RUN - Máx. 10 caracteres'
         })
     )
+
+    genero = forms.ChoiceField(
+        choices=[
+            ('', 'Seleccione su género'),
+            ('H', 'Hombre'),
+            ('M', 'Mujer'),
+            ('O', 'Otro'),
+            ('N', 'Prefiero no decirlo')
+        ],
+        required=True,
+        widget=forms.Select(attrs={
+            'class': 'form-select form-select-sm'
+        })
+    )
+
     fecha_nac = forms.DateField(
         required=True,
         widget=forms.DateInput(attrs={
@@ -212,6 +249,14 @@ class RegistroForm(UserCreationForm):
         if run:
             validar_rut(run)
         return run
+    
+    def clean_genero(self):
+        genero = self.cleaned_data.get('genero')
+        if not genero:
+            raise forms.ValidationError("Debes seleccionar un género.")
+        if genero not in ['H', 'M', 'O', 'N']:
+            raise forms.ValidationError("Opción de género no válida.")
+        return genero
 
     def clean_fecha_nac(self):
         """

@@ -21,7 +21,7 @@ class Comuna(models.Model):
     region = models.ForeignKey(Region, on_delete=models.PROTECT, related_name="comunas")
 
     def __str__(self):
-        return f"{self.nombre} ({self.region.nombre})"
+        return f"{self.nombre}"
     
 class Nivel_educacional(models.Model):
     nombre = models.CharField(max_length=50)
@@ -39,7 +39,7 @@ class Ocupacion(models.Model):
     nombre = models.CharField(max_length=100)
 
     def __str__(self):
-        return f"{self.nombre}, ID: {str(self.id)}"
+        return f"{self.nombre}"
 
 class Institucion(models.Model):
     nombre = models.CharField(max_length=200)
@@ -71,6 +71,14 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(email, password, **extra_fields)
     
 class Usuario(AbstractBaseUser, PermissionsMixin):
+
+    GENERO_CHOICES = [
+        ("H", "Hombre"),
+        ("M", "Mujer"),
+        ("O", "Otro"),
+        ("N", "Prefiero no decirlo"),
+    ]
+
     email = models.EmailField(unique=True)
     nombre = models.CharField(max_length=50, blank=True, null=True)
     p_apellido = models.CharField(max_length=50, blank=True, null=True)
@@ -82,6 +90,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     comuna = models.ForeignKey(to=Comuna, on_delete=models.PROTECT, null=True, blank=True)
     fecha_nac = models.DateField(null=True, blank=True)
     ocupacion = models.ForeignKey(to=Ocupacion, on_delete=models.PROTECT, null=True, blank=True)
+    genero = models.CharField(max_length=1, choices=GENERO_CHOICES, null=True)
     institucion = models.ForeignKey(to=Institucion, on_delete=models.PROTECT, null=True, blank=True)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
