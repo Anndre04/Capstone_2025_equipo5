@@ -12,6 +12,7 @@ urlpatterns = [
     path('tutoria/', include('tutoria.urls')),
     path('chat/', include('chat.urls')),
     path('videollamadas/', include('videollamadas.urls')),
+    path('evaluaciones/', include('evaluaciones.urls')),
     path('activar/<str:token>/', auth_views.verificar_email, name='activar_cuenta'),
 ]
 

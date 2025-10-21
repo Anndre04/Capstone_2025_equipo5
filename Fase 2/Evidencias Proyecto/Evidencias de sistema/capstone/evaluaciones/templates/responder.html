@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <h2>{{ evaluacion.titulo }}</h2>
+  <form method="post">
+    {% csrf_token %}
+    {% for item in preguntas_con_opciones %}
+        <h4>{{ item.evaluacion_pregunta.pregunta.contenido }}</h4>
+        {% for resp in item.opciones %}
+            <label>
+                <input type="radio" name="respuesta_{{ item.evaluacion_pregunta.pregunta.id }}"
+                       value="{{ resp.id }}"
+                       {% if item.seleccionada and resp.id == item.seleccionada.id %} checked {% endif %}
+                       {% if item.seleccionada %} disabled {% endif %}>
+                {{ resp.contenido }}
+            </label><br>
+        {% endfor %}
+
+        {% if item.seleccionada %}
+            <p>
+                Tu respuesta: {{ item.seleccionada.contenido }} -
+                {% if item.correcta %}<span style="color:green">Correcta</span>{% else %}<span style="color:red">Incorrecta</span>{% endif %}
+            </p>
+            <p>Puntaje obtenido: {{ item.evaluacion_pregunta.puntaje_obtenido }} / {{ item.evaluacion_pregunta.pregunta.puntos }}</p>
+        {% endif %}
+        <hr>
+    {% endfor %}
+
+    {% if not preguntas_con_opciones.0.seleccionada %}
+        <button type="submit">Enviar</button>
+    {% endif %}
+  </form>
+</div>
+{% endblock content %}

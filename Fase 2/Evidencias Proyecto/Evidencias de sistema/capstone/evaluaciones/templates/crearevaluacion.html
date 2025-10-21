@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Crear Evaluación Dinámica</h2>
+
+<form class="container" method="post">
+    {% csrf_token %}
+    <label>Título de la Evaluación:</label><br>
+    <input type="text" name="titulo" required><br><br>
+
+    <div id="preguntas-container"></div>
+
+    <button type="button" onclick="agregarPregunta()">Agregar Pregunta</button><br><br>
+    <button type="submit">Guardar Evaluación</button>
+</form>
+
+<script>
+let preguntaCount = 0;
+
+function agregarPregunta() {
+    const container = document.getElementById('preguntas-container');
+
+    const div = document.createElement('div');
+    div.classList.add('pregunta');
+    div.id = `pregunta_${preguntaCount}`;
+    div.innerHTML = `
+        <hr>
+        <label>Pregunta ${preguntaCount + 1}:</label><br>
+        <input type="text" name="pregunta_${preguntaCount}" placeholder="Contenido de la pregunta" required><br>
+        <label>Puntos:</label><br>
+        <input type="number" name="pregunta_${preguntaCount}_puntos" value="1" min="1" required><br><br>
+        <div id="opciones_${preguntaCount}"></div>
+        <button type="button" onclick="agregarOpcion(${preguntaCount})">Agregar Opción</button>
+        <br><br>
+    `;
+    container.appendChild(div);
+    preguntaCount++;
+}
+
+function agregarOpcion(preguntaId) {
+    const container = document.getElementById(`opciones_${preguntaId}`);
+    const opcionCount = container.children.length;
+
+    const div = document.createElement('div');
+    div.innerHTML = `
+        <input type="text" name="pregunta_${preguntaId}_op_${opcionCount}" placeholder="Opción ${opcionCount + 1}" required>
+        <input type="radio" name="pregunta_${preguntaId}_correcta" value="${opcionCount}" required> Correcta
+    `;
+    container.appendChild(div);
+}
+</script>
+
+
+{% endblock content %}
