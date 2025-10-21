@@ -83,10 +83,9 @@
                                 <i class="bi bi-send me-2"></i>Enviar solicitud de tutoría
                             </button>
                         </form>
-                        <a href="{% url 'crearchat' request.user.id %}" class="btn btn-primary py-2">
+                        <a href="{% url 'crearchat' anuncio.tutor.usuario.id %}" class="btn btn-primary py-2">
                             <i class="bi bi-chat-dots me-2"></i>Iniciar Chat con el Profesor
                         </a>
-
                     </div>
                 </div>
             </div>
@@ -175,41 +174,9 @@
 
                     <!-- BOTÓN CHAT -->
                     <div class="d-grid mt-4 pt-3 border-top">
-                        <a href="{% url 'chat' %}" class="btn btn-primary py-2">
+                        <a href="{% url 'crearchat' anuncio.tutor.usuario.id %}" class="btn btn-primary py-2">
                             <i class="bi bi-chat-dots me-2"></i>Iniciar Chat con el Profesor
                         </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- TARJETA INFORMACIÓN TUTORÍA -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-start mb-4">
-                        <div>
-                            <h2 class="fw-bold text-dark mb-2">{{ anuncio.titulo }}</h2>
-                            <div class="d-flex align-items-center flex-wrap gap-2">
-                                <span class="badge bg-primary bg-opacity-10 text-primary border-0">Avanzado</span>
-                                <span class="badge bg-info bg-opacity-10 text-info border-0">Matemáticas</span>
-                            </div>
-                        </div>
-                        <span class="fs-4 fw-bold text-success">$15.000/hr</span>
-                    </div>
-
-                    <!-- DESCRIPCIÓN -->
-                    <div class="mb-4">
-                        <h5 class="fw-bold text-dark mb-3">Descripción de la Tutoría</h5>
-                        <p class="text-muted mb-0">
-                            {{ anuncio.descripcion }}
-                        </p>
-                    </div>
-
-                    <!-- FECHA DE PUBLICACIÓN -->
-                    <div class="border-top pt-3">
-                        <small class="text-muted">
-                            <i class="bi bi-calendar me-1"></i>
-                            {{ anuncio.fecha_creacion }}
-                        </small>
                     </div>
                 </div>
             </div>

@@ -212,9 +212,9 @@ class Tutoria(models.Model):
             ("Cancelada", "Cancelada"),
             ("En curso", "En curso"),
         ],
-        default="Pendiente"
+        default="En curso"
     )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Tutoria de {self.estudiante} con {self.tutor} ({self.fecha})"
+        return f"Tutoria de {self.estudiante} con {self.tutor} ({self.fecha}), ID = {str(self.id)}"

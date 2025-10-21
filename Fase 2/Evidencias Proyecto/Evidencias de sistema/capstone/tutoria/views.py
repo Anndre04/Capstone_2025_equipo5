@@ -191,7 +191,6 @@ def publicartutoria(request, user_id):
         messages.success(request, "Tutoría publicada correctamente")
         return redirect('tutoria:misanunciosprof', user_id=user_id)
 
-@login_required
 def anunciotutor(request, anuncio_id):
 
     anuncio = get_object_or_404(Anuncio, id=anuncio_id)

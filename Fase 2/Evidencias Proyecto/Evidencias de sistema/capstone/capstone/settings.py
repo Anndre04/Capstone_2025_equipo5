@@ -46,13 +46,15 @@ INSTALLED_APPS = [
     'notificaciones',
     'channels',
     'videollamadas',
+    #'evaluaciones',
 ]
 
 
 AUTH_USER_MODEL = "autenticacion.Usuario"
 
-LOGIN_REDIRECT_URL = '/login/'
-LOGOUT_REDIRECT_URL = '/home/'
+LOGIN_URL = '/auth/login/' 
+LOGIN_REDIRECT_URL = '/home/' 
+LOGOUT_REDIRECT_URL = '/home/' 
 
 
 MIDDLEWARE = [
