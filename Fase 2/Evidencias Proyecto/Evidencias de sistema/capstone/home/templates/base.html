@@ -210,12 +210,21 @@
               <i class="bi bi-person-check me-1"></i>Gestor Tutorías 
             </a>
           </li>
-
-          <li class="nav-item">
-            <a class="nav-link smooth-transition" href="#">
-              <i class="bi bi-people me-1"></i>Mis Estudiantes
-            </a>
-          </li>
+          <!-- Tutoria -->
+          {% if tutoria_en_curso %}
+            <li class="nav-item">
+              <a class="nav-link smooth-transition"
+                href="{% url 'tutoria:tutoria' tutoria_en_curso.id %}">
+                <i class="bi bi-person-check me-1"></i>Tutoría
+              </a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link smooth-transition disabled" href="#" tabindex="-1" aria-disabled="true">
+                <i class="bi bi-person-check me-1"></i>Tutoría
+              </a>
+            </li>
+          {% endif %}
         </ul>
       </div>
     </div>
@@ -265,7 +274,21 @@
             <i class="bi bi-person-check me-1"></i>Gestor Tutorías 
           </a>
         </li>
-
+        <!-- Tutoria -->
+          {% if tutoria_en_curso %}
+            <li class="nav-item">
+              <a class="nav-link smooth-transition"
+                href="{% url 'tutoria:tutoria' tutoria_en_curso.id %}">
+                <i class="bi bi-person-check me-1"></i>Tutoría
+              </a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link smooth-transition disabled" href="#" tabindex="-1" aria-disabled="true">
+                <i class="bi bi-person-check me-1"></i>Tutoría
+              </a>
+            </li>
+          {% endif %}
 
       </ul>
     </div>
@@ -311,12 +334,20 @@
             </a>
           </li>
           <!-- Tutoria -->
-          <li class="nav-item">
-            <a class="nav-link smooth-transition"
-              href="#">
-              <i class="bi bi-person-check me-1"></i>Tutoria 
-            </a>
-          </li>
+          {% if tutoria_en_curso %}
+            <li class="nav-item">
+              <a class="nav-link smooth-transition"
+                href="{% url 'tutoria:tutoria' tutoria_en_curso.id %}">
+                <i class="bi bi-person-check me-1"></i>Tutoría
+              </a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link smooth-transition disabled" href="#" tabindex="-1" aria-disabled="true">
+                <i class="bi bi-person-check me-1"></i>Tutoría
+              </a>
+            </li>
+          {% endif %}
         </ul>
       </div>
     </div>
@@ -360,12 +391,21 @@
         </li>
 
         <!-- GESTOR -->
-        <li class="nav-item">
-          <a class="nav-link smooth-transition"
-            href="#">
-            <i class="bi bi-person-check me-1"></i>Tutoría 
-          </a>
-        </li>
+        <!-- Tutoria -->
+          {% if tutoria_en_curso %}
+            <li class="nav-item">
+              <a class="nav-link smooth-transition"
+                href="{% url 'tutoria:tutoria' tutoria_en_curso.id %}">
+                <i class="bi bi-person-check me-1"></i>Tutoría
+              </a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link smooth-transition disabled" href="#" tabindex="-1" aria-disabled="true">
+                <i class="bi bi-person-check me-1"></i>Tutoría
+              </a>
+            </li>
+          {% endif %}
       </ul>
     </div>
   </nav>

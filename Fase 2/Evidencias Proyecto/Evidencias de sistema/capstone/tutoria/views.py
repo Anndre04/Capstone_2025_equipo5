@@ -466,3 +466,18 @@ def estado_solicitud_tutoria(request, solicitud_id):
     return JsonResponse({
         "estado": solicitud.estado
     })
+
+@login_required
+def tutoria(request, tutoria_id):
+    tutoria = get_object_or_404(Tutoria, id=tutoria_id)
+
+    # Validar que el usuario sea parte de la tutoría
+    if request.user != tutoria.solicitud.usuarioenvia and request.user != tutoria.solicitud.usuarioreceive:
+        messages.error(request, "No tienes permisos para ver esta tutoría.")
+        return redirect('home')
+
+    contexto = {
+        'tutoria': tutoria
+    }
+
+    return render(request, 'tutoria/tutoria.html', contexto)
