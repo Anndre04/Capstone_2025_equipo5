@@ -224,7 +224,6 @@ function conectarNotificaciones() {
 document.addEventListener("DOMContentLoaded", () => {
     cargarNotificacionesPendientes()
     conectarNotificaciones();
-    cargarNotificacionesDropdown();
 
     const btnMarcarTodas = document.getElementById("mark-all-read");
     if (btnMarcarTodas) {

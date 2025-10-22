@@ -39,22 +39,22 @@ def validar_solo_letras(valor):
         if not re.match(r'^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$', valor):
             raise ValidationError('Este campo solo puede contener letras y espacios.')
 
-def validar_rut(valor):
+def validar_rut(run):
     """
     Valida un RUT chileno completo: formato y dígito verificador.
     """
-    if not rut:
+    if not run:
         raise ValidationError("El RUT es obligatorio.")
 
     # Limpiar puntos y guion
-    rut = rut.replace(".", "").replace("-", "").upper()
+    run = run.replace(".", "").replace("-", "").upper()
     
-    if not re.match(r'^\d{7,8}[0-9K]$', rut):
+    if not re.match(r'^\d{7,8}[0-9K]$', run):
         raise ValidationError("RUT con formato inválido.")
     
     # Separar cuerpo y dígito verificador
-    cuerpo = rut[:-1]
-    dv = rut[-1]
+    cuerpo = run[:-1]
+    dv = run[-1]
 
     suma = 0
     multiplicador = 2
