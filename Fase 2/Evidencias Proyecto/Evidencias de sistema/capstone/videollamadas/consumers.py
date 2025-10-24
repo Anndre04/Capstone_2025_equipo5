@@ -2,10 +2,12 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from tutoria.models import Tutoria
+import uuid  # <-- para convertir string a UUID
 
 class TutoriaConsumer(AsyncWebsocketConsumer):
     async def connect(self):
-        self.tutoria_id = self.scope['url_route']['kwargs']['tutoria_id']
+        # Convertir string a UUID
+        self.tutoria_id = uuid.UUID(self.scope['url_route']['kwargs']['tutoria_id'])
         self.user = self.scope['user']
 
         self.tutoria = await self.get_tutoria()
@@ -25,7 +27,7 @@ class TutoriaConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             {
                 "type": "user_joined",
-                "user_id": self.user.id,
+                "user_id": str(self.user.id),  # <-- UUID a string
                 "email": self.user.email
             }
         )
@@ -36,7 +38,7 @@ class TutoriaConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             {
                 "type": "user_left",
-                "user_id": self.user.id
+                "user_id": str(self.user.id)  # <-- UUID a string
             }
         )
 
@@ -53,7 +55,11 @@ class TutoriaConsumer(AsyncWebsocketConsumer):
 
     async def signal(self, event):
         if self.channel_name != event["sender"]:
-            await self.send(text_data=json.dumps(event["message"]))
+            message = event["message"]
+            # Convertir UUID a string si está en el mensaje
+            if "user_id" in message:
+                message["user_id"] = str(message["user_id"])
+            await self.send(text_data=json.dumps(message))
 
     async def user_joined(self, event):
         await self.send(text_data=json.dumps({
@@ -64,7 +70,7 @@ class TutoriaConsumer(AsyncWebsocketConsumer):
     async def user_left(self, event):
         await self.send(text_data=json.dumps({
             "type": "user_left",
-            "user_id": event["user_id"]
+            "user_id": str(event["user_id"])  # <-- UUID a string
         }))
 
     @database_sync_to_async

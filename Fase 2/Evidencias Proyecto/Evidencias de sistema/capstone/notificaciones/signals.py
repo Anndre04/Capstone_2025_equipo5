@@ -30,10 +30,10 @@ def notificacion_mensaje_chat(sender, instance, created, **kwargs):
             titulo=f'Nuevo mensaje de {usuario_remitente.nombre}',
             mensaje=instance.mensaje,
             datos_extra={
-                'chat_id': chat.id,
-                'sender_id': usuario_remitente.id,
+                'chat_id': str(chat.id),
+                'sender_id': str(usuario_remitente.id),
                 'sender_name': usuario_remitente.nombre,
-                'mensaje_id': instance.id,
+                'mensaje_id': str(instance.id),
                 'url': 'chat'
             }
         )
@@ -55,7 +55,7 @@ def notificar_nueva_solicitud(sender, instance, created, **kwargs):
                 titulo="Nueva solicitud recibida",
                 mensaje=f"{instance.usuarioenvia.nombre} te ha enviado una solicitud.",
                 datos_extra={
-                    "solicitud_id": instance.id,
+                    "solicitud_id": str(instance.id),
                     # REVISAR
                     "url" : f"tutoria/solicitudesprof/{instance.usuarioreceive.id}"
                     },

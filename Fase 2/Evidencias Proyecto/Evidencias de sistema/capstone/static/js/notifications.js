@@ -218,12 +218,62 @@ function conectarNotificaciones() {
     notiSocket.onerror = (err) => console.error("❌ Error WebSocket de notificaciones", err);
 }
 
+async function cargarNotificaciones() {
+    const lista = document.getElementById('notifications-list');
+    if (!lista) return;
+
+    try {
+        const res = await fetch('/notificaciones/lista/');
+        const data = await res.json();
+
+        // Limpiar contenido actual
+        lista.innerHTML = '';
+
+        if (!data.notificaciones || data.notificaciones.length === 0) {
+            lista.innerHTML = `
+                <div class="text-center py-3 text-muted">
+                    <i class="bi bi-bell-slash display-6"></i>
+                    <p class="mb-0 small">No hay notificaciones</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Renderizar cada notificación
+        data.notificaciones.forEach(n => {
+            const div = document.createElement('div');
+            div.className = `notification-item p-2 border-bottom ${n.leida ? '' : 'bg-light'}`;
+            div.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="d-flex align-items-center">
+                        <i class="${n.icono} me-2" style="color: ${n.color};"></i>
+                        <div>
+                            <strong>${n.titulo}</strong>
+                            <p class="mb-0 small">${n.mensaje}</p>
+                        </div>
+                    </div>
+                    <small class="text-muted">${new Date(n.fecha_creacion).toLocaleString()}</small>
+                </div>
+            `;
+            lista.appendChild(div);
+        });
+
+    } catch (err) {
+        console.error('❌ Error cargando notificaciones:', err);
+        lista.innerHTML = `
+            <div class="text-center py-3 text-danger">
+                <p class="mb-0 small">Error al cargar notificaciones</p>
+            </div>
+        `;
+    }
+}
 // --------------------
 // Inicialización
 // --------------------
 document.addEventListener("DOMContentLoaded", () => {
     cargarNotificacionesPendientes()
     conectarNotificaciones();
+    cargarNotificaciones()
 
     const btnMarcarTodas = document.getElementById("mark-all-read");
     if (btnMarcarTodas) {

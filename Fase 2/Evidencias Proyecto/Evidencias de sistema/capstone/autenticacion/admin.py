@@ -1,10 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import Usuario, Pais, Region, Comuna, Ocupacion, AreaInteres, Rol, Nivel_educacional, Institucion, UsuarioArea
+from .models import Usuario, Pais, Region, Comuna, Ocupacion, AreaInteres, Rol, Nivel_educacional, Institucion, UsuarioArea, TipoInstitucion
 
 
 admin.site.register(UsuarioArea)
 admin.site.register(Usuario)
+admin.site.register(TipoInstitucion)
 admin.site.register(Pais)
 admin.site.register(Region)
 admin.site.register(Comuna)

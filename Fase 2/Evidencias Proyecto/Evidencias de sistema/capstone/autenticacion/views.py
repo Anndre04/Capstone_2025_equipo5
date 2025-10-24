@@ -68,6 +68,20 @@ def registro_view(request):
                     except ValueError as e:
                         messages.error(request, str(e))
 
+
+                nivel = form.cleaned_data.get('nivel_educacional')
+                institucion = form.cleaned_data.get('institucion')
+                genero = form.cleaned_data.get('genero')
+
+                if genero:
+                    user.genero = genero
+
+                if nivel:
+                    user.n_educacion = nivel
+
+                if institucion:
+                    user.institucion = institucion
+
                 user.save()
 
                 # Asignar rol estudiante

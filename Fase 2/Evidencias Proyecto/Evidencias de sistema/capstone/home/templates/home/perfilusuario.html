@@ -13,32 +13,35 @@
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-4">
                         <div class="row align-items-center">
-                            <!-- ICONO CIRCULAR -->
-                            <div class="col-auto">
-                                <div class="profile-icon-circle bg-success text-white d-flex align-items-center justify-content-center">
-                                    <i class="bi bi-person-fill display-6"></i>
+                            <!-- ICONO / FOTO -->
+                            <div class="col-12 col-sm-3 col-md-2 d-flex justify-content-center mb-3 mb-sm-0">
+                                <div class="profile-icon-circle bg-success text-white d-flex align-items-center justify-content-center" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden;">
+                                    
                                 </div>
+                                {% if foto %}
+                                    <img src="data:image/jpeg;base64,{{ foto }}" alt="Foto usuario">
+                                {% else %}
+                                    <img src="#" alt="Foto por defecto">
+                                {% endif %}
                             </div>
-                            
                             <!-- INFORMACIÓN PRINCIPAL -->
-                            <div class="col">
-                                <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="col-12 col-sm-9 col-md-10">
+                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3">
                                     <div>
                                         <h1 class="h3 fw-bold text-dark mb-1">{{usuario.nombre}} {{usuario.p_apellido}} {{usuario.s_apellido}}</h1>
-                                        <p class="text-muted mb-2">Estudiante de Ingeniería</p>
                                     </div>
-                                    <button class="btn btn-outline-primary btn-sm">
-                                        <i class="bi bi-pencil me-1"></i>Editar
-                                    </button>
+                                    <div class="mt-2 mt-md-0">
+                                        <a href="#" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-pencil me-1"></i>Editar
+                                        </a>
+                                    </div>
                                 </div>
 
                                 <!-- DESCRIPCIÓN PERSONAL -->
                                 <div class="description-section">
                                     <h6 class="fw-bold text-dark mb-2">Sobre mí</h6>
                                     <p class="text-muted mb-0">
-                                        Estudiante de ingeniería apasionado por el aprendizaje y desarrollo personal. 
-                                        Busco mejorar mis habilidades en matemáticas y física para alcanzar mis metas académicas. 
-                                        Me encanta aprender de manera colaborativa y estoy siempre dispuesto a enfrentar nuevos desafíos.
+                                        
                                     </p>
                                 </div>
                             </div>
@@ -79,8 +82,10 @@
                                                 <p class="mb-0 fw-medium">Mujer</p>
                                             {% elif usuario.genero == "O" %}
                                                 <p class="mb-0 fw-medium">Otro</p>
-                                            {% else %}
+                                            {% elif usuario.genero == "N" %}
                                                 <p class="mb-0 fw-medium">Prefiero no decirlo</p>
+                                            {% else %}
+                                                <p class="mb-0 fw-medium">NA</p>
                                             {% endif %}
                                         </div>
                                         <div class="info-item mb-3">

@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from datetime import date, datetime
 from PIL import Image
 import re
-from .models import Usuario, Pais, Region, Comuna, Ocupacion, AreaInteres
+from .models import Usuario, Pais, Region, Comuna, Ocupacion, AreaInteres, Nivel_educacional, Institucion
 
 def validar_edad(fecha_nacimiento):
     """
@@ -173,6 +173,19 @@ class RegistroForm(UserCreationForm):
         required=True,
         widget=forms.Select(attrs={'class': 'form-control form-control-sm'})
     )
+
+    nivel_educacional = forms.ModelChoiceField(
+        queryset=Nivel_educacional.objects.all(),
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control form-control-sm'})
+    )
+
+    institucion = forms.ModelChoiceField(
+        queryset=Institucion.objects.all(),
+        required=True,
+        widget=forms.Select(attrs={'class': 'form-control form-control-sm'})
+    )
+    
     areas_interes = forms.ModelMultipleChoiceField(
         queryset=AreaInteres.objects.all(),
         required=True,

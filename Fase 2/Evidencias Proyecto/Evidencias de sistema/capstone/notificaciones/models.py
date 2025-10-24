@@ -1,9 +1,11 @@
+import uuid
 from django.db import models
 from autenticacion.models import Usuario
 
 # Create your models here.
 
 class TipoNotificacion(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nombre = models.CharField(max_length=100)
     codigo = models.CharField(max_length=50, unique=True, null=True)
     descripcion = models.TextField(blank=True)
@@ -14,6 +16,7 @@ class TipoNotificacion(models.Model):
         return self.nombre
     
 class Notificacion(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     usuario = models.ForeignKey(Usuario, on_delete=models.PROTECT)
     tipo = models.ForeignKey(TipoNotificacion, on_delete=models.PROTECT)
     titulo = models.CharField(max_length=100)

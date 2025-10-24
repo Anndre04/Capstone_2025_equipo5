@@ -296,7 +296,7 @@
   {% endif %}
 
   <!-- NAVBAR SECUNDARIO PARA ESCRITORIO estudiante -->
-  {% if user.is_authenticated and request.path != '/auth/login/' and request.session.rol_actual == "Estudiante" %}
+  {% if user.is_authenticated and request.session.rol_actual == "Estudiante" %}
   <nav class="navbar navbar-secondary d-none d-lg-block sticky-top" id="secondary-navbar">
     <div class="d-flex">
       <div class="container">

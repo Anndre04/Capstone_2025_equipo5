@@ -70,8 +70,8 @@ class ChatConsumer(WebsocketConsumer):
                     'type': 'chat_message',        # Método que se llamará: chat_message
                     'message': message,
                     'username': self.user.nombre,
-                    'user_id': self.user.id,
-                    'chat_id': self.chat_id,
+                    'user_id': str(self.user.id),
+                    'chat_id': str(self.chat_id),
                     'timestamp': mensaje_obj.timestamp.strftime("%d-%m-%Y %H:%M")
                 }
             )
@@ -90,8 +90,8 @@ class ChatConsumer(WebsocketConsumer):
         self.send(text_data=json.dumps({
             'message': event['message'],
             'username': event['username'],
-            'user_id': event['user_id'],    # ID del remitente
-            'chat_id': event['chat_id'],
+            'user_id': str(event['user_id']),    # ID del remitente
+            'chat_id': str(event['chat_id']),
             'timestamp': event['timestamp']
         }))
 

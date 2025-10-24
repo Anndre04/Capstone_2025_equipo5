@@ -1,3 +1,4 @@
+import uuid
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
@@ -11,9 +12,8 @@ logger = logging.getLogger(__name__)
 @login_required
 def chat(request):
     user = request.user
-    
     chats = Chat.objects.filter(users=user).order_by('-fecha_creacion')
-    
+
     chat_data = []
     for chat in chats:
         # Obtener el otro usuario del chat 1:1
@@ -23,12 +23,10 @@ def chat(request):
         # Último mensaje del chat
         ultimo_mensaje = chat.mensaje_set.order_by('-timestamp').first()
         ultimo_texto = ultimo_mensaje.mensaje if ultimo_mensaje else ''
-
         no_leidos = chat.mensaje_set.filter(leido=False).exclude(user=user).count()
 
-        
         chat_data.append({
-            'id': chat.id,
+            'id': str(chat.id),  # UUID -> str para JSON
             'contacto': str(contacto),
             'ultimo_mensaje': ultimo_texto,
             'no_leidos': no_leidos
@@ -38,7 +36,6 @@ def chat(request):
     primera_chat_id = None
     if 'ultimo_chat_id' in request.session:
         primera_chat_id = request.session['ultimo_chat_id']
-        # Limpiar la sesión después de usarlo
         del request.session['ultimo_chat_id']
     elif chat_data:
         primera_chat_id = chat_data[0]['id']
@@ -48,41 +45,34 @@ def chat(request):
         'primera_chat_id': primera_chat_id,
     })
 
-@login_required
-def mensajes_view(request, chat_id):
 
+@login_required
+def mensajes_view(request, chat_id):  # chat_id ya es UUID
     MENSAJES_POR_PAGINA = 30
 
     try:
-        # VERIFICACIÓN DE SEGURIDAD: Usuario debe pertenecer al chat
+        # Verificación de seguridad
         chat = get_object_or_404(Chat, id=chat_id, users=request.user)
-        
-        # Obtener conteo total de mensajes
+
         total_mensajes = chat.mensaje_set.count()
-        
-        # Si no hay mensajes, verificar si es un chat nuevo
+
         if total_mensajes == 0:
             data = {
                 "mensajes": [],
                 "chat_nuevo": True,
                 "info": "Este es un chat nuevo. Envía el primer mensaje."
             }
-            logger.info(f"Chat {chat_id} es nuevo - sin mensajes para usuario {request.user.id}")
         else:
-            # CORRECCIÓN: Obtener los últimos N mensajes en orden cronológico
-            # Calcular el offset para los últimos N mensajes
             offset = max(0, total_mensajes - MENSAJES_POR_PAGINA)
-            
-            # Obtener los últimos N mensajes en orden cronológico
             ultimos_mensajes = chat.mensaje_set.all().order_by('timestamp')[offset:]
-            
+
             data = {
                 "mensajes": [
                     {
                         "contenido": m.mensaje,
                         "fecha": m.timestamp.strftime("%d-%m-%Y %H:%M"),
                         "es_mio": m.user.id == request.user.id,
-                        "mensaje_id": m.id
+                        "mensaje_id": str(m.id)  # si Mensaje también usa UUID
                     } for m in ultimos_mensajes
                 ],
                 "chat_nuevo": False,
@@ -90,17 +80,14 @@ def mensajes_view(request, chat_id):
                 "mostrando_ultimos": len(ultimos_mensajes),
                 "offset": offset
             }
-            logger.info(f"Usuario {request.user.id} cargó {len(data['mensajes'])} mensajes del chat {chat_id}")
-        
+
         return JsonResponse(data)
 
     except Chat.DoesNotExist:
-        logger.warning(f"Usuario {request.user.id} intentó acceder a chat no autorizado: {chat_id}")
         return JsonResponse({"error": "Chat no encontrado o sin permisos"}, status=404)
-        
     except Exception as e:
-        logger.error(f"Error en mensajes_view para usuario {request.user.id}, chat {chat_id}: {e}")
         return JsonResponse({"error": "Error interno del servidor"}, status=500)
+
 
 @login_required
 def crear_chat(request, user_id):
@@ -119,10 +106,11 @@ def crear_chat(request, user_id):
         chat.users.add(user, otro_usuario)
         chat.save()
 
-    # GUARDAR EN SESIÓN EL CHAT RECIÉN CREADO/SELECCIONADO
-    request.session['ultimo_chat_id'] = chat.id
+    # Guardar en sesión el ID (como string para compatibilidad JSON)
+    request.session['ultimo_chat_id'] = str(chat.id)
 
     return redirect('chat')
+
 
 @login_required
 def marcar_leidos(request, chat_id):
@@ -140,6 +128,9 @@ def marcar_leidos(request, chat_id):
             print(f"💡 Mensajes marcados como leídos: {updated_count}")
 
             return JsonResponse({'status': 'ok', 'marcados': updated_count})
+        except ValueError:
+            print("❌ ID de chat inválido")
+            return JsonResponse({'status': 'error', 'message': 'ID de chat inválido'}, status=400)
         except Chat.DoesNotExist:
             print("❌ Chat no encontrado")
             return JsonResponse({'status': 'error', 'message': 'Chat no encontrado'}, status=404)

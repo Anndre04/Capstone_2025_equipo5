@@ -442,12 +442,12 @@ def crear_solicitud_tutoria(request):
             titulo="Nueva solicitud de tutoría",
             mensaje=f"{request.user.nombre} {request.user.p_apellido} te ha enviado una solicitud para iniciar una tutoría.",
             datos_extra={
-                "solicitud_id": solicitud.id,
+                "solicitud_id": str(solicitud.id),
                 "rol_requerido": "Estudiante",
                 }
         )
 
-        return JsonResponse({"success": True, "solicitud_id": solicitud.id})
+        return JsonResponse({"success": True, "solicitud_id": str(solicitud.id)})
     
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=500)

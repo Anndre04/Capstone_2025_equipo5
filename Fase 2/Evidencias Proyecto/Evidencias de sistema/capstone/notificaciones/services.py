@@ -55,13 +55,13 @@ class NotificationService:
             if channel_layer is None:
                 return
                 
-            group_name = f"notificaciones_{notificacion.usuario.id}"
+            group_name = f"notificaciones_{str(notificacion.usuario.id)}"
             
             async_to_sync(channel_layer.group_send)(
                 group_name,
                 {
                     "type": "send_notificacion",
-                    "id": notificacion.id,
+                    "id": str(notificacion.id),
                     "tipo": notificacion.tipo.codigo,
                     "tipo_nombre": notificacion.tipo.nombre,
                     "titulo": notificacion.titulo,
@@ -73,7 +73,7 @@ class NotificationService:
                     "datos_extra": notificacion.datos_extra or {}
                 }
             )
-            logger.debug(f"Notificación enviada por WebSocket a usuario {notificacion.usuario.id}")
+            logger.debug(f"Notificación enviada por WebSocket a usuario {str(notificacion.usuario.id)}")
             
         except Exception as e:
             logger.error(f"Error enviando WebSocket: {e}")

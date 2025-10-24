@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.forms import ValidationError
 from autenticacion.models import AreaInteres, Usuario
@@ -7,12 +8,14 @@ from django.conf import settings
 # Create your models here.
 
 class TipoSolicitud(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nombre = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.nombre
     
 class Solicitud(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     usuarioenvia = models.ForeignKey(
         Usuario, on_delete=models.PROTECT, related_name="solicitudes", null=True
     )
@@ -89,6 +92,7 @@ class Solicitud(models.Model):
     
 
 class Tutor(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     areas_conocimiento = models.ManyToManyField(
         to=AreaInteres,
@@ -101,25 +105,11 @@ class Tutor(models.Model):
     def __str__(self):
         return str(self.usuario)
     
-
-    
-class Archivo(models.Model):
-
-    estado = [
-        ("Revisado", "Revisado"),
-        ("Pendiente", "Pendiente"),
-        ("Rechazado", "Rechazado"),
-    ]
-
-    nombre = models.CharField(max_length=80, null=True)
-    contenido = models.BinaryField()
-    tutor = models.ForeignKey(Tutor, on_delete=models.PROTECT, related_name="archivos", null=True)
-    estado = models.CharField(max_length=20, choices=estado, null=True)
-
     def __str__(self):
-        return self.nombre or "Archivo sin nombre"
+        return str(self.id) or "Archivo sin nombre"
     
 class TutorArea(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tutor = models.ForeignKey(to=Tutor, on_delete=models.PROTECT, null=True)
     area = models.ForeignKey(to=AreaInteres, on_delete=models.PROTECT)
     activo = models.BooleanField(default=True)
@@ -140,6 +130,7 @@ class Anuncio(models.Model):
         ("Eliminado", "Eliminado"),
     ]
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     tutor = models.ForeignKey(to=Tutor, on_delete=models.PROTECT, related_name="anuncios")
     area = models.ForeignKey(to=TutorArea, on_delete=models.PROTECT, null=True)
     titulo = models.CharField(max_length=200)
@@ -165,6 +156,7 @@ class Anuncio(models.Model):
         return f"{self.titulo} - {self.area} - {self.tutor}"
     
 class Disponibilidad(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     anuncio = models.ForeignKey(to=Anuncio, on_delete=models.PROTECT, null=True)
 
     DIAS_SEMANA = [
@@ -186,6 +178,7 @@ class Disponibilidad(models.Model):
         return f"{self.anuncio.id} - {self.dia} - {self.mañana}"
     
 class Tutoria(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     solicitud = models.ForeignKey(Solicitud, on_delete=models.PROTECT, related_name="tutoria_creada", null=True)
     anuncio = models.ForeignKey(
         to=Anuncio,
@@ -217,4 +210,22 @@ class Tutoria(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Tutoria de {self.estudiante} con {self.tutor} ({self.fecha}), ID = {str(self.id)}"
+        return f"Tutoria de {self.estudiante.email} con {self.tutor} ({self.fecha}), ID = {str(self.id)}"
+
+    
+class Archivo(models.Model):
+
+    estado = [
+        ("Revisado", "Revisado"),
+        ("Pendiente", "Pendiente"),
+        ("Rechazado", "Rechazado"),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    nombre = models.CharField(max_length=80, null=True)
+    contenido = models.BinaryField()
+    tutor = models.ForeignKey(Tutor, on_delete=models.PROTECT, related_name="archivos", null=True)
+    tutoria = models.ForeignKey(Tutoria, on_delete=models.PROTECT, related_name="archivos", null=True)
+    estado = models.CharField(max_length=20, choices=estado, null=True)
+
+

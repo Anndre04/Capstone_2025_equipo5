@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     const chatContainer = document.getElementById('chat-container');
-    const userId = chatContainer ? parseInt(chatContainer.dataset.user) : null;
-    let chatId = chatContainer ? parseInt(chatContainer.dataset.chatId) : null;
+    const userId = chatContainer ? chatContainer.dataset.user : null;
+    let chatId = chatContainer ? chatContainer.dataset.chatId : null;
 
     const chatMessagesDiv = document.getElementById('chat-messages');
     const input = document.getElementById('message-input');
@@ -51,7 +51,9 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await res.json();
             chatMessagesDiv.innerHTML = '';
             data.mensajes.forEach(m => appendMessage(m.contenido, m.es_mio, m.fecha));
-            if (data.mensajes.some(m => !m.es_mio && !m.leido)) marcarMensajesLeidos(id);
+            if (data.mensajes.some(m => !m.es_mio && !m.leido))
+                console.log("Mensajes marcados leidos")
+                marcarMensajesLeidos(id);
         } catch (err) {
             console.error('❌ Error cargando mensajes:', err);
         }

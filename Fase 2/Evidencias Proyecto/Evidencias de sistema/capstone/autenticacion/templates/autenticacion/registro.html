@@ -139,6 +139,24 @@
               </select>
             </div>
 
+            <!-- Nivel Educacional -->
+            <div class="mb-3" id="div_nivel_educacional" style="display:none;">
+              <label for="{{ form.nivel_educacional.id_for_label }}" class="form-label fw-semibold small">Nivel Educacional</label>
+              {{ form.nivel_educacional }}
+              {% if form.nivel_educacional.errors %}
+                <div class="text-danger small">{{ form.nivel_educacional.errors }}</div>
+              {% endif %}
+            </div>
+
+            <!-- Institución -->
+            <div class="mb-3" id="div_institucion" style="display:none;">
+              <label for="{{ form.institucion.id_for_label }}" class="form-label fw-semibold small">Institución</label>
+              {{ form.institucion }}
+              {% if form.institucion.errors %}
+                <div class="text-danger small">{{ form.institucion.errors }}</div>
+              {% endif %}
+            </div>
+
             <!-- AREAS DE INTERES - NUEVO DISEÑO -->
             <div class="mb-3">
                 <label class="form-label fw-semibold small">Áreas de Interés (Puedes seleccionar varias)</label>

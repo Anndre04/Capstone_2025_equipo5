@@ -1,9 +1,11 @@
+import uuid
 from django.db import models
 from autenticacion.models import Usuario 
 
 # Create your models here.
 
 class Chat(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nombre = models.CharField(max_length=50)
     users = models.ManyToManyField(Usuario, related_name="chats")
     fecha_creacion = models.DateField(auto_now_add=True)
@@ -19,6 +21,7 @@ class Chat(models.Model):
         return str(self.id)
     
 class Mensaje(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(Usuario, on_delete=models.PROTECT, verbose_name="Usuario")
     chat = models.ForeignKey(Chat, on_delete=models.PROTECT, verbose_name="Chat")
     mensaje = models.TextField(verbose_name="Mensaje")

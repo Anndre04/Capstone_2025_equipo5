@@ -1,15 +1,19 @@
+import uuid
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
+from cloudinary.models import CloudinaryField
 
 # Create your models here.
 
 class Pais(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nombre = models.CharField(max_length=80)
 
     def __str__(self):
         return self.nombre
 
 class Region(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nombre = models.CharField(max_length=100)
     numero = models.CharField(max_length=5, unique=True)
 
@@ -17,6 +21,7 @@ class Region(models.Model):
         return self.nombre
 
 class Comuna(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nombre = models.CharField(max_length=150)
     region = models.ForeignKey(Region, on_delete=models.PROTECT, related_name="comunas")
 
@@ -24,30 +29,52 @@ class Comuna(models.Model):
         return f"{self.nombre}"
     
 class Nivel_educacional(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nombre = models.CharField(max_length=50)
 
     def __str__(self):
-        return self.nombre
+        return f"{self.nombre}"
 
 class AreaInteres(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nombre = models.CharField(max_length=100)
 
     def __str__(self):
         return self.nombre
 
 class Ocupacion(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nombre = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.nombre}"
+    
+class TipoInstitucion(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    nombre = models.CharField(max_length=100, unique=True)
 
     def __str__(self):
         return f"{self.nombre}"
 
 class Institucion(models.Model):
-    nombre = models.CharField(max_length=200)
+    ESTADOS = [
+        ('VIGENTE', 'Vigente'),
+        ('NO_VIGENTE', 'No vigente'),
+        ('EN_CIERRE', 'En proceso de cierre'),
+        ('REVOCADA', 'Reconocimiento revocado'),
+    ]
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    nombre = models.CharField(max_length=200)
+    tipo_institucion = models.ForeignKey(TipoInstitucion, on_delete=models.PROTECT, null=True, related_name="tipoinstitucion")
+    estado = models.CharField(max_length=20, choices=ESTADOS, default='VIGENTE')
+    neducacional = models.ForeignKey(Nivel_educacional, on_delete=models.PROTECT, null=True, related_name="niveleducacional")
+    
     def __str__(self):
         return self.nombre
     
 class Rol(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nombre = models.CharField(max_length=40)
 
     def __str__(self):
@@ -79,6 +106,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         ("N", "Prefiero no decirlo"),
     ]
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email = models.EmailField(unique=True)
     nombre = models.CharField(max_length=50, blank=True, null=True)
     p_apellido = models.CharField(max_length=50, blank=True, null=True)
@@ -92,6 +120,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     ocupacion = models.ForeignKey(to=Ocupacion, on_delete=models.PROTECT, null=True, blank=True)
     genero = models.CharField(max_length=1, choices=GENERO_CHOICES, null=True)
     institucion = models.ForeignKey(to=Institucion, on_delete=models.PROTECT, null=True, blank=True)
+    n_educacion = models.ForeignKey(Nivel_educacional, on_delete=models.PROTECT, null=True, blank=True)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     estado = models.CharField(max_length=20, default='Inactivo')
@@ -125,6 +154,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         
 
 class UsuarioArea(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     usuario = models.ForeignKey(to=Usuario, on_delete=models.PROTECT)
     area = models.ForeignKey(to=AreaInteres, on_delete=models.PROTECT)
     activo = models.BooleanField(default=True)
