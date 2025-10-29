@@ -1,5 +1,7 @@
 let notiSocket;
 const notiMostradas = new Set();
+let rolActual = sessionStorage.getItem("rol_actual");
+
 
 // --------------------
 // Funciones de utilidad
@@ -118,7 +120,6 @@ async function mostrarModalNotificacion(n) {
     if (notiMostradas.has(n.id)) return;
     notiMostradas.add(n.id);
 
-    const rolActual = sessionStorage.getItem("rol_actual");
     const rolRequerido = n.datos_extra?.rol_requerido || "Estudiante";
 
     if (rolActual !== rolRequerido) {
@@ -136,9 +137,9 @@ async function mostrarModalNotificacion(n) {
         return;
     }
 
-     // Marcar como leída de inmediato
-    marcarNotificacionLeida(n.id)
-    
+    // Marcar como leída de inmediato
+    marcarNotificacionLeida(n.id);
+
     // Modal de acción si rol coincide
     Swal.fire({
         title: n.titulo,
@@ -156,7 +157,19 @@ async function mostrarModalNotificacion(n) {
             fetch(`/aceptar_tutoria/${solicitud_id}/`, {
                 method: "POST",
                 headers: { "X-CSRFToken": getCookie("csrftoken") }
-            }).then(() => location.reload());
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.redirect_url) {
+                        window.location.href = data.redirect_url; // 🔥 redirección real
+                    } else if (data.error) {
+                        Swal.fire("Error", data.error, "error");
+                    } else {
+                        location.reload(); // fallback si no es tutoría
+                    }
+                })
+                .catch(() => Swal.fire("Error", "Ocurrió un problema al aceptar la tutoría", "error"));
+
         } else if (result.dismiss === Swal.DismissReason.cancel) {
             fetch(`/rechazar_tutoria/${solicitud_id}/`, {
                 method: "POST",
@@ -191,20 +204,164 @@ async function cargarNotificacionesPendientes() {
     }
 }
 
+// ================================
+// 🔹 Función general de alerta
+// ================================
+/*function mostrarAlertaTutoría(data) {
+    return Swal.fire({
+        icon: data.icon || 'info',
+        title: data.titulo || 'Notificación',
+        text: data.mensaje || '',
+        confirmButtonText: data.confirmButtonText || 'Aceptar',
+        customClass: { confirmButton: 'btn btn-primary' },
+        buttonsStyling: false
+    });
+}*/
+
+// ================================
+// 🔹 Modal para reseña
+// ================================
+async function mostrarModalReseña(tutoriaId, comentariosPredefinidos) {
+    const confirmacion = await Swal.fire({
+        icon: 'question',
+        title: 'La tutoría ha finalizado.',
+        text: '¿Deseas dejar una reseña de esta tutoría?',
+        showCancelButton: true,
+        confirmButtonText: 'Sí',
+        cancelButtonText: 'No',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        customClass: { confirmButton: 'btn btn-primary', cancelButton: 'btn btn-secondary' },
+        buttonsStyling: false
+    });
+
+    if (!confirmacion.isConfirmed) return;
+
+    let seleccion = 1; // 🔹 Declarada aquí para usarla en preConfirm
+
+    const estrellasHtml = Array.from({ length: 5 }, (_, i) =>
+        `<span class="estrella" data-value="${i + 1}" style="font-size:2rem; cursor:pointer; color: ${i === 0 ? 'gold' : 'gray'};">
+            ${i === 0 ? '★' : '☆'}
+        </span>`
+    ).join('');
+
+    const comentariosHtml = comentariosPredefinidos.map(c =>
+        `<label style="display:block; margin:5px 0;">
+            <input type="checkbox" value="${c.id}"> ${c.comentario}
+        </label>`
+    ).join('');
+
+    try {
+        const { value: formValues } = await Swal.fire({
+            title: 'Deja tu reseña',
+            html: `
+                <div style="text-align:center; margin-bottom:10px;">
+                    ${estrellasHtml}
+                </div>
+                <div style="text-align:left; margin-top:10px;">
+                    ${comentariosHtml}
+                </div>
+            `,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Enviar',
+            cancelButtonText: 'Cancelar',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            customClass: { confirmButton: 'btn btn-primary', cancelButton: 'btn btn-secondary' },
+            buttonsStyling: false,
+            didOpen: () => {
+                const estrellas = Swal.getPopup().querySelectorAll('.estrella');
+
+                const pintarEstrellas = (hasta) => {
+                    estrellas.forEach((s, i) => {
+                        s.textContent = i < hasta ? '★' : '☆';
+                        s.style.color = i < hasta ? 'gold' : 'gray';
+                    });
+                };
+
+                pintarEstrellas(seleccion); // primera estrella marcada
+
+                estrellas.forEach(star => {
+                    star.addEventListener('mouseover', () => {
+                        const val = parseInt(star.dataset.value);
+                        pintarEstrellas(val);
+                    });
+                    star.addEventListener('click', () => {
+                        seleccion = parseInt(star.dataset.value); // actualiza selección
+                        pintarEstrellas(seleccion);
+                    });
+                    star.addEventListener('mouseout', () => {
+                        pintarEstrellas(seleccion);
+                    });
+                });
+            },
+            preConfirm: () => {
+                const comentarios = Array.from(
+                    Swal.getPopup().querySelectorAll('input[type="checkbox"]:checked')
+                ).map(c => c.value);
+                return { estrellas: seleccion, comentarios };
+            }
+        });
+
+        if (!formValues) return;
+
+        const data = new URLSearchParams();
+        data.append("estrellas", formValues.estrellas);
+        formValues.comentarios.forEach(id => data.append("comentarios[]", id));
+
+        const response = await fetch(`/tutoria/reseña/${tutoriaId}/`, {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": getCookie("csrftoken"),
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: data
+        });
+
+        const result = await response.json();
+        if (result.success) {
+            Swal.fire('Gracias', 'Tu reseña ha sido enviada', 'success');
+        }
+    } catch (err) {
+        console.error("❌ Error enviando reseña:", err);
+        Swal.fire('Error', 'No se pudo enviar la reseña', 'error');
+    }
+}
 
 // --------------------
 // WebSocket
 // --------------------
 function conectarNotificaciones() {
     const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
-    notiSocket = new WebSocket(`${wsScheme}://${window.location.host}/ws/notificaciones/`);
+    const notiSocket = new WebSocket(`${wsScheme}://${window.location.host}/ws/notificaciones/`);
 
     notiSocket.onopen = () => console.log("✅ Conectado al WebSocket de notificaciones");
 
     notiSocket.onmessage = (e) => {
         const data = JSON.parse(e.data);
+        console.log("📩 WS mensaje recibido:", data);
 
-        console.log(data)
+        if (rolActual === "Estudiante" && data.tipo === "tutoria_finalizada") {
+            const tutoriaId = data.datos_extra?.tutoria_id;
+            const comentarios = data.datos_extra?.comentarios_predefinidos || [];
+            
+            if (tutoriaId) {
+                mostrarModalReseña(tutoriaId, comentarios);
+            } else {
+                console.error("❌ tutoriaId no definido en datos_extra", data);
+            }
+        } else {
+            Swal.fire({
+                icon: "info",
+                title: "Tutoría finalizada",
+                text: "La tutoria ha finiquitado.",
+                confirmButtonText: "Aceptar",
+                customClass: { confirmButton: 'btn btn-primary' },
+                buttonsStyling: false
+            });
+        }
+        
 
         if (data.tipo === "Solicitud_tutoria") {
             mostrarModalNotificacion(data);
@@ -214,8 +371,8 @@ function conectarNotificaciones() {
         actualizarBadge();
     };
 
-    notiSocket.onclose = (e) => console.log("❌ WebSocket de notificaciones cerrado", e);
-    notiSocket.onerror = (err) => console.error("❌ Error WebSocket de notificaciones", err);
+    notiSocket.onclose = (e) => console.log("❌ WebSocket cerrado:", e);
+    notiSocket.onerror = (err) => console.error("❌ Error en WebSocket:", err);
 }
 
 async function cargarNotificaciones() {
@@ -271,8 +428,8 @@ async function cargarNotificaciones() {
 // Inicialización
 // --------------------
 document.addEventListener("DOMContentLoaded", () => {
-    cargarNotificacionesPendientes()
     conectarNotificaciones();
+    cargarNotificacionesPendientes()
     cargarNotificaciones()
 
     const btnMarcarTodas = document.getElementById("mark-all-read");

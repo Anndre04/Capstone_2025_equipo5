@@ -152,6 +152,23 @@ class Anuncio(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
 
+    def tutorias_completadas(self):
+        return self.tutorias.filter(estado="Completada", reseña__isnull=False)
+
+    @property
+    def promedio_estrellas(self):
+        reseñas = self.tutorias.filter(reseña__isnull=False).values_list('reseña__estrellas', flat=True)
+        if reseñas:
+            return sum(reseñas) / len(reseñas)
+        return 0
+
+    @property
+    def promedio_estrellas_redondeado(self):
+        return round(self.promedio_estrellas)
+
+    def cantidad_reseñas(self):
+        return self.tutorias_completadas().count()
+
     def __str__(self):
         return f"{self.titulo} - {self.area} - {self.tutor}"
     
@@ -195,22 +212,21 @@ class Tutoria(models.Model):
         on_delete=models.PROTECT,
         related_name="tutorias_recibidas"
     )
-    fecha = models.DateField()
-    hora_inicio = models.TimeField()
-    hora_fin = models.TimeField()
+    hora_inicio = models.DateTimeField()
+    hora_fin = models.DateTimeField()
     estado = models.CharField(
         max_length=20,
         choices=[
-            ("Completada", "Completada"),
-            ("Cancelada", "Cancelada"),
             ("En curso", "En curso"),
+            ("Cancelada", "Cancelada"),
+            ("Completada", "Completada"),
         ],
         default="En curso"
     )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Tutoria de {self.estudiante.email} con {self.tutor} ({self.fecha}), ID = {str(self.id)}"
+        return f"Tutoria de {self.estudiante.email} con {self.tutor}, {self.hora_inicio} {self.hora_fin}"
 
     
 class Archivo(models.Model):
@@ -228,4 +244,17 @@ class Archivo(models.Model):
     tutoria = models.ForeignKey(Tutoria, on_delete=models.PROTECT, related_name="archivos", null=True)
     estado = models.CharField(max_length=20, choices=estado, null=True)
 
+class ComentarioPredefinido(models.Model): 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False) 
+    comentario = models.CharField(max_length=50) 
+    
+    def __str__(self): return f"{self.comentario}" 
 
+class ReseñaTutor(models.Model): 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False) 
+    tutoria = models.OneToOneField(Tutoria, on_delete=models.CASCADE, related_name="reseña") 
+    estrellas = models.IntegerField(default=5) 
+    comentarios = models.ManyToManyField(ComentarioPredefinido, blank=True)
+    fecha = models.DateTimeField(auto_now_add=True) 
+    def __str__(self): 
+        return f"Reseña de {self.tutoria.estudiante.nombre} a {self.tutoria.tutor.usuario.nombre}"

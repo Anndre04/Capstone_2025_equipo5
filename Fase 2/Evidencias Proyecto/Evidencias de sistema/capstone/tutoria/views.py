@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import Anuncio, TipoSolicitud, Solicitud, Usuario, Tutor, TutorArea, Disponibilidad, Archivo, Tutoria  
+from .models import Anuncio, ComentarioPredefinido, TipoSolicitud, Solicitud, Usuario, Tutor, TutorArea, Disponibilidad, Archivo, Tutoria, ReseñaTutor  
 from .forms import TutorRegistrationForm
 from autenticacion.models import AreaInteres, Rol
 from notificaciones.services import NotificationService
@@ -463,13 +463,21 @@ def estado_solicitud_tutoria(request, solicitud_id):
     if solicitud.usuarioenvia != request.user:
         return JsonResponse({"error": "No tienes permisos para ver esta solicitud."}, status=403)
 
-    return JsonResponse({
-        "estado": solicitud.estado
-    })
+    data = {"estado": solicitud.estado}
+
+    # Agregar tutoria_id si la solicitud es aceptada y existe al menos una tutoría creada
+    if solicitud.estado == "Aceptada":
+        tutoria = solicitud.tutoria_creada.first()  # toma la primera tutoría asociada
+        if tutoria:
+            data["tutoria_id"] = str(tutoria.id)
+
+    return JsonResponse(data)
+
 
 @login_required
 def tutoria(request, tutoria_id):
     tutoria = get_object_or_404(Tutoria, id=tutoria_id)
+    c = ComentarioPredefinido.objects.all
 
     # Validar que el usuario sea parte de la tutoría
     if request.user != tutoria.solicitud.usuarioenvia and request.user != tutoria.solicitud.usuarioreceive:
@@ -477,7 +485,73 @@ def tutoria(request, tutoria_id):
         return redirect('home')
 
     contexto = {
-        'tutoria': tutoria
+        'tutoria': tutoria,
+        'c' : c
     }
 
     return render(request, 'tutoria/tutoria.html', contexto)
+
+@login_required
+def estado_tutoria(request, tutoria_id):
+    """
+    Devuelve el estado actual de una tutoría.
+    """
+    tutoria = get_object_or_404(Tutoria, id=tutoria_id)
+
+    # Solo los involucrados (tutor o estudiante) pueden consultar
+    if request.user != tutoria.estudiante and request.user != tutoria.tutor.usuario:
+        return JsonResponse({"error": "No tienes permisos para ver esta tutoría."}, status=403)
+
+    return JsonResponse({
+        "estado": tutoria.estado,
+        "fecha": str(tutoria.fecha),           # YYYY-MM-DD
+        "hora_inicio": str(tutoria.hora_inicio), # HH:MM:SS
+        "hora_fin": str(tutoria.hora_fin)      # HH:MM:SS
+    })
+
+@login_required
+def tutoria_completada(request, tutoria_id):
+    """
+    Marca una tutoría como completada y devuelve información para mostrar reseña opcional.
+    """
+    tutoria = get_object_or_404(Tutoria, id=tutoria_id)
+
+    # Validar que solo tutor o estudiante puedan completar
+    if request.user != tutoria.tutor.usuario and request.user != tutoria.estudiante:
+        return JsonResponse({"error": "No tienes permisos"}, status=403)
+
+    # Marcar como completada
+    tutoria.estado = "Completada"
+    tutoria.save()
+
+    # Devolver info para mostrar modal de reseña
+    return JsonResponse({
+        "success": True,
+        "tutoria_id": str(tutoria.id),
+        "estudiante_id": str(tutoria.estudiante.id),
+        "tutor_id": str(tutoria.tutor.id),
+    })
+
+@login_required
+def crear_reseña(request, tutoria_id):
+    tutoria = get_object_or_404(Tutoria, id=tutoria_id)
+
+
+    # Solo el estudiante puede dejar reseña
+    if request.user != tutoria.estudiante:
+        return JsonResponse({"error": "No tienes permisos"}, status=403)
+
+    if request.method == "POST":
+        estrellas = int(request.POST.get("estrellas", 5))
+        comentarios_ids = request.POST.getlist("comentarios[]")  # Lista de UUIDs de ComentarioPredefinido
+
+        reseña, created = ReseñaTutor.objects.get_or_create(
+            tutoria=tutoria,
+            defaults={"estrellas": estrellas}
+        )
+        reseña.estrellas = estrellas
+        if comentarios_ids:
+            reseña.comentarios.set(ComentarioPredefinido.objects.filter(id__in=comentarios_ids))
+        reseña.save()
+
+        return JsonResponse({"success": True, "reseña_id": str(reseña.id)})

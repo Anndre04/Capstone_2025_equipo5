@@ -4,7 +4,7 @@ from django.dispatch import receiver
 from notificaciones.services import NotificationService
 import logging
 from chat.models import Mensaje
-from tutoria.models import Solicitud
+from tutoria.models import ComentarioPredefinido, Solicitud, Tutoria
 
 logger = logging.getLogger(__name__)
 
@@ -64,3 +64,40 @@ def notificar_nueva_solicitud(sender, instance, created, **kwargs):
             logger.info(f"📨 Notificación enviada a {instance.usuarioreceive.nombre}")
         except Exception as e:
             logger.error(f"❌ Error en notificación de solicitud: {e}")
+
+@receiver(post_save, sender=Tutoria)
+def notificacion_tutoria_completada(sender, instance, created, **kwargs):
+    """
+    Envía notificación cuando la tutoría cambia a 'Completada'.
+    Cada usuario recibe su propia notificación si aún no la tiene.
+    """
+    if instance.estado != "Completada":
+        return  # Solo notificar si la tutoría está completada
+
+    try:
+        comentarios_predefinidos = [
+            {"id": str(c.id), "comentario": c.comentario}
+            for c in ComentarioPredefinido.objects.all()
+        ]
+        usuarios_a_notificar = [instance.tutor.usuario, instance.estudiante]
+
+        for usuario in usuarios_a_notificar:
+            # Solo crear la notificación si no existe para este usuario
+            if not NotificationService.notificacion_existente(instance.id, 'tutoria_finalizada', usuario):
+                NotificationService.crear_notificacion(
+                    usuario=usuario,
+                    codigo_tipo='tutoria_finalizada',
+                    titulo='Tutoría finalizada',
+                    mensaje='La tutoría ha finalizado.',
+                    datos_extra={
+                        'tutoria_id': str(instance.id),
+                        'url': f'tutoria/tutoria/{instance.id}',
+                        'comentarios_predefinidos': comentarios_predefinidos
+                    }
+                )
+                logger.info(f"Notificación de tutoría finalizada enviada a usuario {usuario.id}")
+            else:
+                logger.info(f"Notificación ya existente para tutoría {instance.id}, usuario {usuario.id}")
+
+    except Exception as e:
+        logger.error(f"Error en notificación de tutoría: {e}")

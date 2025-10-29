@@ -44,6 +44,23 @@ class NotificationService:
             except Exception as e:
                 logger.error(f"Error creando notificación: {e}")
                 raise
+
+    @staticmethod
+    def notificacion_existente(tutoria_id, codigo_tipo, usuario):
+        """
+        Retorna True si ya existe una notificación para esta tutoría, tipo y usuario.
+        """
+        try:
+            tipo = NotificationService.get_tipo_by_codigo(codigo_tipo)
+            return Notificacion.objects.filter(
+                tipo=tipo,
+                usuario=usuario,
+                datos_extra__tutoria_id=str(tutoria_id)
+            ).exists()
+        except ValueError:
+            return False
+
+
     
     @staticmethod
     def _enviar_websocket(notificacion):

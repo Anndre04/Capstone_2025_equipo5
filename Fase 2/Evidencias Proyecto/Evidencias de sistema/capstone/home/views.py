@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from django.urls import reverse
 import logging
 from django.forms import ValidationError
 from django.http import JsonResponse
@@ -132,20 +133,20 @@ def aceptar_solicitud_tutoria(request, solicitud_id):
     # Solo crear tutoría si es de tipo "tutoria"
     if solicitud.tipo.nombre.lower() == "tutoria":
         dt_inicio = datetime.now()  # o tomar de request.POST si querés fecha personalizada
-        dt_fin = dt_inicio + timedelta(minutes=60)
+        dt_fin = dt_inicio + timedelta(seconds=10)
 
         tutoria = Tutoria.objects.create(
             solicitud=solicitud,
             anuncio=solicitud.anuncio,
             tutor=solicitud.usuarioenvia.tutor,
             estudiante=solicitud.usuarioreceive,
-            fecha=dt_inicio.date(),
-            hora_inicio=dt_inicio.time(),
-            hora_fin=dt_fin.time(),
-            estado="Pendiente"
+            hora_inicio=dt_inicio,
+            hora_fin=dt_fin,   
+            estado="En curso"
         )
 
-        return JsonResponse({"success": True, "tutoria_id": tutoria.id})
+        url = reverse('tutoria:tutoria', args=[tutoria.id])
+        return JsonResponse({"success": True, "redirect_url": url})
 
     return JsonResponse({"success": True, "info": "Solicitud aceptada, no es tutoría."})
 

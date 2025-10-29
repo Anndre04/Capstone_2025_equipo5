@@ -2,11 +2,27 @@
 import logging
 import sys
 
+class ColorFormatter(logging.Formatter):
+    COLORS = {
+        'DEBUG': '\033[36m',    # Cyan
+        'INFO': '\033[32m',     # Verde
+        'WARNING': '\033[33m',  # Amarillo
+        'ERROR': '\033[31m',    # Rojo
+        'CRITICAL': '\033[41m', # Fondo rojo
+    }
+    RESET = '\033[0m'
+
+    def format(self, record):
+        color = self.COLORS.get(record.levelname, self.RESET)
+        message = super().format(record)
+        return f"{color}{message}{self.RESET}"
+
 LOGGING_CONFIG = {
     'version': 1,
-    'disable_existing_loggers': False,  # Mantener loggers existentes
+    'disable_existing_loggers': False,
     'formatters': {
-        'detailed': {
+        'colored': {
+            '()': ColorFormatter,
             'format': '[{levelname}] {asctime} [{name}] {message}',
             'style': '{',
         },
@@ -14,12 +30,12 @@ LOGGING_CONFIG = {
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'detailed',
+            'formatter': 'colored',
             'stream': sys.stdout,
         },
     },
-    'root': {  # Logger universal para todo el proyecto
+    'root': {
         'handlers': ['console'],
-        'level': 'DEBUG',  # Cambia a INFO o WARNING en producción
+        'level': 'DEBUG',
     },
 }

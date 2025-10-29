@@ -22,4 +22,7 @@ urlpatterns = [
     path('crear-solicitud-tutoria/', views.crear_solicitud_tutoria, name='crear_solicitud_tutoria'),
     path('estado-solicitud/<uuid:solicitud_id>/', views.estado_solicitud_tutoria, name='estado_solicitud_tutoria'),
     path('tutoria/<uuid:tutoria_id>', views.tutoria, name='tutoria'),
+    path('estado-tutoria/<uuid:tutoria_id>/', views.estado_tutoria, name='estadotutoria'),
+    path('tutoria-completada/<uuid:tutoria_id>/', views.tutoria_completada, name='estadotutoria'),
+    path('reseña/<uuid:tutoria_id>/', views.crear_reseña, name='crear_reseña'),
 ]

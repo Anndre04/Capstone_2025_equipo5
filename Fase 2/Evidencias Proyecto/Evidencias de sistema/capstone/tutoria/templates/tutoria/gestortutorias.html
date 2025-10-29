@@ -268,8 +268,8 @@ document.addEventListener("DOMContentLoaded", () => {
                                         title: "¡Tutoría aceptada!",
                                         text: "El alumno ha aceptado la solicitud."
                                     }).then(() => {
-                                        // Iniciar la videollamada
-                                        iniciarVideollamada();
+                                        console.log(estadoData)
+                                        window.location.href = `/tutoria/tutoria/${estadoData.tutoria_id}`;
                                     });
                                 } else if (estadoData.estado === "Rechazada") {
                                     clearInterval(interval);
@@ -282,7 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             } catch (e) {
                                 console.error("Error consultando estado:", e);
                             }
-                        }, 2000);
+                        }, 1000);
                     }
                 });
             } else {
@@ -433,31 +433,8 @@ document.addEventListener("DOMContentLoaded", () => {
             }, 1000 + Math.random() * 2000);
         }
     }
-
-    function agregarMensaje(autor, mensaje, esPropio) {
-        const mensajeDiv = document.createElement("div");
-        mensajeDiv.className = `d-flex mb-3 ${esPropio ? 'justify-content-end' : 'justify-content-start'}`;
-        
-        const contenidoDiv = document.createElement("div");
-        contenidoDiv.className = `rounded p-3 ${esPropio ? 'bg-primary text-white' : 'bg-light'}`;
-        contenidoDiv.style.maxWidth = "70%";
-        
-        const autorSpan = document.createElement("div");
-        autorSpan.className = "small fw-bold";
-        autorSpan.textContent = autor;
-        
-        const textoDiv = document.createElement("div");
-        textoDiv.textContent = mensaje;
-        
-        contenidoDiv.appendChild(autorSpan);
-        contenidoDiv.appendChild(textoDiv);
-        mensajeDiv.appendChild(contenidoDiv);
-        
-        chatMessages.appendChild(mensajeDiv);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
 });
 </script>
 
-<script src="{% static 'js/tutoria.js' %}"></script>
+<script src="{% static 'js/js_tutoria/tutoria.js' %}"></script>
 {% endblock %}
