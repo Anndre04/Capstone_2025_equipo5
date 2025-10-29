@@ -153,6 +153,7 @@
             <a class="nav-link smooth-transition" href="{% url 'login' %}" data-bs-toggle="tooltip"
               title="Iniciar Sesión">
               <i class="bi bi-box-arrow-in-right"></i>
+              <span class="ms-1">Ingresar</span>
               <span class="d-lg-none ms-2">Ingresar</span>
             </a>
           </li>
@@ -313,7 +314,7 @@
           <!-- MIS TUTORÍAS -->
           <li class="nav-item">
             <a class="nav-link smooth-transition" 
-                  href="#">
+                  href="{% url 'tutoriasagregadas' user.id %}">
               <i class="bi bi-journal-text me-1"></i>Mis Tutorias
             </a>
           </li>

@@ -161,3 +161,30 @@ def rechazar_solicitud_tutoria(request, solicitud_id):
     solicitud.estado = "Rechazada"
     solicitud.save()
     return JsonResponse({"success": True})
+
+
+
+
+@login_required
+def tutoriasagregadas(request, user_id):
+    # Obtener el usuario/alumno
+    alumno = get_object_or_404(Usuario, id=user_id)
+
+    try:
+        # Obtener el historial completo de tutorías del alumno
+        historial_tutorias = Tutoria.objects.filter(
+            solicitud__usuarioenvia=alumno
+        )
+    except Exception as e:
+        messages.error(request, "Hubo un error obteniendo su historial de tutorias.")
+        logger.error("Error obteniendo tutorías agregadas del usuario", exc_info=True)
+        return redirect("home")
+    
+    contexto = {
+        'alumno': alumno,
+        'tutorias': historial_tutorias,
+    }
+    
+    return render(request, 'home/tutoriasagregadas.html', contexto)
+
+
