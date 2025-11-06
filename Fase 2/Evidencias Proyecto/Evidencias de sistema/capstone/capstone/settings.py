@@ -27,13 +27,7 @@ SECRET_KEY = config("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG")
 
-ALLOWED_HOSTS = [
-    "*"
-]
-
-CSRF_TRUSTED_ORIGINS = [
-    "https://lemuel-hypocotylous-lourdes.ngrok-free.dev",
-]
+ALLOWED_HOSTS = []
 
 
 # Application definition
