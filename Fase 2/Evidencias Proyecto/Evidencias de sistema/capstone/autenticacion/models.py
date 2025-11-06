@@ -1,9 +1,39 @@
 import uuid
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.db import models
-from cloudinary.models import CloudinaryField
+from datetime import timedelta
+from django.conf import settings
+from google.cloud import storage
+import logging
 
 # Create your models here.
+logger = logging.getLogger(__name__)
+
+try:
+    GCP_CLIENT = storage.Client.from_service_account_json(
+        settings.GOOGLE_APPLICATION_CREDENTIALS
+    )
+    GCP_BUCKET = GCP_CLIENT.get_bucket(settings.GOOGLE_CLOUD_BUCKET)
+except Exception as e:
+    logger.error("Error al inicializar el cliente de GCP en models.py", exc_info=True)
+    GCP_BUCKET = None
+
+
+def generar_url_firmada(nombre_objeto, expiracion=3600):
+    """Genera una URL firmada de Cloud Storage para lectura (GET)."""
+    
+    if GCP_BUCKET is None:
+        raise ConnectionError("GCP Bucket no inicializado. Revisar configuración.")
+    
+    blob = GCP_BUCKET.blob(nombre_objeto)
+    
+    # Genera la URL temporal (v4)
+    url = blob.generate_signed_url(
+        version="v4",
+        expiration=timedelta(seconds=expiracion), 
+        method="GET"
+    )
+    return url
 
 class Pais(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -124,7 +154,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     estado = models.CharField(max_length=20, default='Inactivo')
-    foto = models.BinaryField(blank=True, null=True)
+    foto = models.URLField(blank=True, null=True)
 
 
     areas_interes = models.ManyToManyField(
@@ -148,6 +178,31 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
+
+    @property
+    def foto_url_firmada(self):
+        """
+        Genera y devuelve la URL firmada (temporal) de la foto de perfil.
+        Si no hay foto o falla la firma, devuelve None.
+        """
+        # 1. Verificar si el usuario tiene una foto guardada
+        if not self.foto:
+            return None
+        
+        try:
+            # 2. Llamar a la utilidad de firma, usando la ruta guardada en el campo 'foto'.
+            # La URL expira después de 3600 segundos (1 hora)
+            return generar_url_firmada(self.foto, expiracion=3600) 
+        
+        except ConnectionError:
+            # Captura si el bucket no se inicializó correctamente
+            logger.error(f"Fallo de conexión al intentar firmar la URL: {self.foto}")
+            return None
+            
+        except Exception as e:
+            # Capturar otros errores (ej. fallo de comunicación con la API de GCP)
+            logger.error(f"Error al generar URL firmada para {self.foto}", exc_info=True)
+            return None
 
     def __str__(self):
         return f"{self.email},  {str(self.id)}"

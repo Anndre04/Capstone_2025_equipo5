@@ -1,9 +1,10 @@
 from django import forms
+from django.core.exceptions import ValidationError
 from autenticacion.models import AreaInteres
 from .models import Archivo
 
-# Widget que permite subir varios archivos
-class MultipleFileInput(forms.ClearableFileInput):
+# Widget que soporta múltiples archivos
+class MultipleFileInput(forms.FileInput):
     allow_multiple_selected = True
 
 
@@ -13,12 +14,6 @@ class TutorRegistrationForm(forms.Form):
         widget=forms.CheckboxSelectMultiple
     )
 
-    certificacion = forms.FileField(
-        label='Subir certificación (PDF)',
-        required=True   # Por defecto FileField es obligatorio
-    )
-
-    # Cargamos las áreas desde el modelo
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['areas'].choices = [

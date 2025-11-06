@@ -9,6 +9,7 @@ from django.contrib import messages
 from tutoria.models import Anuncio, Tutoria
 from autenticacion.models import AreaInteres, Usuario
 from tutoria.models import Anuncio, Solicitud
+from django.db.models import Avg
 
 logger = logging.getLogger(__name__) 
 
@@ -21,6 +22,9 @@ def home(request):
         nombre = request.GET.get('nombre', '')
         precio_max = request.GET.get('precio_max', '')
         asignatura_id = request.GET.get('asignatura', '')
+        estrellas_min = request.GET.get('estrellas', '') # Nuevo filtro
+
+        # 2. Aplicar Filtros Secundarios
 
         # Filtrar por nombre del tutor
         if nombre:
@@ -34,6 +38,11 @@ def home(request):
         if asignatura_id:
             anuncios = anuncios.filter(area__id=asignatura_id)
 
+        if estrellas_min:
+            anuncios = anuncios.annotate(
+                promedio_estrellas_anotado=Avg('tutorias__reseña__estrellas')
+            ).filter(promedio_estrellas_anotado__gte=estrellas_min)
+
         contexto = {
             "anuncios": anuncios,
             "areas": areainteres,
@@ -41,6 +50,7 @@ def home(request):
                 "nombre": nombre,
                 "precio_max": precio_max,
                 "asignatura": asignatura_id,
+                "estrellas": estrellas_min,
             }
         }
 

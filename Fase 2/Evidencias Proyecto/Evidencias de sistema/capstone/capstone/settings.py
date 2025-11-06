@@ -27,7 +27,14 @@ SECRET_KEY = config("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    "*"
+]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://lemuel-hypocotylous-lourdes.ngrok-free.dev",
+]
+
 
 # Application definition
 
@@ -47,6 +54,7 @@ INSTALLED_APPS = [
     'channels',
     'videollamadas',
     'evaluaciones',
+    'storages',
 ]
 
 
@@ -79,7 +87,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'home.context_processors.usuario_foto',
+                #'home.context_processors.usuario_foto',
                 'home.context_processors.tutoriaEnCurso',
             ],
         },
@@ -89,16 +97,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'capstone.wsgi.application'
 
 ASGI_APPLICATION = 'capstone.asgi.application'
-
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": [("localhost", 6379)],
-        },
-    },
-}
-
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -155,6 +153,11 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static'
 ]
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -168,4 +171,41 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS')
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 
+# Servicios Google Cloud Platform
+
+GOOGLE_APPLICATION_CREDENTIALS = config("GOOGLE_APPLICATION_CREDENTIALS")
+GOOGLE_CLOUD_BUCKET = config("GOOGLE_CLOUD_BUCKET")
+
 LOGOUT_REDIRECT_URL = '' 
+
+# --- CONFIGURACIÓN DE REDIS ---
+REDIS_HOST = 'localhost'
+REDIS_PORT = '6379'
+
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [(REDIS_HOST, int(REDIS_PORT))],
+        },
+    },
+}
+
+# --- CELERY CONFIGURATION ---
+
+# 1. Broker: URL de conexión a Redis (La cola de tareas)
+# Usamos la base de datos 0
+CELERY_BROKER_URL = f'redis://{REDIS_HOST}:{REDIS_PORT}/0'
+
+# 2. Backend: Dónde se almacenan los resultados de las tareas (Opcional, pero recomendado)
+# Usamos la base de datos 1
+CELERY_RESULT_BACKEND = f'redis://{REDIS_HOST}:{REDIS_PORT}/1'
+
+# 3. Serialización de datos (El formato en que Celery codifica las tareas)
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+# 4. Zona horaria (Debe coincidir con la variable TIME_ZONE de Django)
+CELERY_TIMEZONE = TIME_ZONE

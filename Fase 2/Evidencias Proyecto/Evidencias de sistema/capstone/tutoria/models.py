@@ -94,6 +94,7 @@ class Solicitud(models.Model):
 class Tutor(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
+    sobremi = models.TextField(null=True, blank=True)
     areas_conocimiento = models.ManyToManyField(
         to=AreaInteres,
         through='TutorArea',
@@ -226,23 +227,23 @@ class Tutoria(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Tutoria de {self.estudiante.email} con {self.tutor}, {self.hora_inicio} {self.hora_fin}"
+        return f"Tutoria id :{self.id}"
 
     
 class Archivo(models.Model):
 
-    estado = [
-        ("Revisado", "Revisado"),
+    estado_choices = [
+        ("Aprobado", "Aprobado"),
         ("Pendiente", "Pendiente"),
         ("Rechazado", "Rechazado"),
     ]
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nombre = models.CharField(max_length=80, null=True)
-    contenido = models.BinaryField()
-    tutor = models.ForeignKey(Tutor, on_delete=models.PROTECT, related_name="archivos", null=True)
-    tutoria = models.ForeignKey(Tutoria, on_delete=models.PROTECT, related_name="archivos", null=True)
-    estado = models.CharField(max_length=20, choices=estado, null=True)
+    contenido = models.URLField(max_length=500, verbose_name='URL_bucket')    
+    tutor = models.ForeignKey(Tutor, on_delete=models.PROTECT, related_name="certificados",  blank=True, null=True)
+    tutoria = models.ForeignKey(Tutoria, on_delete=models.PROTECT, related_name="archivos", null=True, default=None)
+    estado = models.CharField(max_length=20, choices=estado_choices, null=True, default="Pendiente")
 
 class ComentarioPredefinido(models.Model): 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False) 

@@ -1,6 +1,9 @@
 import json
+import logging
+from django.conf import settings
+from django.db import transaction
 from django.forms import ValidationError
-from django.http import JsonResponse
+from django.http import HttpRequest, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -8,6 +11,11 @@ from .models import Anuncio, ComentarioPredefinido, TipoSolicitud, Solicitud, Us
 from .forms import TutorRegistrationForm
 from autenticacion.models import AreaInteres, Rol
 from notificaciones.services import NotificationService
+import uuid
+from google.cloud import storage
+
+logger = logging.getLogger(__name__)
+
 
 dias_semana = [d[0] for d in Disponibilidad.DIAS_SEMANA]
 
@@ -341,62 +349,118 @@ def perfiltutor(request, tutor_id):
     
     return render(request, 'tutoria/perfiltutor.html', contexto)
 
+
+
+def subir_archivo_gcp(archivo, tutor_id, tutoria_id=None):
+    """
+    Sube un archivo a GCP, forzando la lectura binaria completa.
+    Esto resuelve el problema de los archivos subidos con 0 bytes.
+    """
+    GCP_CLIENT = storage.Client.from_service_account_json(
+        settings.GOOGLE_APPLICATION_CREDENTIALS
+    )
+
+    # 2. Obtener el objeto Bucket (GCP_BUCKET) que tiene los métodos
+    GCP_BUCKET = GCP_CLIENT.get_bucket(settings.GOOGLE_CLOUD_BUCKET)
+
+    # 1. Preparar metadata y ruta relativa
+    file_uuid = uuid.uuid4().hex[:8] 
+    nombre_base = archivo.name.replace(' ', '_')
+    ruta_base = f"PDFs/certificados/tutor_{tutor_id}"
+    ruta_relativa_gcp = f"{ruta_base}/{file_uuid}_{nombre_base}"
+    
+    try:
+        blob = GCP_BUCKET.blob(ruta_relativa_gcp)
+    except NameError:
+        logger.error("GCP_BUCKET no está inicializado o accesible.")
+        raise RuntimeError("Configuración de GCP faltante.")
+
+    try:
+        # ⭐ PASO 1: Mover el puntero al inicio (necesario si ya fue leído)
+        archivo.seek(0)
+        
+        # ⭐ PASO 2: Leer el contenido binario COMPLETO
+        contenido_archivo_binario = archivo.read() 
+        
+        # ⭐ PASO 3: Subir el contenido binario usando upload_from_string
+        blob.upload_from_string(
+            contenido_archivo_binario, 
+            content_type=archivo.content_type
+        )
+        
+        logger.info(f"Subida exitosa: {ruta_relativa_gcp}")
+        return ruta_relativa_gcp
+        
+    except Exception as e:
+        logger.error(f"Fallo al subir el archivo {archivo.name} a GCP: {e}", exc_info=True)
+        raise RuntimeError(f"Fallo fatal en la subida a GCP: {e}")
+    
+
 @login_required
 def registrotutor(request):
     user = request.user
-    print(f"[DEBUG] Usuario logueado: {user}")
+    logger.debug(f"Usuario logueado: {user.nombre} (ID: {user.id})")
 
-    # Evitar registro duplicado
+    # Evita registro duplicado
     if hasattr(user, 'tutor'):
-        print("[DEBUG] Ya existe un tutor para este usuario")
-        messages.warning(request, "Ya estás registrado como tutor")
-        return render(request, 'tutoria/registrotutor.html', {'form': None})
+        logger.warning(f"Intento de registro duplicado para usuario: {user.id}")
+        messages.warning(request, "Ya estás registrado como tutor.")
+        return redirect('home')
 
-    # Crear instancia del formulario
-    form = TutorRegistrationForm(request.POST or None, request.FILES or None)
-    print(f"[DEBUG] request.method: {request.method}")
-    print(f"[DEBUG] Archivos subidos: {request.FILES}")
+    form = TutorRegistrationForm(request.POST or None)
 
     if request.method == 'POST':
-        print(f"[DEBUG] Form data: {request.POST}")
-        if form.is_valid():
-            print("[DEBUG] Formulario válido")
+        logger.debug("--- INICIO POST REGISTROTUTOR ---")
 
-            # 1️⃣ Crear tutor
-            tutor = Tutor.objects.create(
-                usuario=user,
-                estado='Activo'
-            )
-            print(f"[DEBUG] Tutor creado: {tutor}")
+        archivos_certificacion = request.FILES.getlist('certificacion')
+        logger.debug(f"Archivos 'certificacion' recibidos: {len(archivos_certificacion)}")
 
-            try:
-                rol_tutor = Rol.objects.get(nombre="Tutor")
-                user.roles.add(rol_tutor)
-            except Rol.DoesNotExist:
-                print("No existe el rol")
+        if not form.is_valid():
+            logger.warning(f"Formulario NO válido. Errores: {form.errors}")
+            messages.error(request, "Hubo errores en el formulario. Revisa las áreas seleccionadas.")
+            return render(request, 'tutoria/registrotutor.html', {'form': form})
 
-            # 2️⃣ Asociar áreas seleccionadas
-            areas_ids = form.cleaned_data['areas']
-            print(f"[DEBUG] Áreas seleccionadas: {areas_ids}")
-            for area_id in areas_ids:
-                area = AreaInteres.objects.get(id=area_id)
-                TutorArea.objects.create(tutor=tutor, area=area)
-                print(f"[DEBUG] Área asociada: {area.nombre}")
-
-            # 3️⃣ Guardar PDF (solo uno)
-            archivo = form.cleaned_data.get('certificacion')
-            if archivo:
-                Archivo.objects.create(
-                    nombre=archivo.name,
-                    contenido=archivo.read(),
-                    tutor=tutor,
-                    estado='Pendiente'
+        try:
+            with transaction.atomic():
+                # 1️⃣ Crear tutor
+                tutor = Tutor.objects.create(
+                    usuario=request.user,
+                    estado="Pendiente"
                 )
-                print(f"[DEBUG] Archivo guardado: {archivo.name}")
+                logger.info(f"Tutor creado con ID: {tutor.id}")
 
-            messages.success(request, "Registro exitoso")
-        else:
-            print(f"[DEBUG] Formulario NO válido: {form.errors}")
+                # 2️⃣ Asignar áreas de conocimiento
+                for area_id in form.cleaned_data['areas']:
+                    TutorArea.objects.create(tutor=tutor, area_id=area_id)
+                logger.info(f"Áreas asignadas: {form.cleaned_data['areas']}")
+
+                # 3️⃣ Subir archivos a GCP
+                if archivos_certificacion:
+                    logger.info(f"Subiendo {len(archivos_certificacion)} certificaciones a GCP.")
+                    for archivo_subido in archivos_certificacion:
+                        ruta_relativa = subir_archivo_gcp(
+                            archivo=archivo_subido,
+                            tutor_id=tutor.id
+                        )
+
+                        Archivo.objects.create(
+                            tutor=tutor,
+                            contenido=ruta_relativa,
+                            nombre=archivo_subido.name
+                        )
+                        logger.info(f"Archivo '{archivo_subido.name}' subido exitosamente.")
+                else:
+                    logger.info("No se recibieron archivos de certificación (campo opcional).")
+
+            rol_tutor = Rol.objects.get(nombre="Tutor")
+            user.roles.add(rol_tutor)
+
+            messages.success(request, "Registro completado exitosamente.")
+            return redirect('home')
+
+        except Exception as e:
+            logger.error(f"Error durante el registro o subida a GCP: {e}", exc_info=True)
+            messages.error(request, f"Ocurrió un error durante el proceso: {e}")
 
     return render(request, 'tutoria/registrotutor.html', {'form': form})
 

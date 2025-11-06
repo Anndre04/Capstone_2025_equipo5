@@ -3,7 +3,7 @@ import imghdr
 from django.db.models import Q 
 from tutoria.models import Tutoria
 
-def usuario_foto(request):
+'''def usuario_foto(request):
     if request.user.is_authenticated and request.user.foto:
         foto_bytes = bytes(request.user.foto)
         # Obtener tipo MIME de la extensión original si lo tienes
@@ -12,7 +12,7 @@ def usuario_foto(request):
         foto_base64 = base64.b64encode(foto_bytes).decode('utf-8')
         return {"foto_base64": foto_base64, "foto_mime": mime_type}
     return {"foto_base64": None, "foto_mime": None}
-
+'''
 
 def tutoriaEnCurso(request):
     if request.user.is_authenticated:

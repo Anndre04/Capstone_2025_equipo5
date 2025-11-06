@@ -5,65 +5,124 @@
 
 {% block content %}
 <div class="container my-5">
-  <div class="row justify-content-center">
-    <div class="col-lg-8 col-md-10">
-      <div class="card shadow-lg border-0 rounded-4">
-        <div class="card-header bg-primary text-white text-center rounded-top-4 py-3">
-          <h3 class="mb-0 fw-semibold">Registro de Tutor</h3>
-        </div>
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-primary text-white text-center rounded-top-4 py-3">
+                    <h3 class="mb-0 fw-semibold">Registro de Tutor</h3>
+                </div>
 
-        <div class="card-body p-4">
-          <form method="POST" enctype="multipart/form-data" novalidate>
-            {% csrf_token %}
-            
-            <!-- Áreas de conocimiento -->
-            <div class="mb-4">
-              <label class="form-label fw-semibold">{{ form.areas.label }}</label>
-              <div class="d-flex flex-wrap gap-3">
-                {% for checkbox in form.areas %}
-                  <div class="form-check">
-                    {{ checkbox.tag }}
-                    <label class="form-check-label">{{ checkbox.choice_label }}</label>
-                  </div>
-                {% endfor %}
-              </div>
-              {% if form.areas.errors %}
-                <div class="text-danger small">{{ form.areas.errors }}</div>
-              {% endif %}
+                <div class="card-body p-4">
+                    <form method="POST" enctype="multipart/form-data" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">{{ form.areas.label }}</label>
+                            <div class="d-flex flex-wrap gap-3">
+                                {% for checkbox in form.areas %}
+                                    <div class="form-check">
+                                        {{ checkbox.tag }}
+                                        <label class="form-check-label">{{ checkbox.choice_label }}</label>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.areas.errors %}
+                                <div class="text-danger small">{{ form.areas.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                          <label for="id_certificacion" class="form-label fw-semibold">
+                              Certificaciones (PDF)
+                          </label>
+                          <input 
+                              type="file" 
+                              name="certificacion" 
+                              id="id_certificacion" 
+                              class="form-control"
+                              accept="application/pdf"
+                              multiple 
+                          >
+                          <div class="form-text text-muted">Sube uno o más archivos PDF válidos.</div>
+                        </div>
+                        <div id="archivos-seleccionados-container" class="mt-3">
+                            <p class="fw-semibold small mb-1">Archivos adjuntos:</p>
+                            <ul id="lista-archivos-seleccionados" class="list-group list-group-flush border rounded-3 small">
+                                <li class="list-group-item text-muted" id="initial-message">Ningún archivo seleccionado.</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 shadow-sm">
+                                <i class="bi bi-person-check"></i> Registrar
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-footer text-center text-muted small">
+                    <i class="bi bi-info-circle"></i> Asegúrate de subir documentos válidos (PDF).
+                </div>
             </div>
-
-            <!-- Certificaciones -->
-            <div class="mb-4">
-                <label for="{{ form.certificacion.id_for_label }}" class="form-label fw-semibold">
-                    {{ form.certificacion.label }}
-                </label>
-                <input 
-                    type="file" 
-                    name="{{ form.certificacion.name }}" 
-                    id="{{ form.certificacion.id_for_label }}" 
-                    class="form-control"
-                    accept="application/pdf"
-                >
-                <div class="form-text text-muted">Sube un archivo PDF válido.</div>
-                {% if form.certificacion.errors %}
-                    <div class="text-danger small">{{ form.certificacion.errors }}</div>
-                {% endif %}
-            </div>
-
-            <!-- Botón -->
-            <div class="text-center">
-              <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 shadow-sm">
-                <i class="bi bi-person-check"></i> Registrar
-              </button>
-            </div>
-          </form>
         </div>
-
-        <div class="card-footer text-center text-muted small">
-          <i class="bi bi-info-circle"></i> Asegúrate de subir documentos válidos (PDF).
-        </div>
-      </div>
     </div>
-  </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. Declaración y Asignación
+    const fileInput = document.getElementById('id_certificacion');
+    const listaArchivos = document.getElementById('lista-archivos-seleccionados');
+    
+    // ⭐ VERIFICACIÓN DE SEGURIDAD CLAVE ⭐
+    if (!fileInput || !listaArchivos) {
+        console.error("Error: No se encontraron los elementos 'id_certificacion' o 'lista-archivos-seleccionados' en el DOM.");
+        return; // Detiene la ejecución del script si faltan elementos
+    }
+    
+    console.log('--- Inicialización JS ---');
+    console.log('Campo de Archivo (id_certificacion) presente:', !!fileInput);
+
+    let selectedFiles = [];
+
+    function renderFileList() {
+        // ... (Tu lógica de renderFileList) ...
+        
+        // La variable listaArchivos ya está verificada como existente
+        listaArchivos.innerHTML = ''; // Aseguramos que se puede limpiar
+
+        // ...
+    }
+
+    // Al seleccionar archivos nuevos
+    fileInput.addEventListener('change', function() {
+        selectedFiles = Array.from(fileInput.files);
+        console.log('EVENTO CHANGE: Archivos seleccionados del diálogo:', selectedFiles.length);
+        renderFileList();
+    });
+    
+    // Al eliminar archivos de la lista visual
+    listaArchivos.addEventListener('click', function(event) {
+        // **FALTA LOGICA**: Aquí falta tu lógica de eliminación.
+        // Asegúrate de que la variable 'removeButton' y 'index' están definidas
+        // dentro de esta función, o el error puede venir de ahí.
+
+        const removeButton = event.target.closest('[data-index]');
+        if (removeButton) {
+            const index = parseInt(removeButton.dataset.index);
+            // ... (Asegúrate que 'index' es válido antes de splice) ...
+            
+            console.log('EVENTO CLICK: Eliminado archivo. Archivos restantes:', selectedFiles.length - 1);
+            selectedFiles.splice(index, 1);
+            renderFileList();
+        }
+    });
+
+    renderFileList(); 
+    
+    // Log final del estado al cargar la página
+    console.log('--- Fin Inicialización JS. Estado actual: ---');
+    console.log('Input deshabilitado (Inicial):', fileInput.disabled);
+});
+</script>
 {% endblock %}

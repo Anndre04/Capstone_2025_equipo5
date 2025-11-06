@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="{% static 'css/css_tutoria/tutoria.css' %}">
 <div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
 
+    {% if tutor %}
     <!-- PERFIL HEADER -->
     <div class="row justify-content-center mb-4">
         <div class="col-12 col-lg-10">
@@ -24,8 +25,7 @@
                         <div class="col">
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 <div>
-                                    <h1 class="h3 fw-bold text-dark mb-1">María González Pérez</h1>
-                                    <p class="text-muted mb-2">Profesora de Inglés</p>
+                                    <h1 class="h3 fw-bold text-dark mb-1">{{tutor.usuario.nombre}} {{tutor.usuario.p_apellido}} {{tutor.usuario.s_apellido}}</h1>
                                     <div class="d-flex align-items-center">
                                         <div class="rating-stars me-2">
                                             <i class="bi bi-star-fill text-warning"></i>
@@ -46,11 +46,7 @@
                             <div class="description-section">
                                 <h6 class="fw-bold text-dark mb-2">Sobre mí</h6>
                                 <p class="text-muted mb-0">
-                                    Profesora certificada en enseñanza de inglés con más de 5 años de experiencia. 
-                                    Especializada en preparación para exámenes internacionales y inglés empresarial. 
-                                    Mi metodología se centra en las necesidades específicas de cada estudiante, 
-                                    creando un ambiente dinámico y participativo donde el aprendizaje se convierte 
-                                    en una experiencia enriquecedora y efectiva.
+                                    {{tutor.sobremi}}
                                 </p>
                             </div>
                         </div>
@@ -64,67 +60,31 @@
         <div class="col-12 col-lg-10">
             <div class="row g-4">
 
-                <!-- INFORMACIÓN PERSONAL -->
-                <div class="col-md-6">
-                    <div class="card border-0 shadow-sm h-100">
+                <!-- Areas a enseñar -->
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
                         <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
                             <h5 class="fw-bold text-dark mb-0">
-                                <i class="bi bi-person me-2 text-primary"></i>
-                                Información Personal
+                                <i class="bi bi-award me-2 text-primary"></i>
+                                Areas que enseño
                             </h5>
-                            <button class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-pencil"></i>
-                            </button>
                         </div>
                         <div class="card-body">
-                            <div class="info-item mb-3">
-                                <label class="small text-muted fw-semibold">CORREO ELECTRÓNICO</label>
-                                <p class="mb-0 fw-medium">maria.gonzalez@email.com</p>
-                            </div>
-                            <div class="info-item mb-3">
-                                <label class="small text-muted fw-semibold">TELÉFONO</label>
-                                <p class="mb-0 fw-medium">+56 9 1234 5678</p>
-                            </div>
-                            <div class="info-item mb-3">
-                                <label class="small text-muted fw-semibold">FECHA DE NACIMIENTO</label>
-                                <p class="mb-0 fw-medium">15 de Marzo, 1995</p>
-                            </div>
-                            <div class="info-item">
-                                <label class="small text-muted fw-semibold">UBICACIÓN</label>
-                                <p class="mb-0 fw-medium">Santiago, Chile</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- INFORMACIÓN ACADÉMICA -->
-                <div class="col-md-6">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
-                            <h5 class="fw-bold text-dark mb-0">
-                                <i class="bi bi-building me-2 text-primary"></i>
-                                Información Académica
-                            </h5>
-                            <button class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                        </div>
-                        <div class="card-body">
-                            <div class="info-item mb-3">
-                                <label class="small text-muted fw-semibold">INSTITUCIÓN</label>
-                                <p class="mb-0 fw-medium">Universidad de Chile</p>
-                            </div>
-                            <div class="info-item mb-3">
-                                <label class="small text-muted fw-semibold">CARRERA</label>
-                                <p class="mb-0 fw-medium">Pedagogía en Inglés</p>
-                            </div>
-                            <div class="info-item mb-3">
-                                <label class="small text-muted fw-semibold">AÑO DE EGRESO</label>
-                                <p class="mb-0 fw-medium">2022</p>
-                            </div>
-                            <div class="info-item">
-                                <label class="small text-muted fw-semibold">ESPECIALIDAD</label>
-                                <p class="mb-0 fw-medium">Enseñanza de Inglés como Segunda Lengua</p>
+                            <div class="row g-3">
+                                {% for a in tutor.areas_conocimiento.all %}
+                                <div class="col-md-6">
+                                    <div class="certification-item p-3 border rounded h-100">
+                                        <div class="d-flex align-items-start">
+                                            <div class="cert-icon bg-success bg-opacity-10 text-success rounded p-2 me-3">
+                                                <i class="bi bi-patch-check-fill"></i>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="fw-bold">{{a.nombre}}</h6>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
@@ -138,42 +98,39 @@
                                 <i class="bi bi-award me-2 text-primary"></i>
                                 Certificaciones
                             </h5>
-                            <button class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-plus"></i>Agregar
-                            </button>
                         </div>
                         <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <div class="certification-item p-3 border rounded h-100">
-                                        <div class="d-flex align-items-start">
-                                            <div class="cert-icon bg-success bg-opacity-10 text-success rounded p-2 me-3">
-                                                <i class="bi bi-patch-check-fill"></i>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="fw-bold mb-1">TEFL Certification</h6>
-                                                <p class="text-muted small mb-1">International TEFL Academy</p>
-                                                <p class="small mb-2">Certificación internacional para enseñanza de inglés como lengua extranjera.</p>
-                                                <span class="badge bg-success bg-opacity-10 text-success small">2023</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="certification-item p-3 border rounded h-100">
-                                        <div class="d-flex align-items-start">
-                                            <div class="cert-icon bg-info bg-opacity-10 text-info rounded p-2 me-3">
-                                                <i class="bi bi-patch-check-fill"></i>
-                                            </div>
-                                            <div class="flex-grow-1">
-                                                <h6 class="fw-bold mb-1">Cambridge C1 Advanced</h6>
-                                                <p class="text-muted small mb-1">Cambridge Assessment English</p>
-                                                <p class="small mb-2">Certificación que acredita dominio avanzado del idioma inglés.</p>
-                                                <span class="badge bg-info bg-opacity-10 text-info small">2022</span>
+                            <div class="row g-3">  
+                                {% for c in tutor.certificados.all %}
+                                    <div class="col-md-6">
+                                        <div class="certification-item p-3 border rounded h-100">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                
+                                                <!-- Información del certificado -->
+                                                <div>
+                                                    <h6 class="fw-bold mb-1">{{ c.nombre }}</h6>
+                                                    <p class="small mb-2">
+                                                        Estado de revisión:
+                                                        <span class="{% if c.estado == 'Aprobado' %}text-success
+                                                                    {% elif c.estado == 'Rechazado' %}text-danger
+                                                                    {% else %}text-warning{% endif %}">
+                                                            {{ c.estado }}
+                                                        </span>
+                                                    </p>
+                                                </div>
+
+                                                <!-- 👁️ Ícono de ver PDF a la derecha -->
+                                                <a href="#" target="_blank"
+                                                class="text-primary fs-5 ms-3"
+                                                title="Ver certificado">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
+                                {% empty %}
+                                    <p class="text-muted">No hay certificados registrados aún.</p>
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
@@ -182,6 +139,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 
 </div>
 
