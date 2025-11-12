@@ -154,7 +154,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     estado = models.CharField(max_length=20, default='Inactivo')
-    foto = models.URLField(blank=True, null=True)
+    foto = models.CharField(max_length=200, blank=True, null=True)
 
 
     areas_interes = models.ManyToManyField(
@@ -180,6 +180,11 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = []
 
     @property
+    def nombre_completo(self):
+        """Devuelve el nombre y los dos apellidos concatenados."""
+        return f"{self.nombre} {self.p_apellido} {self.s_apellido}"
+
+    @property
     def foto_url_firmada(self):
         """
         Genera y devuelve la URL firmada (temporal) de la foto de perfil.
@@ -191,8 +196,8 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         
         try:
             # 2. Llamar a la utilidad de firma, usando la ruta guardada en el campo 'foto'.
-            # La URL expira después de 3600 segundos (1 hora)
-            return generar_url_firmada(self.foto, expiracion=3600) 
+            # La URL expira después de 3600 segundos (1 semana)
+            return generar_url_firmada(self.foto, expiracion=604800) 
         
         except ConnectionError:
             # Captura si el bucket no se inicializó correctamente
@@ -218,8 +223,3 @@ class UsuarioArea(models.Model):
 
     class Meta:
         unique_together = ('usuario', 'area')
-
-
-
-
-

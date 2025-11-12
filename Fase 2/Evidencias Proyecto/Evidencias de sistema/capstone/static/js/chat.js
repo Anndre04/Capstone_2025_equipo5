@@ -30,19 +30,45 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function appendMessage(msg, esMio, datetime) {
         if (!chatMessagesDiv) return;
+
         const div = document.createElement('div');
         div.className = `d-flex mb-3 ${esMio ? 'justify-content-end' : 'justify-content-start'}`;
+
+        // Estilos del globo del mensaje
+        const bubbleStyle = `
+        display: inline-block;
+        padding: 12px 16px;
+        border-radius: 18px;
+        max-width: 70%;
+        word-wrap: break-word;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        ${esMio ?
+                'background: linear-gradient(135deg, #0d6efd, #0b5ed7); color: white; border-bottom-right-radius: 4px;' :
+                'background-color: #f8f9fa; color: #212529; border: 1px solid #e9ecef; border-bottom-left-radius: 4px;'
+            }
+        position: relative;
+    `;
+
+        const timeStyle = `
+        display: block;
+        font-size: 0.7rem;
+        margin-top: 6px;
+        text-align: ${esMio ? 'right' : 'left'};
+        color: ${esMio ? 'rgba(255,255,255,0.7)' : '#6c757d'};
+        font-weight: 400;
+    `;
+
         div.innerHTML = `
-            <div class="flex-grow-1 ${esMio ? 'me-3' : 'ms-3'}" style="max-width: 85%;">
-                <div class="${esMio ? 'bg-primary text-white' : 'bg-light text-dark'} rounded p-3">
-                    <p class="mb-1">${msg}</p>
-                    <small class="text">${datetime}</small>
-                </div>
-            </div>
-        `;
+        <div style="${bubbleStyle}">
+            <p class="mb-0" style="line-height: 1.4; font-size: 0.95rem;">${msg}</p>
+            <small style="${timeStyle}">${datetime}</small>
+        </div>
+    `;
+
         chatMessagesDiv.appendChild(div);
         chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
     }
+
 
     async function cargarMensajes(id) {
         if (!id) return;
@@ -53,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function () {
             data.mensajes.forEach(m => appendMessage(m.contenido, m.es_mio, m.fecha));
             if (data.mensajes.some(m => !m.es_mio && !m.leido))
                 console.log("Mensajes marcados leidos")
-                marcarMensajesLeidos(id);
+            marcarMensajesLeidos(id);
         } catch (err) {
             console.error('❌ Error cargando mensajes:', err);
         }

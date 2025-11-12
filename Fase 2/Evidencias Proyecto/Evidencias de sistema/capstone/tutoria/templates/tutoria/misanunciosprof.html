@@ -28,7 +28,7 @@
   {% if anuncios %}
     {% for anuncio in anuncios %}
       {% if anuncio.estado == "Activo" or anuncio.estado == "Deshabilitado" %}
-      <div class="row g-4">
+      <div class="row g-4 mb-3">
         <div class="col-12">
           <div class="card border-0 shadow-sm hover-card">
             <div class="card-body p-4">
@@ -127,15 +127,14 @@
                         <i class="bi bi-pencil me-2"></i>Editar
                       </a>
 
-                      <!-- Botón Eliminar (siempre) -->
-                      <form method="POST" action="{% url 'tutoria:eliminar_anuncio' anuncio.id %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                        <button type="submit" class="btn btn-outline-danger w-100"
-                                onclick="return confirm('¿ESTÁS SEGURO? Esta acción no se puede deshacer.');">
-                            <i class="bi bi-trash me-2"></i>Eliminar
-                        </button>
-                    </form>
+                      <!-- Botón Eliminar -->
+                      <form method="POST" action="{% url 'tutoria:eliminar_anuncio' anuncio.id %}" class="form-eliminar-anuncio">
+                          {% csrf_token %}
+                          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                          <button type="submit" class="btn btn-outline-danger w-100">
+                              <i class="bi bi-trash me-2"></i>Eliminar
+                          </button>
+                      </form>
                   </div>
                 </div>
               </div>
@@ -257,7 +256,7 @@
           <div class="row g-3">
             <!-- Título -->
             <div class="col-12">
-              <label class="form-label fw-semibold">Título de la Tutoría</label>
+              <label class="form-label fw-semibold">Título de la Tutoría<span class="text-danger">*</span></label>
               <input type="text" name="titulo" class="form-control border" placeholder="Ej: Matemáticas Avanzadas - Álgebra Lineal" required>
             </div>
 
@@ -269,10 +268,10 @@
 
             <!-- Precio -->
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Precio por hora</label>
+              <label class="form-label fw-semibold">Precio por hora<span class="text-danger">*</span></label>
               <div class="input-group">
                 <span class="input-group-text bg-light border">$</span>
-                <input type="number" name="precio" class="form-control border-start-0" placeholder="25" value="25" min="0" required>
+                <input type="number" name="precio" class="form-control border-start-0" placeholder="El valor minimo es de 5000CLP" min="5000" required>
               </div>
             </div>
 
@@ -343,7 +342,7 @@
           </div>
 
           <!-- Footer -->
-          <div class="modal-footer border-0 pt-0">
+          <div class="modal-footer border-0 pt-0 mt-1">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
             <button type="submit" class="btn btn-primary">Publicar Tutoría</button>
           </div>
@@ -352,6 +351,31 @@
     </div>
   </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const formularios = document.querySelectorAll(".form-eliminar-anuncio");
+
+    formularios.forEach(form => {
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault(); // Detener envío automático
+
+            const confirmado = await BS5Helper.Modal.confirmacion({
+                titulo: "Eliminar anuncio",
+                mensaje: "¿ESTÁS SEGURO? Esta acción no se puede deshacer.",
+                tipo: "danger",
+                textoSi: "Eliminar",
+                textoNo: "Cancelar",
+                eliminar: 1
+            });
+
+            if (confirmado) {
+                form.submit(); // Enviar el formulario si confirma
+            }
+        });
+    });
+});
+</script>
 
 <script src="{% static 'js/js_tutoria/tutoria.js' %}"></script>
 {% endblock %}

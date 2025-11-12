@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'videollamadas',
     'evaluaciones',
     'storages',
+    'widget_tweaks',
 ]
 
 
@@ -173,8 +174,8 @@ GOOGLE_CLOUD_BUCKET = config("GOOGLE_CLOUD_BUCKET")
 LOGOUT_REDIRECT_URL = '' 
 
 # --- CONFIGURACIÓN DE REDIS ---
-REDIS_HOST = 'localhost'
-REDIS_PORT = '6379'
+REDIS_HOST = os.environ.get('REDIS_HOST') 
+REDIS_PORT = os.environ.get('REDIS_PORT')
 
 
 CHANNEL_LAYERS = {

@@ -5,47 +5,40 @@
 
 {% block content %}
 {% if usuario %}
-    <div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
+<div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
 
-        <!-- PERFIL HEADER -->
-        <div class="row justify-content-center mb-4">
-            <div class="col-12 col-lg-10">
-                <div class="card border-0 shadow-sm">
-                    <div class="card-body p-4">
-                        <div class="row align-items-center">
-                            <div class="col-12 col-sm-3 col-md-2 d-flex justify-content-center mb-3 mb-sm-0">
-                                <div class="profile-icon-circle" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden;">
-                                    {% if usuario.foto %}
-                                        <img src="{{ usuario.foto_url_firmada }}" 
-                                            alt="Foto de perfil de {{ usuario.username|default:'Usuario' }}" 
-                                            class="w-100 h-100" 
-                                            style="object-fit: cover;">
-                                    {% else %}
-                                        <img src="{% static 'img/default_profile.png' %}" 
-                                            alt="Foto por defecto"
-                                            class="w-100 h-100" 
-                                            style="object-fit: cover;">
-                                    {% endif %}
+    <!-- PERFIL HEADER (Se mantiene igual) -->
+    <div class="row justify-content-center mb-4">
+        <div class="col-12 col-lg-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-12 col-sm-3 col-md-2 d-flex justify-content-center mb-3 mb-sm-0">
+                            <div class="profile-icon-circle" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden;">
+                                {% if usuario.foto %}
+                                    <img src="{{ usuario.foto_url_firmada }}" 
+                                        alt="Foto de perfil de {{ usuario.username|default:'Usuario' }}" 
+                                        class="w-100 h-100" 
+                                        style="object-fit: cover;">
+                                {% else %}
+                                    <!-- Asegúrate de tener la etiqueta load static al inicio -->
+                                    <img src="{% static 'img/default_profile.png' %}" 
+                                        alt="Foto por defecto"
+                                        class="w-100 h-100" 
+                                        style="object-fit: cover;">
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 col-sm-9 col-md-10">
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h1 class="h3 fw-bold text-dark mb-1">{{ usuario.nombre }} {{ usuario.p_apellido }} {{ usuario.s_apellido }}</h1>
                                 </div>
-                                
-                                </div>
-                            
-                            <div class="col-12 col-sm-9 col-md-10">
-                                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start mb-3">
-                                    <div>
-                                        <h1 class="h3 fw-bold text-dark mb-1">{{ usuario.nombre }} {{ usuario.p_apellido }} {{ usuario.s_apellido }}</h1>
-                                    </div>
-                                    <div class="mt-2 mt-md-0">
-                                        <a href="#" class="btn btn-outline-primary btn-sm">
-                                            <i class="bi bi-pencil me-1"></i>Editar
-                                        </a>
-                                    </div>
-                                </div>
-
-                                <div class="description-section">
-                                    <h6 class="fw-bold text-dark mb-2">Sobre mí</h6>
-                                    <p class="text-muted mb-0">
-                                        </p>
+                                <div class="mt-2 mt-md-0">
+                                    <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditarPerfil">
+                                      <i class="bi bi-pencil"></i> Editar Perfil
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -53,111 +46,353 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="row justify-content-center">
-            <div class="col-12 col-lg-10">
-                <div class="row g-4">
+    <!-- PESTAÑAS (TABS) DE BOOTSTRAP 5 -->
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    
+                    <!-- Navegación de Pestañas -->
+                    <ul class="nav nav-tabs mb-4" id="perfilTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="usuario-tab" data-bs-toggle="tab" data-bs-target="#usuario-pane" type="button" role="tab" aria-controls="usuario-pane" aria-selected="true">
+                                <i class="bi bi-person-circle me-1"></i> Perfil Personal
+                            </button>
+                        </li>
+                        
+                        <!-- LÓGICA CONDICIONAL: Muestra el Tab de Tutor solo si 'es_tutor' es True -->
+                        {% if es_tutor %}
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tutor-tab" data-bs-toggle="tab" data-bs-target="#tutor-pane" type="button" role="tab" aria-controls="tutor-pane" aria-selected="false">
+                                <i class="bi bi-mortarboard-fill"></i>  Perfil de Tutor
+                            </button>
+                        </li>
+                        {% endif %}
+                    </ul>
 
-                    <!-- INFORMACIÓN PERSONAL -->
-                    <div class="col-md-12">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
-                                <h5 class="fw-bold text-dark mb-0">
-                                    <i class="bi bi-person me-2 text-primary"></i>
-                                    Información Personal
-                                </h5>
-                                <button class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                            </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <div class="info-item mb-3">
-                                            <label class="small text-muted fw-semibold">CORREO ELECTRÓNICO</label>
-                                            <p class="mb-0 fw-medium">{{usuario.email}}</p>
-                                        </div>
-                                        <div class="info-item mb-3">
-                                            <label class="small text-muted fw-semibold">GÉNERO</label>
-                                            {% if usuario.genero == "H" %}
-                                                <p class="mb-0 fw-medium">Hombre</p>
-                                            {% elif usuario.genero == "M" %}
-                                                <p class="mb-0 fw-medium">Mujer</p>
-                                            {% elif usuario.genero == "O" %}
-                                                <p class="mb-0 fw-medium">Otro</p>
-                                            {% elif usuario.genero == "N" %}
-                                                <p class="mb-0 fw-medium">Prefiero no decirlo</p>
-                                            {% else %}
-                                                <p class="mb-0 fw-medium">NA</p>
-                                            {% endif %}
-                                        </div>
-                                        <div class="info-item mb-3">
-                                            <label class="small text-muted fw-semibold">FECHA DE NACIMIENTO</label>
-                                            <p class="mb-0 fw-medium">{{usuario.fecha_nac}}</p>
-                                        </div>
+                    <!-- Contenido de las Pestañas -->
+                    <div class="tab-content" id="perfilTabsContent">
+                        
+                        <!-- PANE 1: PERFIL PERSONAL (Siempre visible) -->
+                        <div class="tab-pane fade show active" id="usuario-pane" role="tabpanel" aria-labelledby="usuario-tab" tabindex="0">
+                            
+                            <!-- INFORMACIÓN PERSONAL (Tu código original) -->
+                            <h5 class="fw-bold text-dark mb-3 mt-2">
+                                <i class="bi bi-info-circle me-2 text-primary"></i> Información personal
+                            </h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="info-item mb-3">
+                                        <label class="small text-muted fw-semibold">CORREO ELECTRÓNICO</label>
+                                        <p class="mb-0 fw-medium">{{usuario.email}}</p>
                                     </div>
-                                    <div class="col-6">
-                                        <div class="info-item mb-3">
-                                            <label class="small text-muted fw-semibold">UBICACIÓN</label>
-                                            <p class="mb-0 fw-medium">{{usuario.comuna}}, {{usuario.region}}, {{usuario.pais}}</p>
-                                        </div>
-                                        <div class="info-item mb-3">
-                                            <label class="small text-muted fw-semibold">OCUPACIÓN</label>
-                                            {% if usuario.ocupacion.id != 4 %}
-                                                <p class="mb-0 fw-medium">{{ usuario.ocupacion }}</p>
-                                            {% else %}
-                                                <p class="mb-0 fw-medium">Estudiante y Trabajador</p>
-                                            {% endif %}
-                                        </div>
-                                        <div class="info-item mb-3">
-                                            <label class="small text-muted fw-semibold">UNIVERSIDAD/INSTITUTO</label>
-                                            <p class="mb-0 fw-medium">{{usuario.institucion}}</p>
-                                        </div>
+                                    <div class="info-item mb-3">
+                                        <label class="small text-muted fw-semibold">GÉNERO</label>
+                                        {% if usuario.genero == "H" %}
+                                            <p class="mb-0 fw-medium">Hombre</p>
+                                        {% elif usuario.genero == "M" %}
+                                            <p class="mb-0 fw-medium">Mujer</p>
+                                        {% elif usuario.genero == "O" %}
+                                            <p class="mb-0 fw-medium">Otro</p>
+                                        {% elif usuario.genero == "N" %}
+                                            <p class="mb-0 fw-medium">Prefiero no decirlo</p>
+                                        {% else %}
+                                            <p class="mb-0 fw-medium">NA</p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="small text-muted fw-semibold">FECHA DE NACIMIENTO</label>
+                                        <p class="mb-0 fw-medium">{{usuario.fecha_nac}}</p>
                                     </div>
                                 </div>
-                                
+                                <div class="col-md-6">
+                                    <div class="info-item mb-3">
+                                        <label class="small text-muted fw-semibold">UBICACIÓN</label>
+                                        <p class="mb-0 fw-medium">{{usuario.comuna}}, {{usuario.region}}, {{usuario.pais}}</p>
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="small text-muted fw-semibold">OCUPACIÓN</label>
+                                        {% if usuario.ocupacion.id != 4 %}
+                                            <p class="mb-0 fw-medium">{{ usuario.ocupacion }}</p>
+                                        {% else %}
+                                            <p class="mb-0 fw-medium">Estudiante y Trabajador</p>
+                                        {% endif %}
+                                    </div>
+                                    <div class="info-item mb-3">
+                                        <label class="small text-muted fw-semibold">UNIVERSIDAD/INSTITUTO</label>
+                                        <p class="mb-0 fw-medium">{{usuario.institucion}}</p>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
+                            
+                            <hr class="my-4">
 
-                    <!-- INTERESES Y OBJETIVOS -->
-                    <div class="col-12">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
-                                <h5 class="fw-bold text-dark mb-0">
-                                    <i class="bi bi-book me-2 text-primary"></i>
-                                    Áreas de Interés
-                                </h5>
-                                <button class="btn btn-sm btn-outline-secondary">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                            </div>
-                            <div class="card-body">
-                                <div class="row g-3">
-                                    {% for area in usuario.areas_interes.all %}
-                                        <div class="col-md-6">
-                                            <div class="interest-item p-3 border rounded h-100">
-                                                <div class="d-flex align-items-start">
-                                                    <div class="interest-icon bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
-                                                        <i class="bi bi-graph-up"></i>
-                                                    </div>
-                                                    <div class="flex-grow-1">
-                                                        <h6 class="fw-bold mb-1">{{area.nombre}}</h6>
-                                                    </div>
+                            <!-- ÁREAS DE INTERÉS (Tu código original) -->
+                            <h5 class="fw-bold text-dark mb-3">
+                                <i class="bi bi-bookmark-fill me-2 text-primary"></i> Áreas de Interés
+                            </h5>
+                            <div class="row g-3">
+                                {% for area in usuario.areas_interes.all %}
+                                    <div class="col-12 col-sm-6 col-lg-4">
+                                        <div class="interest-item p-3 border rounded h-100 bg-light">
+                                            <div class="d-flex align-items-center">
+                                                <div class="interest-icon bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
+                                                     <!-- Revisa el icono de Bootstrap que prefieras -->
+                                                     <i class="bi bi-folder-fill"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="fw-bold mb-0">{{area.nombre}}</h6>
                                                 </div>
                                             </div>
                                         </div>
-                                    {% endfor %}
-                                </div>
+                                    </div>
+                                {% empty %}
+                                    <p class="text-muted fst-italic">Aún no has seleccionado tus áreas de interés.</p>
+                                {% endfor %}
+                            </div>
+
+                        </div>
+                        
+                        <!-- PANE 2: PERFIL DE TUTOR (Condicional) -->
+                        {% if es_tutor %}
+                        <div class="tab-pane fade" id="tutor-pane" role="tabpanel" aria-labelledby="tutor-tab" tabindex="0">
+
+                            <!-- ÁREAS DE INTERÉS TUTOR -->
+                            <h5 class="fw-bold text-dark mb-3">
+                                <i class="bi bi-bookmark-fill me-2 text-primary"></i> Áreas de Interés
+                            </h5>
+                            <div class="row g-3">
+                                {% for tutor_area in areastutor %}
+                                    <div class="col-12 col-sm-6 col-lg-4">
+                                        <div class="interest-item p-3 border rounded h-100 bg-light">
+                                            <div class="d-flex align-items-center">
+                                                <div class="interest-icon bg-primary bg-opacity-10 text-primary rounded p-2 me-3">
+                                                    <i class="bi bi-mortarboard-fill"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="fw-bold mb-0">{{ tutor_area.area.nombre }}</h6>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% empty %}
+                                    <div class="col-12">
+                                        <p class="text-muted fst-italic">El tutor no tiene áreas de conocimiento activas.</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <hr class="my-4">
+
+                            <!-- Descripción y Certificaciones del Tutor -->
+                            <h5 class="fw-bold text-dark mb-3">
+                                <i class="bi bi-file-earmark-text-fill me-2 text-primary"></i> Sobre mi  y Mis certificaciones
+                            </h5>
+                            <!-- SOBRE MÍ -->
+                            <div class="mb-4">
+                                <label class="small text-muted fw-semibold">SOBRE MÍ</label>
+                                <p class="mb-0">{{ tutor.sobremi|default:"No ha proporcionado este apartado aún." }}</p>
+                            </div>
+
+                            <!-- CERTIFICACIONES -->
+                            <div class="mb-3">
+                                <label class="small text-muted fw-semibold d-block mb-2">CERTIFICACIONES</label>
+
+                                {% if archivos %}
+                                    <div class="row g-3">
+                                        {% for archivo in archivos %}
+                                            <div class="col-md-6 col-lg-4">
+                                                <div class="card shadow-sm border-0 h-100">
+                                                    <div class="card-body d-flex flex-column">
+                                                        <div class="d-flex align-items-start justify-content-between mb-2">
+                                                            <h6 class="fw-bold text-dark mb-0">
+                                                                {{ archivo.nombre|default:"Certificación sin nombre" }}
+                                                            </h6>
+                                                            {% if archivo.estado == "Aprobado" %}
+                                                                <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                                            {% elif archivo.estado == "Rechazado" %}
+                                                                <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+                                                            {% else %}
+                                                                <i class="bi bi-hourglass-split text-warning fs-5"></i>
+                                                            {% endif %}
+                                                        </div>
+
+                                                        <p class="text-muted small mb-3">Estado: {{ archivo.estado }}</p>
+
+                                                        <div>
+                                                            <a href="#" 
+                                                                class="btn btn-outline-primary btn-sm mt-auto align-self-start btn-ver-pdf"
+                                                                data-url="{{ archivo.url_ver }}"
+                                                                data-titulo="Vista previa de {{ archivo.nombre }}">
+                                                                <i class="bi bi-eye-fill me-1"></i> Ver archivo
+                                                            </a>
+
+                                                            <a href="{{ archivo.url_descargar }}" 
+                                                                class="btn btn-outline-primary btn-sm mt-auto align-self-start">
+                                                                <i class="bi bi-download me-1"></i> Descargar
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p class="text-muted">No se han subido certificaciones aún.</p>
+                                {% endif %}
                             </div>
                         </div>
-                    </div>
+                        {% endif %}
 
+                    </div>
                 </div>
             </div>
         </div>
-
     </div>
+    
+</div>
+
+<!-- Modal de Edición de Perfil -->
+<div class="modal fade" id="modalEditarPerfil" tabindex="-1" aria-labelledby="editarPerfilLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="editarPerfilLabel">Editar Perfil</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Navegación con solo 2 PESTAÑAS PRINCIPALES -->
+        <ul class="nav nav-tabs" id="perfilTabs" role="tablist">
+          <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tabPersonal"><i class="bi bi-person-circle me-1"></i> Perfil Personal</button></li>
+          <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tabTutorCompleto"><i class="bi bi-mortarboard-fill"></i> Perfil Tutor</button></li>
+        </ul>
+
+        <!-- Contenido de las pestañas -->
+        <div class="tab-content mt-3">
+
+          <!-- NEW TAB 1: PERFIL PERSONAL (Datos Básicos + Áreas de Interés) -->
+          <div class="tab-pane fade show active" id="tabPersonal">
+            
+            <!-- 1. Datos personales (Formulario de usuario) -->
+            <h6 class="fw-bold text-primary mb-3"><i class="bi bi-person-fill me-2"></i>Datos Básicos</h6>
+            <form id="formUsuario" class="mb-4">
+              {% csrf_token %}
+              <input type="hidden" name="tipo" value="usuario">
+              <div class="row g-3">
+                <div class="col-md-4"><label class="form-label">Nombre</label><input class="form-control" name="nombre" value="{{ usuario.nombre }}"></div>
+                <div class="col-md-4"><label class="form-label">Primer Apellido</label><input class="form-control" name="p_apellido" value="{{ usuario.p_apellido }}"></div>
+                <div class="col-md-4"><label class="form-label">Segundo Apellido</label><input class="form-control" name="s_apellido" value="{{ usuario.s_apellido }}"></div>
+              </div>
+              <!-- Botón de guardar removido -->
+            </form>
+            
+            <hr class="my-4">
+
+            <!-- 2. Áreas de interés (Formulario de usuario_area) -->
+            <h6 class="fw-bold text-primary mb-3"><i class="bi bi-bookmark-star-fill me-2"></i>Áreas de Interés</h6>
+            <form id="formAreasUsuario">
+              {% csrf_token %}
+              <input type="hidden" name="tipo" value="usuario_area">
+              <label class="form-label">Selecciona tus áreas de interés</label>
+              <select name="areas[]" class="form-select" multiple>
+                {% for area in areas %}
+                  <option value="{{ area.id }}" {% if area in usuario.areas_interes.all %}selected{% endif %}>{{ area.nombre }}</option>
+                {% endfor %}
+              </select>
+              <!-- Botón de guardar removido -->
+            </form>
+            
+          </div>
+
+          <!-- NEW TAB 2: PERFIL TUTOR COMPLETO (Biografía + Áreas de Conocimiento + Archivos) -->
+          <div class="tab-pane fade" id="tabTutorCompleto">
+            {% if tutor %}
+              
+              <!-- 1. Datos del Tutor (Biografía / Sobre mí) -->
+              <h6 class="fw-bold text-success mb-3"><i class="bi bi-patch-check-fill me-2"></i>Biografía del Tutor</h6>
+              <form id="formTutor" class="mb-4">
+                {% csrf_token %}
+                <input type="hidden" name="tipo" value="tutor">
+                <label class="form-label">Sobre mí</label>
+                <textarea class="form-control" name="sobremi" rows="4">{{ tutor.sobremi }}</textarea>
+                <!-- Botón de guardar removido -->
+              </form>
+              
+              <hr class="my-4">
+
+              <!-- 2. Áreas de Conocimiento (Formulario de tutor_area) -->
+              <h6 class="fw-bold text-success mb-3"><i class="bi bi-mortarboard-fill me-2"></i>Áreas de Conocimiento</h6>
+              <form id="formAreasTutor" class="mb-4">
+                {% csrf_token %}
+                <input type="hidden" name="tipo" value="tutor_area">
+                <label class="form-label">Selecciona tus áreas de conocimiento</label>
+                <select name="areas[]" class="form-select" multiple>
+                  {% for area in areas %}
+                    <!-- NOTA: La variable 'areastutor' debe contener una lista o QuerySet de IDs o de objetos AreaInteres para que esto funcione correctamente en la plantilla. -->
+                    <option value="{{ area.id }}" {% if area in areastutor %}selected{% endif %}>{{ area.nombre }}</option>
+                  {% endfor %}
+                </select>
+                <!-- Botón de guardar removido -->
+                </form>
+
+              <hr class="my-4">
+
+              <!-- 3. Archivos (Formulario de subida y listado) -->
+              <h6 class="fw-bold text-success mb-3"><i class="bi bi-file-earmark-arrow-up-fill me-2"></i>Archivos de Certificación y Soporte</h6>
+              <!-- Este formulario SÍ necesita su propio botón o manejo especial, ya que requiere `multipart/form-data` y NO debe ser disparado junto a los demás, sino de forma independiente. -->
+              <form id="formArchivo" enctype="multipart/form-data" class="mb-4">
+                {% csrf_token %}
+                <input type="hidden" name="tipo" value="archivo">
+                <label class="form-label">Subir nuevo archivo</label>
+                <input type="file" class="form-control" name="archivo">
+                <input type="text" class="form-control mt-2" name="nombre" placeholder="Nombre del archivo">
+                <div class="mt-3 text-end">
+                  <button type="submit" class="btn btn-primary">Subir Archivo</button>
+                </div>
+              </form>
+              
+              <h6 class="fw-bold text-secondary mb-3"><i class="bi bi-folder-fill me-2"></i>Archivos existentes</h6>
+              <ul class="list-group">
+                {% for a in archivos %}
+                  <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ a.nombre }} <span class="badge bg-{{ a.estado|lower }}">{{ a.estado }}</span>
+                  </li>
+                {% empty %}
+                  <li class="list-group-item text-muted">No hay archivos.</li>
+                {% endfor %}
+              </ul>
+
+            {% else %}
+              <div class="alert alert-info">
+                  No tienes perfil de tutor. Debes ser registrado como tutor para editar esta sección.
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+      
+      <!-- Pie de página del modal con el botón de guardado universal -->
+      <div class="modal-footer d-flex justify-content-between">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <!-- BOTÓN UNIVERSAL DE GUARDADO -->
+        <button type="button" id="btnGuardarUniversal" class="btn btn-success">
+            <i class="bi bi-save-fill me-2"></i>Guardar Todos los Cambios
+        </button>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+{% else %}
+<!-- Mensaje si por alguna razón no se carga el usuario -->
+<div class="container my-5">
+    <div class="alert alert-danger text-center">No se pudo cargar la información del perfil.</div>
+</div>
 {% endif %}
 
 <style>
@@ -245,8 +480,21 @@
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('✅ Perfil estudiante cargado correctamente');
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".btn-ver-pdf").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.preventDefault();
+      const url = btn.dataset.url;
+      const titulo = btn.dataset.titulo || "Vista previa del archivo";
+
+      if (url) {
+        BS5Helper.Modal.PDFViewer({ url, titulo });
+      } else {
+        console.error("No se encontró la URL del PDF");
+      }
+    });
+  });
 });
 </script>
+
 {% endblock %}

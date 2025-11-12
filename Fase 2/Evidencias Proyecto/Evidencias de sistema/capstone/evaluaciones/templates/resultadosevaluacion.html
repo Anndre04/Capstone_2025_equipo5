@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-4">
+    
+    <header class="mb-4 text-center">
+        <h1 class="h4 fw-bold text-dark mb-2">
+            Resultados de la evaluación: {{ evaluacion_realizada.evaluacion.titulo }}
+        </h1>
+        <h6 class="text-muted">
+            Realizada por <strong class="text-primary">{{ evaluacion_realizada.estudiante.nombre_completo }}</strong> 
+            el {{ evaluacion_realizada.fecha_intento|date:"d M Y" }} a las {{ evaluacion_realizada.fecha_intento|date:"H:i" }}
+        </h6>
+    </header>
+
+    <div class="row justify-content-center mb-4">
+        <div class="col-md-6 col-lg-4">
+            <div class="card p-3 shadow-sm border-0 rounded-3 bg-primary bg-opacity-10 text-center">
+                <div class="card-body">
+                    <h5 class="text-primary mb-1 small fw-semibold">Puntaje Total</h5>
+                    <div class="d-flex align-items-center justify-content-center">
+                        <i class="bi bi-award-fill text-warning me-2 fs-5"></i> 
+                        <h2 class="fw-bold text-dark mb-0 fs-4">{{ evaluacion_realizada.puntaje_obtenido_total }} pts</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3 class="h5 mb-3 fw-semibold text-secondary border-bottom pb-1">Detalle por Pregunta</h3>
+    
+    {% for rta in evaluacion_realizada.respuestas_dadas.all %}
+        
+        <div class="card mb-3 shadow-sm rounded-3 border-{% if rta.puntaje_obtenido > 0 %}success{% else %}danger{% endif %}">
+            <div class="card-body p-3">
+                
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="fw-bold mb-0 text-dark small">
+                        {{ forloop.counter }}. {{ rta.pregunta.contenido }}
+                    </h5>
+                    <span class="badge bg-secondary-subtle text-secondary fw-semibold p-1 ms-2 small">
+                        {{ rta.puntaje_obtenido }}/{{ rta.puntos_maximos }} pts
+                    </span>
+                </div>
+
+                <ul class="list-group list-group-flush mt-2">
+                    {% for opcion in rta.pregunta.respuestas.all %}
+                        
+                        {% if opcion.correcto %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center bg-success-subtle border-success border-1 rounded-2 mb-1 p-2 small">
+                                <span class="fw-medium me-auto">
+                                    {{ opcion.contenido }}
+                                </span>
+                                <span class='badge bg-success ms-2 p-1 small'><i class='bi bi-check-circle-fill me-1'></i> Correcta</span>
+                            </li>
+                        {% elif rta.respuesta_seleccionada.id == opcion.id %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center bg-danger-subtle border-danger border-1 rounded-2 mb-1 p-2 small">
+                                <span class="fw-medium me-auto">
+                                    {{ opcion.contenido }}
+                                </span>
+                                <span class='badge bg-danger ms-2 p-1 small'><i class='bi bi-x-circle-fill me-1'></i> Seleccionada</span>
+                            </li>
+                        {% else %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center bg-white border-light border-1 rounded-2 mb-1 p-2 small">
+                                <span class="fw-medium me-auto">
+                                    {{ opcion.contenido }}
+                                </span>
+                            </li>
+                        {% endif %}
+                        
+                    {% endfor %}
+                </ul>
+
+                <div class="mt-3 pt-2 border-top text-end">
+                    {% if rta.puntaje_obtenido > 0 %}
+                        <span class="text-success fw-bold small">
+                            <i class="bi bi-check-circle me-1"></i> +{{ rta.puntaje_obtenido }}
+                        </span>
+                    {% else %}
+                        <span class="text-danger fw-bold small">
+                            <i class="bi bi-x-circle me-1"></i> 0
+                        </span>
+                    {% endif %}
+                    <span class="text-muted fw-semibold ms-2 small">/ {{ rta.pregunta.puntos }} pts</span>
+                </div>
+            </div>
+        </div>
+        
+    {% endfor %}
+    
+    <div class="text-center mt-4 pt-2 border-top">
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-sm">Volver al Inicio</a>
+    </div>
+
+</div>
+{% endblock content %}

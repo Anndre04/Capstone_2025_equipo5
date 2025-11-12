@@ -10,9 +10,6 @@ def clp(value):
     except (ValueError, TypeError):
         return value
     
-@register.filter
-def get_item(dictionary, key):
-    return dictionary.get(key, [])
 
 @register.simple_tag
 def get_disponibilidad_dia(disponibilidades, anuncio_id, dia):
@@ -21,3 +18,10 @@ def get_disponibilidad_dia(disponibilidades, anuncio_id, dia):
             if disp.dia == dia:
                 return disp
     return None
+
+@register.filter
+def get_item(dictionary, key):
+    """Permite acceder a un valor de diccionario usando una variable como clave."""
+    if isinstance(dictionary, dict):
+        return dictionary.get(key, {})
+    return {}

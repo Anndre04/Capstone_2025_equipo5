@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // SECCIÓN: ANUNCIOTUTOR.HTML
 
-  const downloadButtons = document.querySelectorAll('.btn-outline-primary');
+  /* const downloadButtons = document.querySelectorAll('.btn-outline-primary');
   if (downloadButtons.length > 0) {
     console.log(' Vista de Tutoría - Anuncio cargada correctamente');
     downloadButtons.forEach(button => {
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
         setTimeout(() => alert.remove(), 3000);
       });
     });
-  }
+  } */
 
   const tutorCards = document.querySelectorAll('.card');
   tutorCards.forEach(card => {
@@ -42,28 +42,62 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 
- 
+
   // SECCIÓN: GESTORTUTORIAS.HTML
 
-  window.subirArchivo = function () {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.pdf,.doc,.docx,.txt';
-    fileInput.style.display = 'none';
 
-    fileInput.addEventListener('change', function () {
-      if (this.files && this.files[0]) {
-        const fileName = this.files[0].name;
-        alert(`Archivo seleccionado: ${fileName}\n\n(Esta es una maqueta - En producción se subiría el archivo)`);
+  const picker = new tempusDominus.TempusDominus(
+    document.getElementById("datetimepicker-fechagestortutoria"),
+    {
+      display: {
+        theme: "light",
+        viewMode: "calendar",
+        components: {
+          calendar: true,
+          date: true,
+          month: true,
+          year: true,
+          decades: true,
+          clock: false, // ❌ sin hora
+        },
+        icons: {
+          previous: "bi bi-chevron-left",
+          next: "bi bi-chevron-right",
+        },
+      },
+      localization: {
+        locale: "es-ES",
+        startOfTheWeek: 1,
+        format: "yyyy-MM-dd",
+        dayViewHeaderFormat: { month: "long", year: "numeric" },
+      },
+      restrictions: {
+        maxDate: new Date(), // ⛔ no deja elegir fechas futuras
+      },
+      useCurrent: false,
+    }
+
+  );
+
+  const inputFecha = document.getElementById('fechagestortutoria');
+  inputFecha.addEventListener('focus', () => picker.show());
+  inputFecha.addEventListener('click', () => picker.show());
+
+  // 🔧 Al seleccionar una fecha, la formateamos sin hora
+  const input = document.getElementById("fechagestortutoria");
+  document
+    .getElementById("datetimepicker-fechagestortutoria")
+    .addEventListener("change.td", (e) => {
+      if (e.detail?.date) {
+        const date = e.detail.date;
+        const year = date.year;
+        const month = String(date.month + 1).padStart(2, "0");
+        const day = String(date.date).padStart(2, "0");
+        input.value = `${year}-${month}-${day}`;
       }
     });
 
-    document.body.appendChild(fileInput);
-    fileInput.click();
-    document.body.removeChild(fileInput);
-  };
 
- 
   //  SECCIÓN: MISTUTORIASPROF.HTML
 
   const resumenDisponibilidad = document.getElementById('resumenDisponibilidad');
@@ -165,7 +199,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
   // SECCIÓN: SOLICITUDESPROF.HTML
-  
+
   const acceptButtons = document.querySelectorAll('.btn-success');
   const rejectButtons = document.querySelectorAll('.btn-outline-secondary');
 
@@ -201,7 +235,7 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     });
 
-    rejectButtons.forEach(button => {
+    /* rejectButtons.forEach(button => {
       button.addEventListener('click', function () {
         const studentName = this.closest('.card')?.querySelector('.fw-bold')?.textContent || 'Estudiante';
         showNotification(`Solicitud de ${studentName} rechazada`, 'secondary');
@@ -212,7 +246,7 @@ document.addEventListener('DOMContentLoaded', function () {
           this.previousElementSibling.disabled = true;
         }, 1000);
       });
-    });
+    }); */
 
     const cards = document.querySelectorAll('.hover-card');
     cards.forEach(card => {

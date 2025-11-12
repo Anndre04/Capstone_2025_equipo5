@@ -1,25 +1,6 @@
-// Desaparecer automáticamente las alertas después de 8 segundos
-setTimeout(() => {
-    document.querySelectorAll('.alert').forEach(alert => {
-        const bsAlert = bootstrap.Alert.getOrCreateInstance(alert);
-        bsAlert.close();
-    });
-}, 8000);
-
-
-
-
 document.addEventListener("DOMContentLoaded", function () {
 
     console.log("Documento cargado y listo");
-
-    flatpickr("#id_fecha_nac", {
-        locale: "es",
-        altInput: true,
-        altFormat: "d-m-Y",
-        dateFormat: "Y-m-d",
-        maxDate: new Date(new Date().setFullYear(new Date().getFullYear() - 13)), // al menos 13 años
-    })
 
     // 4. EFECTO SMOOTH SCROLL PARA NAVEGACIÓN
     document.querySelectorAll('.nav-link[href^="#"]').forEach(link => {
@@ -119,3 +100,6 @@ document.addEventListener("DOMContentLoaded", function () {
     resaltarEnlaceActivo();
 
 });
+
+
+

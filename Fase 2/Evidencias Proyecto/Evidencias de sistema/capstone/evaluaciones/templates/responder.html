@@ -2,34 +2,118 @@
 
 {% block content %}
 <div class="container mt-4">
-  <h2>{{ evaluacion.titulo }}</h2>
-  <form method="post">
-    {% csrf_token %}
-    {% for item in preguntas_con_opciones %}
-        <h4>{{ item.evaluacion_pregunta.pregunta.contenido }}</h4>
-        {% for resp in item.opciones %}
-            <label>
-                <input type="radio" name="respuesta_{{ item.evaluacion_pregunta.pregunta.id }}"
-                       value="{{ resp.id }}"
-                       {% if item.seleccionada and resp.id == item.seleccionada.id %} checked {% endif %}
-                       {% if item.seleccionada %} disabled {% endif %}>
-                {{ resp.contenido }}
-            </label><br>
+    <!-- Header mejorado -->
+    <div class="text-center mb-4">
+        <h2 class="h3 fw-bold text-primary mb-2">{{ evaluacion.titulo }}</h2>
+        <div class="border-bottom pb-3 mx-auto" style="max-width: 300px;"></div>
+    </div>
+
+    {% if ya_respondio %}
+        <!-- Alert mejorado -->
+        <div class="alert alert-success shadow-sm border-0 rounded-3 mb-4">
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center mb-1">
+                        <i class="bi bi-check-circle-fill me-2 fs-5"></i>
+                        <h5 class="mb-0 fw-semibold">¡Evaluación completada!</h5>
+                    </div>
+                    <p class="mb-1">Tu puntaje total: <span class="badge bg-success fs-6">{{ realizacion.puntaje_obtenido_total }} puntos</span></p>
+                    <small class="text-muted">
+                        <i class="bi bi-calendar me-1"></i>
+                        {{ realizacion.fecha_intento|date:"d M Y" }} a las {{ realizacion.fecha_intento|date:"H:i" }}
+                    </small>
+                </div>
+                <div class="ms-3">
+                    <i class="bi bi-trophy-fill text-warning fs-1"></i>
+                </div>
+            </div>
+        </div>
+    {% elif not preguntas_con_opciones %}
+        <div class="alert alert-warning shadow-sm border-0 rounded-3">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Esta evaluación no tiene preguntas definidas.
+        </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+
+        {% for item in preguntas_con_opciones %}
+            <div class="card mb-4 shadow-sm border-0 rounded-3">
+                <div class="card-header bg-light border-0 py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0 fw-semibold">
+                            <span class="badge bg-primary me-2">{{ forloop.counter }}</span>
+                            {{ item.evaluacion_pregunta.pregunta.contenido }}
+                        </h5>
+                        {% if ya_respondio %}
+                            <span class="badge bg-secondary fs-6">{{ item.evaluacion_pregunta.puntos }} pts</span>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="card-body py-3">
+                    <div class="list-group list-group-flush">
+                        {% for resp in item.opciones %}
+                            <label class="list-group-item d-flex justify-content-between align-items-center border-0 py-3
+                                {% if ya_respondio %}
+                                    {% if resp.correcto %} 
+                                        bg-success bg-opacity-10 border-start border-success border-3
+                                    {% elif item.seleccionada.id == resp.id %} 
+                                        bg-danger bg-opacity-10 border-start border-danger border-3
+                                    {% else %}
+                                        bg-light
+                                    {% endif %}
+                                {% else %}
+                                    bg-light
+                                {% endif %}">
+                                
+                                <div class="form-check d-flex align-items-center w-100">
+                                    <input class="form-check-input me-3"
+                                           type="radio"
+                                           name="respuesta_{{ item.evaluacion_pregunta.pregunta.id }}"
+                                           value="{{ resp.id }}"
+                                           {% if item.seleccionada and resp.id == item.seleccionada.id %} checked {% endif %}
+                                           {% if ya_respondio %} disabled {% endif %}>
+                                    <span class="form-check-label fs-6">{{ resp.contenido }}</span>
+                                </div>
+
+                                {% if ya_respondio %}
+                                    {% if resp.correcto %}
+                                        <span class="badge bg-success rounded-pill px-3 py-2">
+                                            <i class="bi bi-check-lg me-1"></i>Correcta
+                                        </span>
+                                    {% elif item.seleccionada.id == resp.id %}
+                                        <span class="badge bg-danger rounded-pill px-3 py-2">
+                                            <i class="bi bi-x-lg me-1"></i>Incorrecta
+                                        </span>
+                                    {% endif %}
+                                {% endif %}
+                            </label>
+                        {% endfor %}
+                    </div>
+
+                    {% if ya_respondio %}
+                        <div class="mt-3 pt-3 border-top text-center">
+                            <p class="mb-0 fs-6">
+                                Puntaje obtenido: 
+                                <span class="badge {% if item.puntaje_obtenido > 0 %}bg-success{% else %}bg-danger{% endif %} fs-6 px-3 py-2">
+                                    {{ item.puntaje_obtenido|default:0 }} / {{ item.evaluacion_pregunta.puntos }}
+                                </span>
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
         {% endfor %}
 
-        {% if item.seleccionada %}
-            <p>
-                Tu respuesta: {{ item.seleccionada.contenido }} -
-                {% if item.correcta %}<span style="color:green">Correcta</span>{% else %}<span style="color:red">Incorrecta</span>{% endif %}
-            </p>
-            <p>Puntaje obtenido: {{ item.evaluacion_pregunta.puntaje_obtenido }} / {{ item.evaluacion_pregunta.pregunta.puntos }}</p>
+        {% if not ya_respondio %}
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary btn-lg px-5 py-3 rounded-pill shadow-sm">
+                    <i class="bi bi-send-fill me-2"></i> Enviar Evaluación
+                </button>
+            </div>
         {% endif %}
-        <hr>
-    {% endfor %}
-
-    {% if not preguntas_con_opciones.0.seleccionada %}
-        <button type="submit">Enviar</button>
-    {% endif %}
-  </form>
+    </form>
 </div>
 {% endblock content %}

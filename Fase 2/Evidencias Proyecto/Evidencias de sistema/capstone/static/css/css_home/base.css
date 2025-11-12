@@ -335,3 +335,22 @@
          transform: translate(25%, -25%) scale(1);
      }
  }
+
+#tutoria-encurso {
+  display: inline-block;
+  padding: 0.25em 0.5em;
+  font-size: 0.55rem;
+  font-weight: 250;
+  border-radius: 0.5rem;
+  animation: blink 1.5s infinite;
+  letter-spacing: 0.5px;
+  vertical-align: middle;
+  margin-left: 0.25rem;
+}
+
+/* Animación de parpadeo */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+

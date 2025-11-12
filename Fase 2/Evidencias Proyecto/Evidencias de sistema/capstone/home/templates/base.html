@@ -12,7 +12,29 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
   <!-- Flatpickr -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
+  />
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Popperjs -->
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha256-BRqBN7dYgABqtY9Hd4ynE+1slnEw+roEPFzQ7TRRfcg=" crossorigin="anonymous"></script>
+  <!-- Tempus Dominus JavaScript -->
+  <script src="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.9.4/dist/js/tempus-dominus.min.js" crossorigin="anonymous"></script>
+
+  <!-- Tempus Dominus Styles -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@eonasdan/tempus-dominus@6.9.4/dist/css/tempus-dominus.min.css" crossorigin="anonymous">
+
+  <!-- Select2 -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
+
+  <!-- BS5 icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
   <!-- JS -->
   <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
@@ -131,7 +153,7 @@
           {% if user.is_authenticated %}
           <!-- PERFIL -->
           <li class="nav-item">
-            <a class="nav-link smooth-transition" href="{% url "perfilusuario" user.id %}" data-bs-toggle="tooltip" title="Perfil">
+            <a class="nav-link smooth-transition" href="{% url "perfilusuario" %}" data-bs-toggle="tooltip" title="Perfil">
               <i class="bi bi-person-circle"></i>
               <span class="d-lg-none ms-2">Perfil</span>
             </a>
@@ -206,7 +228,7 @@
           <!-- GESTOR -->
           <li class="nav-item">
             <a class="nav-link smooth-transition {% if request.path == '/tutoria/gestortutorias/' %}active{% endif %}"
-              href="{% url "tutoria:gestortutorias" request.user.id %}">
+              href="{% url "tutoria:gestortutorias" %}">
               <i class="bi bi-person-check me-1"></i>Gestor Tutorías 
             </a>
           </li>
@@ -216,6 +238,7 @@
               <a class="nav-link smooth-transition"
                 href="{% url 'tutoria:tutoria' tutoria_en_curso.id %}">
                 <i class="bi bi-person-check me-1"></i>Tutoría
+                <span id="tutoria-encurso" class="badge bg-success ms-1">En curso</span>
               </a>
             </li>
           {% else %}
@@ -246,7 +269,7 @@
         <li class="nav-item">
           <a class="nav-link smooth-transition {% if request.path == '/tutoria/mistutoriasprof/' %}active{% endif %}"
             href="{% url 'tutoria:misanunciosprof' user.id %}">
-            <i class="bi bi-journal-text me-1"></i>Mis Tutorías
+            <i class="bi bi-journal-text me-1"></i>Mis Anuncios
           </a>
         </li>
 
@@ -270,7 +293,7 @@
         <!-- GESTOR -->
         <li class="nav-item">
           <a class="nav-link smooth-transition {% if request.path == '/tutoria/gestortutorias/' %}active{% endif %}"
-            href="{% url 'tutoria:gestortutorias' user.id %}">
+            href="{% url 'tutoria:gestortutorias' %}">
             <i class="bi bi-person-check me-1"></i>Gestor Tutorías 
           </a>
         </li>
@@ -280,6 +303,7 @@
               <a class="nav-link smooth-transition"
                 href="{% url 'tutoria:tutoria' tutoria_en_curso.id %}">
                 <i class="bi bi-person-check me-1"></i>Tutoría
+                <span id="tutoria-encurso" class="badge bg-success ms-1">En curso</span>
               </a>
             </li>
           {% else %}
@@ -313,7 +337,7 @@
           <!-- MIS TUTORÍAS -->
           <li class="nav-item">
             <a class="nav-link smooth-transition" 
-                  href="#">
+                  href="{% url "historial_tutoria" user.id %}">
               <i class="bi bi-journal-text me-1"></i>Mis Tutorias
             </a>
           </li>
@@ -339,6 +363,7 @@
               <a class="nav-link smooth-transition"
                 href="{% url 'tutoria:tutoria' tutoria_en_curso.id %}">
                 <i class="bi bi-person-check me-1"></i>Tutoría
+                <span id="tutoria-encurso" class="badge bg-success ms-1">En curso</span>
               </a>
             </li>
           {% else %}
@@ -367,9 +392,9 @@
 
         <!-- MIS TUTORÍAS -->
         <li class="nav-item">
-          <a class="nav-link smooth-transition"
-            href="#">
-            <i class="bi bi-journal-text me-1"></i>Mis Tutorías
+          <a class="nav-link smooth-transition" 
+                href="{% url "historial_tutoria" user.id %}">
+            <i class="bi bi-journal-text me-1"></i>Mis Tutorias
           </a>
         </li>
 
@@ -390,16 +415,17 @@
           </a>
         </li>
 
-        <!-- GESTOR -->
         <!-- Tutoria -->
           {% if tutoria_en_curso %}
-            <li class="nav-item">
-              <a class="nav-link smooth-transition"
+            <li class="nav-item position-relative">
+              <a class="nav-link smooth-transition active tutoria-en-curso" 
                 href="{% url 'tutoria:tutoria' tutoria_en_curso.id %}">
                 <i class="bi bi-person-check me-1"></i>Tutoría
+                <span  id="tutoria-encurso" class="badge bg-success ms-1">En curso</span>
               </a>
+              <!-- Icono pequeño parpadeante en la esquina -->
             </li>
-          {% else %}
+            {% else %}
             <li class="nav-item">
               <a class="nav-link smooth-transition disabled" href="#" tabindex="-1" aria-disabled="true">
                 <i class="bi bi-person-check me-1"></i>Tutoría
@@ -414,29 +440,6 @@
 
   <!-- CONTENIDO PRINCIPAL -->
   <main class="flex-grow-1">
-    {% if messages %}
-      <div class="alert-container position-fixed top-0 mt-5" style="right: 2rem; z-index: 2000;">
-        {% for message in messages %}
-          <div 
-            class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-lg d-flex align-items-center"
-            role="alert"
-            style="min-width: 320px;"
-          >
-            <i class="bi 
-              {% if message.tags == 'success' %}bi-check-circle-fill text-success
-              {% elif message.tags == 'error' %}bi-x-circle-fill text-danger
-              {% elif message.tags == 'warning' %}bi-exclamation-triangle-fill text-warning
-              {% else %}bi-info-circle-fill text-info{% endif %}
-              me-2 fs-5"></i>
-
-            <div class="flex-grow-1">{{ message }}</div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-
-
     {% block content %}
     {% endblock %}
   </main>
@@ -463,7 +466,7 @@
   </footer>
 
 <script src="{% static 'js/js_home/base.js' %}"></script>
-
+<script src="{% static 'js/helpers/bs5helper.js' %}"></script>
 <script src="{% static 'js/notifications.js' %}"></script>
 <script src="{% static 'js/chat.js' %}"></script>
 
@@ -475,8 +478,28 @@ document.addEventListener("DOMContentLoaded", () => {
     {% else %}
         sessionStorage.removeItem("rol_actual");
     {% endif %}
+
+    {% if messages %}
+        {% for message in messages %}
+            const tagsArray = "{{ message.tags|escapejs }}".split(" ");
+
+            let tipo = "info"; // default
+
+            if (tagsArray.includes("success")) tipo = "success";
+            else if (tagsArray.includes("error")) tipo = "danger";
+            else if (tagsArray.includes("warning")) tipo = "warning";
+
+            BS5Helper.Toast.mostrar({
+                mensaje: "{{ message|escapejs }}",
+                tipo: tipo,
+                duracion: 8000,
+                posicion: "top-end"
+            });
+        {% endfor %}
+    {% endif %}
 });
 </script>
+
 
 </body>
 </html>

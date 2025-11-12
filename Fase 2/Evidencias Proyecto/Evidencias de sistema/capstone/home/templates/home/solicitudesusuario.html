@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    rejectButtons.forEach(button => {
+    {% comment %} rejectButtons.forEach(button => {
         button.addEventListener('click', function() {
             const studentName = this.closest('.card').querySelector('.fw-bold').textContent;
             showNotification(`Solicitud de ${studentName} rechazada`, 'secondary');
@@ -243,7 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.previousElementSibling.disabled = true;
             }, 1000);
         });
-    });
+    }); {% endcomment %}
     
     function showNotification(message, type) {
         const alert = document.createElement('div');

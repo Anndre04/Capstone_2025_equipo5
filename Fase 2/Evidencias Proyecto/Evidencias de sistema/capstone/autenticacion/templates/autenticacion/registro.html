@@ -31,11 +31,12 @@
           {% endif %}
 
           <form method="post" enctype="multipart/form-data" action="{% url 'registro' %}" id="registroForm">
+          <p class="text-muted mb-0 small">Los campos marcados con: <span class="text-danger">*</span> son obligatorios.</p>
             {% csrf_token %}
             
             <!-- CORREO -->
             <div class="mb-3">
-              <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold small">Correo Electrónico</label>
+              <label for="{{ form.email.id_for_label }}" class="form-label fw-semibold small">Correo Electrónico<span class="text-danger">*</span></label>
               {{ form.email }}
               {% if form.email.errors %}
                 <div class="text-danger small">{{ form.email.errors }}</div>
@@ -46,7 +47,7 @@
             <div class="row g-2 g-md-3">
               <div class="col-12 col-sm-6">
                 <div class="mb-3">
-                  <label for="{{ form.nombre.id_for_label }}" class="form-label fw-semibold small">Nombre</label>
+                  <label for="{{ form.nombre.id_for_label }}" class="form-label fw-semibold small">Nombre<span class="text-danger">*</span></label>
                   {{ form.nombre }}
                   {% if form.nombre.errors %}
                     <div class="text-danger small">{{ form.nombre.errors }}</div>
@@ -55,7 +56,7 @@
               </div>
               <div class="col-12 col-sm-6">
                 <div class="mb-3">
-                  <label for="{{ form.p_apellido.id_for_label }}" class="form-label fw-semibold small">Primer Apellido</label>
+                  <label for="{{ form.p_apellido.id_for_label }}" class="form-label fw-semibold small">Primer Apellido<span class="text-danger">*</span></label>
                   {{ form.p_apellido }}
                   {% if form.p_apellido.errors %}
                     <div class="text-danger small">{{ form.p_apellido.errors }}</div>
@@ -66,7 +67,7 @@
 
             <!-- SEGUNDO APELLIDO -->
             <div class="mb-3">
-              <label for="{{ form.s_apellido.id_for_label }}" class="form-label fw-semibold small">Segundo Apellido</label>
+              <label for="{{ form.s_apellido.id_for_label }}" class="form-label fw-semibold small">Segundo Apellido<span class="text-danger">*</span></label>
               {{ form.s_apellido }}
               <!-- ALERTA SEGUNDO APELLIDO -->
               {% if form.s_apellido.errors %}
@@ -78,7 +79,7 @@
             <div class="row g-2 g-md-3">
               <div class="col-12 col-sm-6">
                 <div class="mb-3">
-                  <label for="{{ form.run.id_for_label }}" class="form-label fw-semibold small">RUN</label>
+                  <label for="{{ form.run.id_for_label }}" class="form-label fw-semibold small">RUN<span class="text-danger">*</span></label>
                   {{ form.run }}
                   <!-- ALERTA RUT -->
                   {% if form.run.errors %}
@@ -89,19 +90,38 @@
               </div>
               <div class="col-12 col-sm-6">
                 <div class="mb-3">
-                  <label for="{{ form.fecha_nac.id_for_label }}" class="form-label fw-semibold small">Fecha de Nacimiento</label>
-                  {{ form.fecha_nac }}
-                  <!-- ALERTA EDADS -->
+                  <label for="fecha_nac" class="form-label fw-semibold small">
+                    Fecha de Nacimiento <span class="text-danger">*</span>
+                  </label>
+                  <div class="input-group" id="datetimepicker-fechanac" 
+                      data-td-target-input="nearest" 
+                      data-td-target-toggle="nearest">
+                    <input 
+                      id="fecha_nac" 
+                      name="fecha_nac" 
+                      type="text" 
+                      class="form-control" 
+                      placeholder="Selecciona una fecha" 
+                      data-td-target="#datetimepicker-fechanac" 
+                      value="{{ form.fecha_nac.value|default_if_none:'' }}"
+                      readonly autocomplete="bday"/>
+                    <span class="input-group-text" 
+                        data-td-target="#datetimepicker-fechanac" 
+                        data-td-toggle="datetimepicker">
+                      <i class="bi bi-calendar-event"></i>
+                    </span>
+                  </div>
+
+                  <!-- ALERTA EDAD -->
                   <div class="form-text small">Debes tener al menos 13 años</div>
                   {% if form.fecha_nac.errors %}
                     <div class="text-danger small">{{ form.fecha_nac.errors }}</div>
                   {% endif %}
                 </div>
               </div>
-            </div>
 
             <div class="mb-3 col-12">
-              <label for="{{ form.genero.id_for_label }}" class="form-label fw-semibold small">Género</label>
+              <label for="{{ form.genero.id_for_label }}" class="form-label fw-semibold small">Género<span class="text-danger">*</span></label>
               {{ form.genero }}
             </div>
 
@@ -109,7 +129,7 @@
             <div class="row g-2 g-md-3">
               <div class="col-12 col-sm-4">
                 <div class="mb-3">
-                  <label for="{{ form.pais.id_for_label }}" class="form-label fw-semibold small">País</label>
+                  <label for="{{ form.pais.id_for_label }}" class="form-label fw-semibold small">País<span class="text-danger">*</span></label>
                   {{ form.pais }}
                 </div>
               </div>
@@ -128,7 +148,7 @@
             </div>
 
             <div class="mb-3">
-              <label for="ocupacion" class="form-label fw-semibold small">Ocupación</label>
+              <label for="ocupacion" class="form-label fw-semibold small">Ocupación<span class="text-danger">*</span></label>
               <select name="ocupacion" id="ocupacion" class="form-select form-select-sm">
                 {% for ocup in ocupaciones %}
                   <option value="{{ ocup.id }}"
@@ -159,48 +179,68 @@
 
             <!-- AREAS DE INTERES - NUEVO DISEÑO -->
             <div class="mb-3">
-                <label class="form-label fw-semibold small">Áreas de Interés (Puedes seleccionar varias)</label>
+                <label class="form-label fw-semibold small">Áreas de Interés (Puedes seleccionar varias)<span class="text-danger">*</span></label>
                 {{ form.areas_interes }}
                 {% if form.areas_interes.errors %}
                     <div class="text-danger small">{{ form.areas_interes.errors }}</div>
                 {% endif %}
             </div>
 
-            <!-- CONTRASEÑAS MEJORADAS -->
             <div class="row g-2 g-md-3">
               <div class="col-12 col-sm-6">
-                <div class="mb-3">
-                  <label for="{{ form.password1.id_for_label }}" class="form-label fw-semibold small">Contraseña</label>
-                  <input type="password" 
-                         name="{{ form.password1.name }}" 
-                         id="{{ form.password1.id_for_label }}" 
-                         class="form-control" 
-                         placeholder="Ingresa tu contraseña"
-                         {% if form.password1.value %}value="{{ form.password1.value }}"{% endif %}>
-                  {% if form.password1.errors %}
-                    <div class="text-danger small">{{ form.password1.errors }}</div>
-                  {% endif %}
-                </div>
+                  <div class="mb-3">
+                      <label for="{{ form.password1.id_for_label }}" class="form-label fw-semibold small">Contraseña<span class="text-danger">*</span></label>
+                      
+                      <div class="input-group">
+                          <input type="password" 
+                                name="{{ form.password1.name }}" 
+                                id="{{ form.password1.id_for_label }}" 
+                                class="form-control" 
+                                placeholder="Ingresa tu contraseña"
+                                {% if form.password1.value %}value="{{ form.password1.value }}"{% endif %} autocomplete="new-password">
+                          
+                          <button class="btn btn-outline-secondary toggle-password" 
+                                  type="button" 
+                                  data-target="#{{ form.password1.id_for_label }}">
+                              <i class="bi bi-eye"></i> 
+                          </button>
+                      </div>
+                      
+                      {% if form.password1.errors %}
+                          <div class="text-danger small">{{ form.password1.errors }}</div>
+                      {% endif %}
+                  </div>
               </div>
+              
               <div class="col-12 col-sm-6">
-                <div class="mb-3">
-                  <label for="{{ form.password2.id_for_label }}" class="form-label fw-semibold small">Confirmar Contraseña</label>
-                  <input type="password" 
-                         name="{{ form.password2.name }}" 
-                         id="{{ form.password2.id_for_label }}" 
-                         class="form-control" 
-                         placeholder="Confirma tu contraseña"
-                         {% if form.password2.value %}value="{{ form.password2.value }}"{% endif %}>
-                  {% if form.password2.errors %}
-                    <div class="text-danger small">{{ form.password2.errors }}</div>
-                  {% endif %}
-                </div>
+                  <div class="mb-3">
+                      <label for="{{ form.password2.id_for_label }}" class="form-label fw-semibold small">Confirmar Contraseña<span class="text-danger">*</span></label>
+                      
+                      <div class="input-group">
+                          <input type="password" 
+                                name="{{ form.password2.name }}" 
+                                id="{{ form.password2.id_for_label }}" 
+                                class="form-control" 
+                                placeholder="Confirma tu contraseña"
+                                {% if form.password2.value %}value="{{ form.password2.value }}"{% endif %} autocomplete="new-password">
+                          
+                          <button class="btn btn-outline-secondary toggle-password" 
+                                  type="button" 
+                                  data-target="#{{ form.password2.id_for_label }}">
+                              <i class="bi bi-eye"></i>
+                          </button>
+                      </div>
+                      
+                      {% if form.password2.errors %}
+                          <div class="text-danger small">{{ form.password2.errors }}</div>
+                      {% endif %}
+                  </div>
               </div>
-            </div>
+          </div>
 
             <!-- FOTO DE PERFIL -->
             <div class="mb-3">
-              <label for="{{ form.foto.id_for_label }}" class="form-label fw-semibold small">Foto de Perfil (Opcional)</label>
+              <label for="{{ form.foto.id_for_label }}" class="form-label fw-semibold small">Foto de Perfil</label>
               {{ form.foto }}
               {% if form.foto.errors %}
                 <div class="text-danger small">{{ form.foto.errors }}</div>

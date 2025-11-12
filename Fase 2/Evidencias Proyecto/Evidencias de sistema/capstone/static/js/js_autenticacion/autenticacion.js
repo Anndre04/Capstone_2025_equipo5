@@ -1,10 +1,12 @@
 // ===== REGISTRO =====
 
 document.addEventListener('DOMContentLoaded', function () {
-  // ===== GESTIÓN DE ÁREAS DE INTERÉS =====
-  const areasGrid = document.getElementById('areasGrid');
-  const selectedTagsContainer = document.getElementById('selectedTags');
-  const areasInteresInput = document.getElementById('areasInteresInput');
+
+  // 🌟 Eliminamos las referencias a áreasGrid, selectedTagsContainer, areasInteresInput
+  // const areasGrid = document.getElementById('areasGrid');
+  // const selectedTagsContainer = document.getElementById('selectedTags');
+  // const areasInteresInput = document.getElementById('areasInteresInput');
+  const toggleButtons = document.querySelectorAll('.toggle-password');
 
   const paisSelect = document.getElementById("id_pais");
   const regionSelect = document.getElementById("id_region");
@@ -23,12 +25,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // ===== País / Región / Comuna =====
     const paisSeleccionado = paisSelect.options[paisSelect.selectedIndex].text.trim();
     if (paisSeleccionado === "Chile") {
-        regionSelect.disabled = false;
+      regionSelect.disabled = false;
     } else {
-        regionSelect.disabled = true;
-        comunaSelect.disabled = true;
-        regionSelect.value = "";
-        comunaSelect.value = "";
+      regionSelect.disabled = true;
+      comunaSelect.disabled = true;
+      regionSelect.value = "";
+      comunaSelect.value = "";
     }
 
     // ===== Ocupación (siempre visible) =====
@@ -37,27 +39,60 @@ document.addEventListener('DOMContentLoaded', function () {
     // ===== Nivel / Institución (solo si país es Chile) =====
     if (paisSeleccionado === "Chile") {
 
-        const ocupacionText = ocupacionSelect.options[ocupacionSelect.selectedIndex].text.trim();
+      const ocupacionText = ocupacionSelect.options[ocupacionSelect.selectedIndex].text.trim();
 
-        if (ocupacionText === 'Estudiante' || ocupacionText === 'Ambos') {
-          nivelDiv.style.display = 'block';
-        } else {
-          nivelDiv.style.display = 'none';
-          institucionDiv.style.display = 'none';
-        }
-
-        const nivelText = nivelSelect ? nivelSelect.options[nivelSelect.selectedIndex].text.trim() : '';
-
-        if (nivelText === 'Educación Superior' && (ocupacionText === 'Estudiante' || ocupacionText === 'Ambos')) {
-          institucionDiv.style.display = 'block';
-        } else {
-          institucionDiv.style.display = 'none';
-        }
-    } else {
+      if (ocupacionText === 'Estudiante' || ocupacionText === 'Ambos') {
+        nivelDiv.style.display = 'block';
+      } else {
         nivelDiv.style.display = 'none';
         institucionDiv.style.display = 'none';
+      }
+
+      const nivelText = nivelSelect ? nivelSelect.options[nivelSelect.selectedIndex].text.trim() : '';
+
+      if (nivelText === 'Educación Superior' && (ocupacionText === 'Estudiante' || ocupacionText === 'Ambos')) {
+        institucionDiv.style.display = 'block';
+      } else {
+        institucionDiv.style.display = 'none';
+      }
+    } else {
+      nivelDiv.style.display = 'none';
+      institucionDiv.style.display = 'none';
     }
-}
+  }
+
+  function togglePasswordVisibility() {
+    // Seleccionamos todos los botones que tienen la clase 'toggle-password'
+    const toggleButtons = document.querySelectorAll('.toggle-password');
+
+    toggleButtons.forEach(button => {
+      button.addEventListener('click', function () {
+        // 1. Obtener el ID del input objetivo desde el atributo data-target (e.g., "#id_password1")
+        const targetId = this.dataset.target;
+        const passwordInput = document.querySelector(targetId);
+
+        if (!passwordInput) return; // Si el input no existe, salimos
+
+        // 2. Cambiar el atributo 'type' entre 'password' y 'text'
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+
+        // 3. Actualizar el icono del botón (asumiendo Bootstrap Icons: bi-eye / bi-eye-slash)
+        const icon = this.querySelector('i');
+        if (icon) {
+          if (type === 'text') {
+            // Mostrar ojo tachado si está visible
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+          } else {
+            // Mostrar ojo normal si está oculto
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+          }
+        }
+      });
+    });
+  }
 
 
   // Event listeners
@@ -96,77 +131,69 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Ejecutar al cargar la página
   actualizarTodo();
+  togglePasswordVisibility();
 
+  if (typeof jQuery !== 'undefined') {
+    $(document).ready(function () {
+      $('.select2-multiple').select2({
+        placeholder: "Selecciona una o más áreas de interés",
+        allowClear: true,
+        width: '100%'
+      });
 
-  // Inicializar etiquetas según áreas preseleccionadas
-  if (areasInteresInput.value) {
-    const preselectedIds = areasInteresInput.value.split(',').filter(id => id !== '');
-    preselectedIds.forEach(id => {
-      const option = areasGrid.querySelector(`.area-option[data-id="${id}"]`);
-      if (option) {
-        option.classList.add('selected');
-        addTag(id, option.textContent);
-      }
+      console.log("Select2 inicializado correctamente.");
     });
+
+  } else {
+    console.error("jQuery no está cargado. Select2 no se inicializará.");
   }
 
-  // Manejar click en cada opción
-  areasGrid.querySelectorAll('.area-option').forEach(option => {
-    option.addEventListener('click', function () {
-      const id = this.dataset.id;
-      const text = this.textContent;
+  const hoy = new Date();
+  const minEdad = 13;
+  const maxEdad = 115;
+  const fechaMaxima = new Date(hoy.getFullYear() - minEdad, hoy.getMonth(), hoy.getDate());
+  const fechaMinima = new Date(hoy.getFullYear() - maxEdad, hoy.getMonth(), hoy.getDate());
 
-      this.classList.toggle('selected');
+  const pickerNacimiento = new tempusDominus.TempusDominus(
+    document.getElementById("datetimepicker-fechanac"),
+    {
+      display: {
+        components: {
+          calendar: true,
+          date: true,
+          month: true,
+          year: true,
+          decades: true,
+          clock: false // ❌ sin hora
+        },
+      },
+      localization: {
+        locale: 'es',
+        format: 'yyyy-MM-dd', // ✅ formato solo fecha
+        dayViewHeaderFormat: { month: 'long', year: 'numeric' }
+      },
+      restrictions: {
+        minDate: fechaMinima,
+        maxDate: fechaMaxima
+      },
+      useCurrent: false // evita hora por defecto
+    }
+  );
 
-      if (this.classList.contains('selected')) {
-        addTag(id, text);
-      } else {
-        removeTag(id);
-      }
+  // Mostrar calendario al enfocar o hacer click
+  const inputNacimiento = document.getElementById('fecha_nac');
+  inputNacimiento.addEventListener('focus', () => pickerNacimiento.show());
+  inputNacimiento.addEventListener('click', () => pickerNacimiento.show());
 
-      updateAreasInteresInput();
-    });
+  // Actualizar input con fecha seleccionada
+  inputNacimiento.addEventListener("change.td", (e) => {
+    if (e.detail?.date) {
+      const date = e.detail.date;
+      const year = date.year;
+      const month = String(date.month + 1).padStart(2, "0");
+      const day = String(date.date).padStart(2, "0");
+      inputNacimiento.value = `${year}-${month}-${day}`; // solo YYYY-MM-DD
+    }
   });
-
-  // Función para agregar una etiqueta
-  function addTag(id, text) {
-    if (selectedTagsContainer.querySelector(`.tag[data-id="${id}"]`)) return;
-
-    const tag = document.createElement('div');
-    tag.className = 'tag badge bg-primary me-2 mb-2 d-inline-flex align-items-center';
-    tag.dataset.id = id;
-    tag.innerHTML = `
-      ${text}
-      <span class="tag-remove ms-2" style="cursor: pointer; font-weight: bold;">&times;</span>
-    `;
-
-    tag.querySelector('.tag-remove').addEventListener('click', function (e) {
-      e.stopPropagation();
-      removeTag(id);
-
-      const option = areasGrid.querySelector(`.area-option[data-id="${id}"]`);
-      if (option) option.classList.remove('selected');
-
-      updateAreasInteresInput();
-    });
-
-    selectedTagsContainer.appendChild(tag);
-  }
-
-  // Función para eliminar una etiqueta
-  function removeTag(id) {
-    const tag = selectedTagsContainer.querySelector(`.tag[data-id="${id}"]`);
-    if (tag) tag.remove();
-  }
-
-  // Actualizar input oculto
-  function updateAreasInteresInput() {
-    const selectedIds = Array.from(selectedTagsContainer.querySelectorAll('.tag'))
-      .map(tag => tag.dataset.id);
-    areasInteresInput.value = selectedIds.join(',');
-    console.log('IDs seleccionados:', areasInteresInput.value);
-  }
-
-
 
 });

@@ -6,66 +6,1544 @@
 
 {% if tutoria and tutoria.estado == "En curso" %}
 <div class="container-fluid">
+    <p id="status" class="mt-2 fw-bold text-warning">Iniciando...</p>
 
-<div class="row mb-4">
-  <div class="col-12">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center">
-      <div>
-        <h1 class="h2 mb-2 fw-bold text-dark">Tutoría: {{ tutoria.anuncio.titulo }}</h1>
-        <p class="text-muted mb-0">
-          Tutor: {{ tutoria.tutor.usuario.nombre }} {{ tutoria.tutor.usuario.p_apellido }}
-        </p>
-      </div>
+    <div class="row g-4" id="videocallSection">
+        
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm h-100 video-card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Videollamada</h5>
+                </div>
+                
+                <div class="card-body p-0 position-relative video-body-container">
+                    
+                    <div id="remoteVideoWrapper" class="w-100 h-100 bg-dark bg-opacity-10 d-flex align-items-center justify-content-center main-video-wrapper">
+                        <video id="remoteVideo" autoplay playsinline class="w-100 h-100 main-video" style="object-fit: contain;"></video>
+
+                        <div id="videoControls" class="position-absolute bottom-0 start-50 translate-middle-x p-2 mb-3 rounded-pill shadow-lg bg-dark bg-opacity-75 d-flex gap-3">
+        
+                            <button class="btn btn-sm btn-light" id="btnToggleMic" title="Silenciar"><i class="bi bi-mic-fill"></i></button>
+                            <button class="btn btn-sm btn-light" id="btnToggleCam" title="Cámara On/Off"><i class="bi bi-camera-video-fill"></i></button>
+                            
+                            <!-- Se añadió el texto "Compartir" para una mejor UX -->
+                            <button class="btn btn-sm btn-secondary" id="btnShareScreen" title="Compartir Pantalla">
+                                <i class="bi bi-display-fill me-1"></i> Compartir
+                            </button>
+                            <!-- El botón de grabación usa el color info (más suave) -->
+                            <button class="btn btn-sm btn-info text-white" id="btnRecord" title="Iniciar Grabación">
+                                <i class="bi bi-record-circle-fill me-1"></i> Grabar
+                            </button>
+                            
+                            <button class="btn btn-sm btn-danger" id="btnEndCall" title="Colgar"><i class="bi bi-telephone-fill"></i></button>
+                            
+                            <button class="btn btn-sm btn-light" id="btnToggleFullscreen" title="Pantalla Completa">
+                                <i class="bi bi-arrows-fullscreen"></i>
+                            </button>
+
+                        </div>
+                        
+                        <div id="waitingMessage" class="position-absolute top-50 start-50 translate-middle text-center text-muted p-4">
+                            <i class="bi bi-camera-video-off display-4 d-block mb-3"></i>
+                            <h5>Esperando conexión...</h5>
+                            <p>La videollamada se iniciará cuando el otro usuario se una</p>
+                        </div>
+                    </div>
+
+                    <div id="localVideoContainer" class="position-absolute bottom-0 end-0 m-3 z-1 shadow-lg border border-3 border-primary rounded" style="width: 200px; height: 120px; background: #000;">
+                        <video id="localVideo" autoplay muted playsinline class="w-100 h-100 rounded" style="object-fit: cover;"></video>
+                        <div class="position-absolute bottom-0 start-0 bg-dark bg-opacity-75 text-white px-1 py-0 small rounded-top-end">
+                            Tú
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="tutoriaActions" class="d-flex flex-column flex-sm-row gap-3 mt-3" style="display: none;">
+                <button 
+                    id="btnSubirDocumento"
+                    type="button"
+                    class="btn btn-success btn-lg shadow-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#uploadDocumentModal"
+                    style="display:none">
+                    <i class="bi bi-file-earmark-arrow-up-fill me-2"></i> Subir Documento
+                </button>
+                <button 
+                    id="btnRealizarEvaluacion"
+                    type="button"
+                    class="btn btn-primary btn-lg shadow-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#crearEvaluacionModal"
+                    style="display:none">
+                    <i class="bi bi-clipboard-check-fill me-2"></i> Realizar Evaluación
+                </button>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm h-100 chat-card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Chat</h5>
+                </div>
+                <div class="card-body p-0 d-flex flex-column">
+                    <div id="chatMessages" class="flex-grow-1 p-3" style="height: 300px; overflow-y: auto;">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-chat-dots display-6 d-block mb-2"></i>
+                            <p>El chat está listo para usar</p>
+                        </div>
+                    </div>
+
+                    <div class="border-top p-3">
+                        <div class="input-group">
+                            <input type="text" id="chatInput" class="form-control" placeholder="Escribe un mensaje..." disabled>
+                            <button class="btn btn-primary" id="btnSendMessage" disabled>
+                                <i class="bi bi-send-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-3">
+            <div class="modal-header bg-success text-white rounded-top-3">
+                <h5 class="modal-title" id="uploadDocumentModalLabel">
+                    Subir documentos, guias de estudios, etc.
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="modal-body">
+                <form method="POST" action="{% url "tutoria:archivostutoria" tutoria.id %}" enctype="multipart/form-data" id="uploadForm"> 
+                    {% csrf_token %} 
+                    
+                    {# Campo de ID de Tutoría Oculto (Asegúrate de llenarlo con JS si es necesario) #}
+                    <input type="hidden" name="tutoria_id" id="tutoriaIdInput" value=""> 
+
+                    <div class="mb-4 border p-3 rounded-3 bg-light">
+                        <label for="id_archivo" class="form-label fw-semibold">
+                            Seleccionar Archivos para la tutoria (PDF)
+                        </label>
+                        <input 
+                            type="file" 
+                            name="archivo" 
+                            id="id_archivo" 
+                            class="form-control"
+                            accept="application/pdf"
+                            multiple 
+                        >
+                        <div class="form-text text-muted">Sube uno o más archivos PDF. Puedes renombrarlos abajo.</div>
+                    </div>
+                        
+                    <div id="archivos-seleccionados-container" class="mt-3">
+                        <p class="fw-semibold small mb-1">Archivos adjuntos para nombrar:</p>
+                        <ul id="lista-archivos-seleccionados" class="list-group list-group-flush border rounded-3 small">
+                            <li class="list-group-item text-muted" id="initial-message">Ningún archivo seleccionado.</li>
+                        </ul>
+                        <div id="file-error-message" class="text-danger small mt-2 d-none"></div>
+                    </div>
+
+                    <div class="modal-footer border-0 pt-4">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success" id="confirmUploadBtn">Confirmar Subida</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear Evaluación -->
+<div class="modal fade" id="crearEvaluacionModal" tabindex="-1" aria-labelledby="crearEvaluacionLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+
+      <form id="crearEvaluacionForm" action="{% url "crearevaluacion" tutoria.id %}" method="post">
+        {% csrf_token %}
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="crearEvaluacionLabel">Crear Evaluación</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Título -->
+          <div class="mb-3">
+            <label for="titulo" class="form-label fw-semibold">Título de la Evaluación:</label>
+            <input type="text" class="form-control" name="titulo" id="tituloEvaluacion">
+          </div>
+
+          <!-- Contenedor de preguntas -->
+          <div class="container-fluid px-0">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="mb-0 fw-bold">Preguntas</h5>
+              <button id="btnAgregarPregunta" type="button" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-plus-circle me-1"></i> Agregar Pregunta
+              </button>
+            </div>
+            <div id="preguntasContainer"></div>
+            <small class="text-danger d-none" id="errorPreguntas"><i class="bi bi-exclamation-circle-fill"></i>Debe agregar al menos una pregunta.</small>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" id="btnenviarEvaluacion" class="btn btn-success">Guardar Evaluación</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", () => {
+    // --------------------------------------------------------------------------
+    // CLASE ENCAPSULADA PARA MANEJAR ARCHIVOS MÚLTIPLES (FileCustomizer)
+    // (Esta clase es la misma y funciona como antes)
+    // --------------------------------------------------------------------------
+    class FileCustomizer {
+        // ... (Constructor, updateFiles, renderFileList, updateFileInput, handleRemoveClick
+        //      son idénticos a la implementación anterior) ...
+        constructor(fileInputId, listId) {
+            this.fileInput = document.getElementById(fileInputId);
+            this.listaArchivos = document.getElementById(listId);
+            this.errorMessage = document.getElementById('file-error-message');
+            
+            if (!this.fileInput || !this.listaArchivos) return;
 
-    const tutoriaId = "{{ tutoria.id }}";
-    const horaFin = new Date("{{ tutoria.hora_fin|date:'c' }}");
-    let tutoriaCompletada = false;
+            this.selectedFiles = []; 
+            this.fileNames = []; 
 
-    // Revisa periódicamente si ya terminó la tutoría
-    function checkTutoria() {
-        const ahora = new Date();
-        if (!tutoriaCompletada && ahora >= horaFin) {
-            tutoriaCompletada = true;
-            clearInterval(intervalo);
-            completarTutoria();
+            this.listaArchivos.addEventListener('click', this.handleRemoveClick.bind(this));
+            this.fileInput.addEventListener('change', this.updateFiles.bind(this));
+            
+            this.renderFileList();
         }
-    }
 
-    // Solo marca la tutoría como completada (sin mostrar Swal)
-    async function completarTutoria() {
-        try {
-            const response = await fetch(`/tutoria/tutoria-completada/${tutoriaId}/`, {
-                method: "POST",
-                headers: {
-                    "X-CSRFToken": "{{ csrf_token }}",
-                    "Content-Type": "application/json"
+        updateFiles() {
+            const newFiles = Array.from(this.fileInput.files);
+            this.selectedFiles = newFiles;
+            this.fileNames = new Array(newFiles.length).fill(null); 
+            this.renderFileList();
+        }
+        
+        renderFileList() {
+            this.listaArchivos.innerHTML = '';
+            this.errorMessage.classList.add('d-none');
+
+            if (this.selectedFiles.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'list-group-item text-muted';
+                li.textContent = 'Ningún archivo seleccionado.';
+                this.listaArchivos.appendChild(li);
+                return;
+            }
+
+            this.selectedFiles.forEach((file, index) => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item d-flex align-items-center justify-content-between p-2';
+
+                // Creación de elementos...
+                const fileInfoContainer = document.createElement('div');
+                fileInfoContainer.className = 'd-flex align-items-center flex-grow-1';
+                
+                const removeButton = document.createElement('button');
+                removeButton.type = 'button';
+                removeButton.className = 'btn btn-sm btn-outline-danger me-2 p-1';
+                removeButton.innerHTML = '<i class="bi bi-x"></i>';
+                removeButton.setAttribute('data-index', index);
+                removeButton.title = 'Eliminar este archivo';
+                removeButton.dataset.action = 'remove-file'; 
+                
+                const filenameSpan = document.createElement('span');
+                filenameSpan.className = 'fw-medium text-truncate small me-3';
+                filenameSpan.textContent = file.name;
+
+                fileInfoContainer.appendChild(removeButton);
+                fileInfoContainer.appendChild(filenameSpan);
+
+                const inputName = document.createElement('input');
+                inputName.type = 'text';
+                inputName.name = `nombre_archivo_${index}`; 
+                inputName.placeholder = 'Nombre para guardar (sin extensión)';
+                inputName.className = 'form-control form-control-sm w-50';
+                inputName.maxLength = 80;
+                
+                const initialName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+                inputName.value = this.fileNames[index] || initialName;
+                
+                inputName.addEventListener('input', (e) => {
+                    this.fileNames[index] = e.target.value;
+                });
+                
+                li.appendChild(fileInfoContainer);
+                li.appendChild(inputName);
+                this.listaArchivos.appendChild(li);
+            });
+
+            this.updateFileInput();
+        }
+        
+        updateFileInput() {
+            try {
+                const dataTransfer = new DataTransfer();
+                this.selectedFiles.forEach(file => {
+                    dataTransfer.items.add(file);
+                });
+                this.fileInput.files = dataTransfer.files;
+            } catch (e) {
+                this.errorMessage.textContent = 'Tu navegador no soporta la edición de la lista de archivos.';
+                this.errorMessage.classList.remove('d-none');
+            }
+        }
+
+        handleRemoveClick(event) {
+            const removeButton = event.target.closest('[data-index]');
+            if (removeButton && removeButton.dataset.action === 'remove-file') {
+                event.preventDefault(); 
+                const index = parseInt(removeButton.dataset.index);
+                
+                if (index >= 0 && index < this.selectedFiles.length) {
+                    this.selectedFiles.splice(index, 1);
+                    this.fileNames.splice(index, 1);
+                    this.renderFileList();
+                }
+            }
+        }
+
+        // Nuevo método para obtener todos los datos, incluidos los nombres personalizados
+        getFormData() {
+            const formData = new FormData();
+
+            // 1. Agregar los archivos reales del input (ya actualizados por updateFileInput)
+            const files = this.fileInput.files;
+            for (let i = 0; i < files.length; i++) {
+                formData.append('archivo', files[i]);
+            }
+
+            // 2. Agregar los nombres personalizados
+            this.fileNames.forEach((name, index) => {
+                if (name !== null) {
+                    formData.append(`nombre_archivo_${index}`, name);
+                } else if (files[index]) {
+                    // Si el nombre es null, usar el nombre original (sin extensión) como fallback
+                    const originalName = files[index].name.substring(0, files[index].name.lastIndexOf('.')) || files[index].name;
+                    formData.append(`nombre_archivo_${index}`, originalName);
                 }
             });
 
-            if (!response.ok) throw new Error("Error al completar la tutoría");
-
-            // El modal o la reseña se manejarán desde notificacion.js
-            console.log("✅ Tutoría completada correctamente");
-        } catch (err) {
-            console.error("❌ Error completando tutoría:", err);
+            return formData;
         }
     }
 
-    const intervalo = setInterval(checkTutoria, 5000);
-    checkTutoria();
+
+    // --------------------------------------------------------------------------
+    // LÓGICA DE SUBIDA AJAX Y MANEJO DE MODAL
+    // --------------------------------------------------------------------------
+
+    const uploadDocumentModal = document.getElementById('uploadDocumentModal');
+    const formElement = document.getElementById('uploadForm');
+    const tutoriaIdInput = document.getElementById('tutoriaIdInput');
+    const confirmUploadBtn = document.getElementById('confirmUploadBtn');
+    
+    // Instancia del manejador de archivos (CRÍTICO)
+    const fileCustomizer = new FileCustomizer('id_archivo', 'lista-archivos-seleccionados');
+
+    /**
+     * Función que maneja el envío AJAX del formulario.
+     */
+    async function handleFormSubmit(event) {
+        event.preventDefault(); // Detener la recarga de la página
+
+        const url = formElement.action;
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        // 1. Deshabilitar botón y mostrar carga
+        confirmUploadBtn.disabled = true;
+        confirmUploadBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Subiendo...';
+
+        // 2. Obtener los datos del formulario (archivos, nombres, y tutoria_id)
+        const formData = fileCustomizer.getFormData();
+        formData.append('tutoria_id', tutoriaIdInput.value); // Añadir el ID de la tutoría
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    // NO establecer Content-Type; el navegador lo hace automáticamente
+                    // para FormData, incluyendo el boundary.
+                },
+                body: formData
+            });
+
+            const data = await response.json(); // Asumimos que Django devuelve JSON
+
+            if (response.ok) {
+                // Éxito: Mostrar mensaje y recargar la lista de archivos (si aplica)
+                
+                // 💡 NOTA: messages.success de Django no funciona en AJAX.
+                // Usamos un alert o una librería como Toastr/SweetAlert.
+                alert(`✅ Éxito: ${data.message || 'Archivos subidos correctamente.'}`);
+
+                // Cerrar modal y posiblemente recargar la sección de la página
+                const modal = bootstrap.Modal.getInstance(uploadDocumentModal);
+                modal.hide();
+
+                // 🔄 Recargar la ventana o el componente de lista de archivos de la tutoría
+                window.location.reload(); 
+
+            } else {
+                // Fallo del servidor (4xx, 5xx)
+                alert(`❌ Error al subir: ${data.error || 'Ocurrió un error inesperado en el servidor.'}`);
+                console.error('Server error data:', data);
+            }
+
+        } catch (error) {
+            // Fallo de red o error de JS
+            alert('❌ Error de conexión: No se pudo contactar al servidor.');
+            console.error('Fetch error:', error);
+        } finally {
+            // 3. Habilitar botón
+            confirmUploadBtn.disabled = false;
+            confirmUploadBtn.innerHTML = 'Confirmar Subida';
+        }
+    }
+
+    // 4. Conectar el listener del formulario
+    formElement.addEventListener('submit', handleFormSubmit);
+
+
+    // 5. LÓGICA DE INYECCIÓN DE ID AL ABRIR EL MODAL (Como en el código anterior)
+    uploadDocumentModal.addEventListener('show.bs.modal', event => {
+        const button = event.relatedTarget; 
+        const tutoriaId = button.getAttribute('data-tutoria-id');
+        const tutoriaUrl = button.getAttribute('data-tutoria-url');
+
+        if (tutoriaIdInput) { tutoriaIdInput.value = tutoriaId || ''; }
+        if (formElement && tutoriaUrl) { formElement.action = tutoriaUrl; }
+
+        // Resetear el estado del FileCustomizer al abrir
+        fileCustomizer.selectedFiles = [];
+        fileCustomizer.fileNames = [];
+        fileCustomizer.updateFileInput(); 
+        fileCustomizer.renderFileList();   
+    });
+
+</script>
+
+<script>
+
+let preguntaCount = 0;
+
+// ==============================
+// Función de validación
+// ==============================
+function validarEvaluacion() {
+    console.log("📌 Iniciando validación...");
+
+    let valido = true;
+    const preguntas = document.querySelectorAll("#preguntasContainer .card");
+    const errorPreguntas = document.getElementById("errorPreguntas");
+
+    // Ocultar errores anteriores
+    document.querySelectorAll(".text-danger").forEach(e => e.classList.add("d-none"));
+    document.querySelectorAll(".is-invalid").forEach(e => e.classList.remove("is-invalid"));
+
+    // 1️⃣ Título no vacío
+    const titulo = document.getElementById("tituloEvaluacion");
+    if (!titulo.value.trim()) {
+        marcarError(titulo, "El título de la evaluación es obligatorio.");
+        valido = false;
+    }
+
+    // 2️⃣ Al menos una pregunta
+    if (preguntas.length === 0) {
+        console.log("❌ No hay preguntas");
+        if (errorPreguntas) errorPreguntas.classList.remove("d-none");
+        valido = false;
+    }
+
+    // 3️⃣ Validar cada pregunta
+    preguntas.forEach((pregunta, index) => {
+        const inputPregunta = pregunta.querySelector("input[type='text']:not([name*='_opcion_'])");
+        const inputPuntos = pregunta.querySelector("input[type='number']");
+        const opciones = pregunta.querySelectorAll(".input-group");
+
+        // Contenido de pregunta
+        if (!inputPregunta.value.trim()) {
+            marcarError(inputPregunta, "La pregunta no puede estar vacía.");
+            valido = false;
+            return;
+        }
+
+        // Puntos válidos
+        if (!inputPuntos.value || parseInt(inputPuntos.value) <= 0) {
+            marcarError(inputPuntos, "Los puntos deben ser mayores que 0.");
+            valido = false;
+            return;
+        }
+
+        // Al menos 2 opciones
+        if (opciones.length < 2) {
+            marcarError(pregunta, "La pregunta debe tener al menos 2 opciones.");
+            valido = false;
+            return;
+        }
+
+        // Opciones no vacías
+        const inputVacio = Array.from(opciones).find(op => !op.querySelector("input[type='text']").value.trim());
+        if (inputVacio) {
+            marcarError(inputVacio.querySelector("input[type='text']"), "Hay una opción vacía.");
+            valido = false;
+            return;
+        }
+
+        // Opción correcta seleccionada
+        const correcta = pregunta.querySelector("input[type='radio']:checked");
+        if (!correcta) {
+            marcarError(pregunta, "Debe marcar una opción correcta.");
+            valido = false;
+            return;
+        }
+    });
+
+    return valido; // ✅ Devuelve true si todo está bien
+}
+
+// ==============================
+// Función para enviar AJAX
+// ==============================
+function enviarEvaluacion() {
+    const form = document.getElementById("crearEvaluacionForm");
+
+    if (!validarEvaluacion()) {
+        console.log("❌ Validación fallida, no se envía el formulario");
+        return;
+    }
+
+    console.log("✅ Validación correcta, enviando AJAX...");
+
+    const formData = new FormData(form);
+
+    fetch(form.action, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("📦 Respuesta del servidor:", data);
+
+        if (data.status === 'success') {
+            window.showAlert(data.message, 'success');
+
+            // Reset formulario y modal
+            form.reset();
+            document.getElementById("preguntasContainer").innerHTML = '';
+            preguntaCount = 0;
+
+            const modalEl = document.getElementById("crearEvaluacionModal");
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.hide();
+        } else {
+            window.showAlert(data.message || 'Ocurrió un error', 'error');
+        }
+    })
+    .catch(error => {
+        window.showAlert('Hubo un error en su solicitud', 'error');
+    });
+}
+
+// ==============================
+// Función para mostrar errores
+// ==============================
+function marcarError(elemento, mensaje) {
+    let small = elemento.parentElement.querySelector(".text-danger");
+
+    if (!small) {
+        small = document.createElement("small");
+        small.className = "text-danger d-flex align-items-center gap-1 mt-1";
+        small.innerHTML = `<i class="bi bi-exclamation-circle-fill"></i> ${mensaje}`;
+        elemento.parentElement.appendChild(small);
+    } else {
+        small.innerHTML = `<i class="bi bi-exclamation-circle-fill"></i> ${mensaje}`;
+    }
+
+    small.classList.remove("d-none");
+    elemento.classList.add("is-invalid");
+    elemento.scrollIntoView({ behavior: "smooth", block: "center" });
+    elemento.focus();
+}
+
+document.getElementById("btnenviarEvaluacion").addEventListener("click", function(e) {
+  e.preventDefault();
+  enviarEvaluacion();
 });
+
+document.getElementById("btnAgregarPregunta").addEventListener("click", function(e) {
+  e.preventDefault();
+  agregarPregunta();
+});
+
+function agregarPregunta() {
+  preguntaCount++;
+  const preguntaId = preguntaCount;
+
+  const divPregunta = document.createElement("div");
+  divPregunta.classList.add("card", "mb-3", "p-3");
+  divPregunta.dataset.id = preguntaId;
+
+  divPregunta.innerHTML = `
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h5 class="mb-0">Pregunta ${preguntaId}</h5>
+        <button type="button" class="btn btn-danger btn-sm" onclick="eliminarPregunta(${preguntaId})">
+        <i class="bi bi-trash"></i> Eliminar Pregunta
+        </button>
+    </div>
+
+    <input type="text" name="pregunta_${preguntaId}" class="form-control mb-2" placeholder="Texto de la pregunta">
+
+    <input type="number" name="pregunta_${preguntaId}_puntos" class="form-control mb-2" min="1" placeholder="Puntos de la pregunta">
+
+    <div id="opcionesContainer_${preguntaId}"></div>
+
+    <button type="button" class="btn btn-outline-primary btn-sm" onclick="agregarOpcion(${preguntaId})">
+        <i class="bi bi-plus-circle"></i> Agregar Opción
+    </button>
+    `;
+
+  document.getElementById("preguntasContainer").appendChild(divPregunta);
+
+  // Agrega dos opciones iniciales
+  setTimeout(() => {
+    agregarOpcion(preguntaId);
+    agregarOpcion(preguntaId);
+  }, 50);
+}
+
+function agregarOpcion(preguntaId) {
+  const contenedorOpciones = document.getElementById(`opcionesContainer_${preguntaId}`);
+  if (!contenedorOpciones) return;
+
+  const opcionCount = contenedorOpciones.querySelectorAll(".input-group").length + 1;
+
+  const divOpcion = document.createElement("div");
+  divOpcion.classList.add("input-group", "mb-2");
+  divOpcion.innerHTML = `
+    <div class="input-group-text">
+      <input type="radio" name="pregunta_${preguntaId}_correcta" value="${opcionCount}" required>
+    </div>
+    <input type="text" name="pregunta_${preguntaId}_opcion_${opcionCount}" class="form-control" placeholder="Opción ${opcionCount}" required>
+    <button class="btn btn-outline-danger" type="button" onclick="eliminarOpcion(${preguntaId}, this)">
+      <i class="bi bi-x-circle"></i>
+    </button>
+  `;
+
+  contenedorOpciones.appendChild(divOpcion);
+}
+
+function eliminarPregunta(preguntaId) {
+  const pregunta = document.querySelector(`[data-id="${preguntaId}"]`);
+  if (pregunta) pregunta.remove();
+  reindexarPreguntas();
+}
+
+function eliminarOpcion(preguntaId, boton) {
+  boton.closest(".input-group").remove();
+  reindexarOpciones(preguntaId);
+}
+
+function reindexarPreguntas() {
+  const preguntas = document.querySelectorAll("#preguntasContainer .card");
+  preguntas.forEach((pregunta, index) => {
+    const nuevoId = index + 1;
+    pregunta.dataset.id = nuevoId;
+    pregunta.querySelector("h5").textContent = `Pregunta ${nuevoId}`;
+    pregunta.querySelector("input[type='text']").name = `pregunta_${nuevoId}`;
+
+    const eliminarBtn = pregunta.querySelector(".btn-danger");
+    eliminarBtn.setAttribute("onclick", `eliminarPregunta(${nuevoId})`);
+
+    const opcionesContainer = pregunta.querySelector(`[id^="opcionesContainer_"]`);
+    opcionesContainer.id = `opcionesContainer_${nuevoId}`;
+
+    const agregarBtn = pregunta.querySelector(".btn-outline-primary");
+    agregarBtn.setAttribute("onclick", `agregarOpcion(${nuevoId})`);
+
+    reindexarOpciones(nuevoId);
+  });
+  preguntaCount = preguntas.length;
+}
+
+function reindexarOpciones(preguntaId) {
+  const contenedorOpciones = document.getElementById(`opcionesContainer_${preguntaId}`);
+  if (!contenedorOpciones) return;
+
+  const opciones = contenedorOpciones.querySelectorAll(".input-group");
+  opciones.forEach((opcion, index) => {
+    const nuevoIndex = index + 1;
+    const radio = opcion.querySelector("input[type='radio']");
+    const texto = opcion.querySelector("input[type='text']");
+    radio.name = `pregunta_${preguntaId}_correcta`;
+    radio.value = nuevoIndex;
+    texto.name = `pregunta_${preguntaId}_opcion_${nuevoIndex}`;
+    texto.placeholder = `Opción ${nuevoIndex}`;
+  });
+}
 </script>
 
 
-</div>
-    {% else %}
-    NOOOOOOOOOOOOO
 
+<canvas id="recordingCanvas" style="display:none;"></canvas>
+
+<style>
+.toast-container {
+    z-index: 9999;
+    display: flex;
+    flex-direction: column-reverse; /* 👈 Apila los toasts de abajo hacia arriba */
+    gap: 10px;
+}
+/* CSS para corregir el tamaño del video en PC y mejorar la visualización */
+.video-card, .chat-card {
+    height: 100%;
+    /* CLAVE: Máxima altura para la vista de escritorio (lg+), ajusta el aspecto */
+    max-height: 500px; /* Incrementado ligeramente para mejor aspecto */
+}
+.video-body-container {
+    height: 100%; /* Asegura que el contenedor interno ocupe todo el espacio */
+}
+.main-video-wrapper {
+    height: 100%;
+}
+.main-video {
+    /* object-fit: contain asegura que el video remoto completo se vea sin recorte */
+    object-fit: contain !important; 
+}
+
+/* Ajuste de Responsive para móviles */
+@media (max-width: 991.98px) {
+    /* Usamos 70vh para dejar espacio para la barra de navegación y otros elementos */
+    .video-card, .chat-card {
+        max-height: 70vh; 
+    }
+    .chat-card {
+        height: 70vh; /* Asegurar que la tarjeta de chat use la altura completa en móviles */
+    }
+}
+
+/* Estilos de Fullscreen */
+#remoteVideoWrapper:-webkit-full-screen {
+    width: 100% !important;
+    height: 100% !important;
+    background: #000;
+}
+#remoteVideoWrapper:fullscreen {
+    width: 100% !important;
+    height: 100% !important;
+    background: #000;
+}
+</style>
+
+<script>
+// --- Variables de configuración de Django y WS ---
+// Las URLs de Grabación están comentadas, ya que la lógica P2P es compleja y requiere back-end.
+// const GRABAR_URL = "{% url 'iniciar_grabacion' tutoria.id %}";
+// const DETENER_URL = "{% url 'detener_grabacion' tutoria.id %}";
+const TUTORIA_ID = "{{ tutoria.id }}";
+const USER_ID = "{{ request.user.id }}";
+const ROLE = sessionStorage.getItem('rol_actual');
+
+// 2. Variables del DOM (Declaradas con 'let' para ser asignadas en DOMContentLoaded)
+let actionsContainer;
+let btnSubirDocumento;
+let btnRealizarEvaluacion; 
+let btnResponderEvaluacion;
+
+function updateActionButtonsVisibility() {
+    if (!ROLE) {
+        console.warn("⚠️ No se encontró la variable ROLE.");
+        if (actionsContainer) actionsContainer.style.display = 'none';
+        return;
+    }
+
+    if (actionsContainer) {
+        if (ROLE === 'Tutor') {
+            actionsContainer.style.display = 'flex';
+            
+            // Mostrar botones de Tutor
+            if (btnSubirDocumento) btnSubirDocumento.style.display = 'inline-block';
+            if (btnRealizarEvaluacion) btnRealizarEvaluacion.style.display = 'inline-block';
+
+            // Ocultar botón de Estudiante
+            if (btnResponderEvaluacion) btnResponderEvaluacion.style.display = 'none';
+
+        } 
+        else if (ROLE === 'Estudiante') {
+            
+            // 💡 IMPORTANTE: Si la evaluación es publicada dinámicamente, el btnResponderEvaluacion
+            // debe ser visible AHORA. El código del WebSocket se encarga de cambiar su display.
+            
+            // Mostrar solo botón de Responder (si fue renderizado por Django o por WebSocket)
+            if (btnResponderEvaluacion && btnResponderEvaluacion.style.display !== 'none') {
+                actionsContainer.style.display = 'flex';
+            } else {
+                // Si el estudiante no tiene botones visibles, ocultar el contenedor.
+                actionsContainer.style.display = 'none';
+            }
+
+            // Ocultar botones de Tutor
+            if (btnSubirDocumento) btnSubirDocumento.style.display = 'none';
+            if (btnRealizarEvaluacion) btnRealizarEvaluacion.style.display = 'none'; 
+
+        } 
+        else {
+            actionsContainer.style.display = 'none';
+        }
+    }
+}
+
+function showResponseButtonDynamically(evaluacionId) {
+    if (ROLE !== 'Estudiante') return;
+
+    // 🔹 Crear el botón si no existe
+    if (!btnResponderEvaluacion) {
+        btnResponderEvaluacion = document.createElement('a');
+        btnResponderEvaluacion.id = 'btnResponderEvaluacion';
+        btnResponderEvaluacion.className = 'btn btn-primary btn-lg shadow-sm';
+        btnResponderEvaluacion.target = '_blank';
+        btnResponderEvaluacion.innerHTML = '<i class="bi bi-file-earmark-text-fill me-2"></i> Responder Evaluación';
+        if (actionsContainer) actionsContainer.appendChild(btnResponderEvaluacion);
+    }
+
+    // 🔹 Actualizar URL y mostrar botón
+    const urlBase = "{% url 'responder_evaluacion' '00000000-0000-0000-0000-000000000000' %}";
+    btnResponderEvaluacion.href = urlBase.replace('00000000-0000-0000-0000-000000000000', evaluacionId);
+    btnResponderEvaluacion.style.display = 'inline-block';
+    if (actionsContainer) actionsContainer.style.display = 'flex';
+
+    console.log(`✅ Evaluación ${evaluacionId} publicada. Botón habilitado.`);
+}
+
+
+console.log("CONFIG: TUTORIA_ID:", TUTORIA_ID, "USER_ID:", USER_ID, "ROLE:", ROLE);
+if (!TUTORIA_ID || TUTORIA_ID.includes('tutoria.id')) {
+    console.error("CONFIG ERROR: TUTORIA_ID no está correctamente interpolado por Django.");
+}
+
+const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+const wsPath = `${wsScheme}://${window.location.host}/ws/tutoria/${TUTORIA_ID}/`;
+console.log("CONFIG: WebSocket Path:", wsPath); 
+let socket;
+
+// --- Estado de la Sesión ---
+let localStream = null; 
+let peerConnection;
+let screenStream;
+let pendingIceCandidates = []; 
+let remoteAudioTrack;
+let remoteVideoTrack; 
+let isScreenSharing = false;
+let isRemoteSharing = false;
+let p2pReconnectTimeout;
+
+// --- Variables de Grabación (Simulada) ---
+let isRecording = false;
+
+// --- Referencias al DOM ---
+const localVideo = document.getElementById("localVideo");
+const remoteVideo = document.getElementById("remoteVideo");
+const statusEl = document.getElementById("status");
+const waitingMessage = document.getElementById("waitingMessage");
+
+// Botones de control
+const btnToggleMic = document.getElementById("btnToggleMic");
+const btnToggleCam = document.getElementById("btnToggleCam");
+const btnEndCall = document.getElementById("btnEndCall");
+const btnShareScreen = document.getElementById("btnShareScreen");
+const btnRecord = document.getElementById("btnRecord");
+const btnToggleFullscreen = document.getElementById("btnToggleFullscreen");
+const remoteVideoWrapper = document.getElementById("remoteVideoWrapper"); // Necesario para fullscreen
+
+// Chat
+const chatInput = document.getElementById("chatInput");
+const btnSendMessage = document.getElementById("btnSendMessage");
+const chatMessages = document.getElementById("chatMessages");
+
+// ICE servers
+const configuration = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+
+// =========================================================
+// 1. INICIALIZACIÓN DE DISPOSITIVOS
+// =========================================================
+
+/**
+ * Intenta obtener media de forma flexible, primero audio, luego video.
+ */
+async function initMedia() {
+    console.log("LOG: Iniciando acceso flexible a media..."); 
+    const newStream = new MediaStream();
+    let audioReady = false;
+    let videoReady = false;
+    
+    // --- 1. Intentar obtener el Micrófono (Audio) ---
+    try {
+        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        newStream.addTrack(audioStream.getAudioTracks()[0]);
+        audioReady = true;
+        console.log("LOG: Micrófono (Audio) obtenido OK.");
+    } catch (err) {
+        console.warn(`LOG WARNING: Fallo al obtener Micrófono: ${err.name} - ${err.message}`);
+        btnToggleMic.disabled = true;
+        btnToggleMic.classList.remove('btn-light');
+        btnToggleMic.classList.add('btn-danger'); // Marcar como no disponible
+    }
+
+    // --- 2. Intentar obtener la Cámara (Video) ---
+    try {
+        const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+        newStream.addTrack(videoStream.getVideoTracks()[0]);
+        videoReady = true;
+        console.log("LOG: Cámara (Video) obtenido OK.");
+    } catch (err) {
+        console.warn(`LOG WARNING: Fallo al obtener Cámara: ${err.name} - ${err.message}`);
+        btnToggleCam.disabled = true;
+        btnToggleCam.classList.remove('btn-light');
+        btnToggleCam.classList.add('btn-danger'); // Marcar como no disponible
+    }
+
+    // --- 3. Finalización ---
+    if (audioReady || videoReady) {
+        localStream = newStream;
+        localVideo.srcObject = localStream;
+        
+        console.log("LOG: Acceso a media OK. Total tracks obtenidos:", localStream.getTracks().length); 
+        statusEl.textContent = "Media local lista. Conectando...";
+        statusEl.style.color = "blue";
+    } else {
+        localStream = null;
+        console.warn("LOG WARNING: No se pudo obtener ningún dispositivo de media (cámara ni micrófono).");
+        statusEl.textContent = "Advertencia: No se pudo acceder a Cámara ni Micrófono."; 
+        statusEl.style.color = "orange";
+
+        // Deshabilitar completamente los botones de media si no se obtuvo nada
+        btnToggleMic.disabled = true;
+        btnToggleCam.disabled = true;
+        btnShareScreen.disabled = true;
+    }
+    
+    // El chat siempre debe estar habilitado
+    chatInput.disabled = false;
+    btnSendMessage.disabled = false;
+}
+
+
+// =========================================================
+// 2. LÓGICA DE CONEXIÓN WEBRTC (P2P)
+// =========================================================
+let audioSender;
+let videoSender;
+
+function createPeerConnection() {
+    console.log("LOG: Creando nueva RTCPeerConnection."); 
+    
+    if (peerConnection && peerConnection.connectionState !== "closed") {
+        console.log("LOG: PeerConnection ya existe, abortando creación.");
+        return;
+    }
+    if (peerConnection) peerConnection.close(); 
+    
+    peerConnection = new RTCPeerConnection(configuration);
+    
+    // --- DataChannel Setup ---
+    if (ROLE === "tutor") {
+        // Tutor crea y configura el canal
+        dataChannel = peerConnection.createDataChannel("chat");
+        setupDataChannel(dataChannel);
+    } else {
+        // Estudiante espera el canal
+        peerConnection.ondatachannel = (event) => {
+            dataChannel = event.channel;
+            setupDataChannel(dataChannel);
+        };
+    }
+    
+    // 2. AÑADIR TRACKS LOCALES Y GUARDAR SENDERS
+    if (localStream && localStream.getTracks().length > 0) {
+        // Recorrer el localStream para añadir todos los tracks existentes
+        localStream.getTracks().forEach(track => {
+            if (track.kind === 'video') {
+                videoSender = peerConnection.addTrack(track, localStream);
+                console.log("LOG: Video track añadido al PeerConnection.");
+            } else if (track.kind === 'audio') {
+                audioSender = peerConnection.addTrack(track, localStream);
+                console.log("LOG: Audio track añadido al PeerConnection.");
+            }
+        });
+    } else {
+        console.log("LOG: localStream es nulo/vacío. Conexión P2P sin media inicial.");
+    }
+    
+    // 3. Recibir tracks remotos
+    peerConnection.ontrack = e => {
+        console.log("LOG: Track remoto recibido:", e.track.kind); 
+        // Mostrar el video remoto
+        remoteVideo.srcObject = e.streams[0]; 
+        waitingMessage.classList.add("d-none"); 
+        
+        if (e.track.kind === 'audio') {
+            remoteAudioTrack = e.track;
+        } else if (e.track.kind === 'video') {
+            remoteVideoTrack = e.track;
+        }
+    };
+
+    // 4. ICE y Negociación
+    peerConnection.onicecandidate = event => {
+        if (event.candidate) socket.send(JSON.stringify({ type: "ice-candidate", candidate: event.candidate }));
+    };
+
+    peerConnection.onnegotiationneeded = async () => {
+        console.log("LOG: Negociación necesaria. Enviando nueva oferta.");
+        if (ROLE === "tutor" && socket && socket.readyState === WebSocket.OPEN) {
+            try {
+                // Forzar un iceRestart ayuda a resolver problemas de conexión/reconexión
+                const offer = await peerConnection.createOffer({ iceRestart: true }); 
+                await peerConnection.setLocalDescription(offer);
+                socket.send(JSON.stringify({ type: "offer", sdp: offer }));
+                console.log("LOG: Oferta de renegociación enviada.");
+            } catch (err) {
+                console.error("LOG ERROR: Error al crear oferta en negociación:", err);
+            }
+        }
+    };
+
+    // 5. Monitoreo de estado
+    peerConnection.onconnectionstatechange = () => {
+        const state = peerConnection.connectionState;
+        console.log("LOG: PeerConnection State:", state); 
+        
+        if (state === "disconnected" || state === "failed") {
+            statusEl.textContent = "Desconexión P2P. Reintentando... 🔄"; statusEl.style.color = "orange";
+            if (ROLE === "tutor" && socket.readyState === WebSocket.OPEN) {
+                if (p2pReconnectTimeout) clearTimeout(p2pReconnectTimeout);
+                p2pReconnectTimeout = setTimeout(() => {
+                    console.log("LOG: Forzando renegociación ICE...");
+                    // No recrear la conexión, solo forzar ICE Restart
+                    if (peerConnection.signalingState !== 'closed') {
+                       peerConnection.restartIce();
+                    } 
+                }, 5000); 
+            }
+        } else if (state === "connected") {
+            statusEl.textContent = "Conectado ✅"; statusEl.style.color = "green";
+            if (p2pReconnectTimeout) clearTimeout(p2pReconnectTimeout);
+        }
+    };
+}
+
+
+// =========================================================
+// 3. LÓGICA DE CHAT (DataChannel)
+// =========================================================
+
+function setupDataChannel(channel) {
+    dataChannel = channel;
+    console.log("LOG: DataChannel establecido.");
+    
+    dataChannel.onopen = () => {
+        console.log("LOG: DataChannel abierto. Chat activo.");
+        appendMessage("El chat está listo.", "system");
+    };
+
+    dataChannel.onclose = () => {
+        console.warn("LOG WARNING: DataChannel cerrado.");
+        appendMessage("El chat se ha desconectado.", "system-error");
+    };
+
+    dataChannel.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        if (msg.type === 'chat') {
+            appendMessage(msg.message, "remote");
+        }
+    };
+}
+
+function toggleFullscreen() {
+    const isFullscreen = document.fullscreenElement;
+    const icon = btnToggleFullscreen.querySelector('i');
+
+    if (!isFullscreen) {
+        // Entrar en pantalla completa
+        if (remoteVideoWrapper.requestFullscreen) {
+            remoteVideoWrapper.requestFullscreen();
+        } else if (remoteVideoWrapper.webkitRequestFullscreen) { /* Safari */
+            remoteVideoWrapper.webkitRequestFullscreen();
+        } else if (remoteVideoWrapper.msRequestFullscreen) { /* IE11 */
+            remoteVideoWrapper.msRequestFullscreen();
+        }
+        icon.classList.remove('bi-arrows-fullscreen');
+        icon.classList.add('bi-fullscreen-exit');
+    } else {
+        // Salir de pantalla completa
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) { /* Safari */
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) { /* IE11 */
+            document.msExitFullscreen();
+        }
+        icon.classList.remove('bi-fullscreen-exit');
+        icon.classList.add('bi-arrows-fullscreen');
+    }
+}
+
+function appendMessage(message, sender) {
+    const isSystem = sender.startsWith("system");
+    const isRemote = sender === "remote";
+    const className = isSystem ? "text-center text-muted" : (isRemote ? "text-start" : "text-end");
+    const colorClass = sender === "remote" ? "bg-light" : (sender === "local" ? "bg-primary text-white" : "");
+    const name = isRemote ? "Otro Usuario" : (sender === "local" ? "Tú" : "");
+    
+    const messageHtml = `
+        <div class="${className} mb-2">
+            ${!isSystem ? `<small class="text-muted d-block">${name}</small>` : ''}
+            <div class="d-inline-block p-2 rounded ${colorClass} ${sender === "system-error" ? "text-danger fw-bold" : ""}" style="max-width: 80%;">
+                ${message}
+            </div>
+        </div>
+    `;
+    chatMessages.innerHTML += messageHtml;
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function sendMessage() {
+    const message = chatInput.value.trim();
+    if (message && dataChannel && dataChannel.readyState === 'open') {
+        const msgObject = { type: "chat", message: message };
+        dataChannel.send(JSON.stringify(msgObject));
+        appendMessage(message, "local");
+        chatInput.value = '';
+    } else if (message) {
+        appendMessage("Error: Chat no conectado o mensaje vacío.", "system-error");
+    }
+}
+
+
+// =========================================================
+// 4. SEÑALIZACIÓN (WEBSOCKETS) Y AUXILIARES
+// =========================================================
+
+function connectWebSocket() {
+    console.log("LOG: Intentando conectar WebSocket a:", wsPath); 
+    socket = new WebSocket(wsPath);
+
+    socket.onopen = () => {
+        console.log("LOG: WebSocket Conectado. Enviando join..."); 
+        statusEl.textContent = "Esperando al otro usuario..."; 
+        statusEl.style.color = "orange";
+        socket.send(JSON.stringify({ type: "join", user_id: USER_ID, role: ROLE }));
+    };
+
+    socket.onclose = (event) => {
+        console.warn("LOG WARNING: WebSocket Cerrado (Code:", event.code, "). Reconectando..."); 
+        // No reconectar si el cierre es intencional (EndCall)
+        if (event.code !== 1000) { 
+            statusEl.textContent = "Reconectando WebSocket..."; statusEl.style.color = "orange";
+            setTimeout(connectWebSocket, 2000);
+        }
+    };
+
+    socket.onerror = (error) => {
+        console.error("LOG ERROR: WebSocket Error:", error); 
+    };
+
+    socket.onmessage = async (event) => {
+        const data = JSON.parse(event.data);
+        console.log("LOG: Mensaje WS recibido:", data.type); 
+
+        try {
+            switch (data.type) {
+                case "user_joined":
+                    if (!peerConnection || peerConnection.connectionState === "closed") {
+                        createPeerConnection();
+                        // El rol de 'tutor' siempre inicia la oferta para simplificar la negociación
+                        if (ROLE === "tutor") {
+                            console.log("LOG: Tutor enviando Offer inicial.");
+                            const offer = await peerConnection.createOffer();
+                            await peerConnection.setLocalDescription(offer);
+                            socket.send(JSON.stringify({ type: "offer", sdp: offer }));
+                        }
+                    }
+                    break;
+                case "offer":
+                    console.log("LOG: Recibida Offer. Enviando Answer.");
+                    if (!peerConnection || peerConnection.connectionState === "closed") createPeerConnection();
+                    
+                    await peerConnection.setRemoteDescription(data.sdp);
+                    await flushPendingIceCandidates();
+                    const answer = await peerConnection.createAnswer();
+                    await peerConnection.setLocalDescription(answer);
+                    socket.send(JSON.stringify({ type: "answer", sdp: answer }));
+                    break;
+                case "answer":
+                    console.log("LOG: Recibida Answer.");
+                    if (!peerConnection || peerConnection.connectionState === "closed") createPeerConnection();
+                    
+                    await peerConnection.setRemoteDescription(data.sdp);
+                    await flushPendingIceCandidates();
+                    break;
+                case "ice-candidate":
+                    if (!data.candidate) break;
+                    // Asegurar que el peerConnection exista y el RemoteDescription esté configurado
+                    if (!peerConnection || peerConnection.remoteDescription === null) {
+                        pendingIceCandidates.push(data.candidate);
+                    } else {
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                    }
+                    break;
+                case "screen_share_start":
+                    if (data.user_id !== USER_ID) {
+                        isRemoteSharing = true;
+                        statusEl.textContent = "El otro usuario está compartiendo su pantalla. 🖥️";
+                        statusEl.style.color = "blue";
+                        btnShareScreen.disabled = true; // Deshabilitar botón local
+                    }
+                    break;
+                    
+                case "screen_share_stop":
+                    if (data.user_id !== USER_ID) {
+                        isRemoteSharing = false;
+                        statusEl.textContent = "Conectado ✅";
+                        statusEl.style.color = "green";
+                        btnShareScreen.disabled = false; // Habilitar botón local
+                    }
+                    break;
+                case "user_left":
+                    console.log("LOG: Usuario remoto salió.");
+                    remoteVideo.srcObject = null;
+                    remoteVideoTrack = null;
+                    remoteAudioTrack = null;
+                    statusEl.textContent = "El otro usuario salió ❌"; statusEl.style.color = "red";
+                    waitingMessage.classList.remove("d-none"); 
+                    break;
+                case 'evaluacion_publicada':
+                    // Solo llama a la función de renderizado si eres Estudiante
+                    if (sessionStorage.getItem('rol_actual') === 'Estudiante') {
+                        showResponseButtonDynamically(data.evaluacion_id);
+                    }
+                    break;
+            }
+        } catch (err) {
+            console.error("LOG ERROR: Error manejando mensaje WS:", err, data);
+        }
+    };
+}
+
+async function flushPendingIceCandidates() {
+    if (!peerConnection || !pendingIceCandidates.length) return;
+    console.log(`LOG: Añadiendo ${pendingIceCandidates.length} ICE candidates pendientes.`);
+    while (pendingIceCandidates.length) {
+        const candidate = pendingIceCandidates.shift();
+        try {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (err) {
+            console.warn("LOG WARNING: Error al añadir pending candidate:", err, candidate);
+        }
+    }
+}
+
+
+// =========================================================
+// 5. LÓGICA DE CONTROLES
+// =========================================================
+let currentAudioEnabled = true;
+let currentVideoEnabled = true;
+
+function toggleTrack(track, button, isAudio) {
+    if (!track) return;
+    track.enabled = !track.enabled;
+    let enabled = track.enabled;
+    const icon = button.querySelector('i');
+
+    if (isAudio) {
+        currentAudioEnabled = enabled;
+        icon.classList.toggle('bi-mic-fill', enabled);
+        icon.classList.toggle('bi-mic-mute-fill', !enabled);
+    } else {
+        currentVideoEnabled = enabled;
+        icon.classList.toggle('bi-camera-video-fill', enabled);
+        icon.classList.toggle('bi-camera-video-off-fill', !enabled);
+    }
+
+    button.classList.toggle('btn-light', enabled);
+    button.classList.toggle('btn-danger', !enabled);
+    button.title = enabled ? (isAudio ? 'Silenciar' : 'Cámara On/Off') : (isAudio ? 'Activar Mic' : 'Cámara Off/On');
+}
+
+function toggleMic() {
+    const audioTrack = localStream ? localStream.getAudioTracks()[0] : null;
+    toggleTrack(audioTrack, btnToggleMic, true);
+    console.log(`LOG: Micrófono toggled: ${currentAudioEnabled}`);
+}
+
+function toggleCam() {
+    const videoTrack = localStream ? localStream.getVideoTracks()[0] : null;
+    toggleTrack(videoTrack, btnToggleCam, false);
+    console.log(`LOG: Cámara toggled: ${currentVideoEnabled}`);
+}
+
+async function startScreenSharing() {
+    if (isScreenSharing) return;
+    
+    if (isRemoteSharing) {
+        console.warn("LOG WARNING: El usuario remoto ya está compartiendo la pantalla. Espere.");
+        statusEl.textContent = "El otro usuario está compartiendo. Espera tu turno.";
+        statusEl.style.color = "red";
+        setTimeout(() => {
+             // Restaurar estado si no ha cambiado remotamente
+             if (isRemoteSharing) {
+                 statusEl.textContent = "El otro usuario está compartiendo su pantalla. 🖥️";
+                 statusEl.style.color = "blue";
+             } else {
+                 statusEl.textContent = "Conectado ✅"; 
+                 statusEl.style.color = "green";
+             }
+        }, 5000);
+        return; 
+    }
+
+    console.log("LOG: Iniciando Screen Sharing...");
+    try {
+        // Incluir audio del sistema/micrófono si es posible
+        screenStream = await navigator.mediaDevices.getDisplayMedia({ 
+            video: true, 
+            audio: true 
+        });
+        isScreenSharing = true;
+
+        // A. Notificar al otro usuario y al servidor 
+        socket.send(JSON.stringify({ type: "screen_share_start", user_id: USER_ID }));
+        
+        // B. Reemplazar la pista de video y audio
+        const screenVideoTrack = screenStream.getVideoTracks()[0];
+        const screenAudioTrack = screenStream.getAudioTracks()[0]; // Puede ser undefined
+        
+        if (videoSender) {
+            await videoSender.replaceTrack(screenVideoTrack);
+        } else if (peerConnection && screenVideoTrack) {
+            // Si no había video antes, añadirlo
+            videoSender = peerConnection.addTrack(screenVideoTrack, screenStream);
+        }
+
+        if (screenAudioTrack) {
+            if (audioSender) {
+                await audioSender.replaceTrack(screenAudioTrack);
+            } else if (peerConnection) {
+                // Si no había audio, añadirlo
+                audioSender = peerConnection.addTrack(screenAudioTrack, screenStream);
+            }
+        } else if (audioSender) {
+             // Si el stream de la pantalla no tiene audio, detener el audio local
+             audioSender.replaceTrack(null);
+        }
+        
+        // C. Actualizar UI y manejar el final de la compartición
+        localVideo.srcObject = screenStream;
+        btnShareScreen.classList.remove('btn-secondary');
+        btnShareScreen.classList.add('btn-warning');
+        btnShareScreen.innerHTML = '<i class="bi bi-x-circle-fill me-1"></i> Detener';
+        
+        // Evento cuando la pantalla deja de compartirse (ej. usuario hace clic en el botón del navegador)
+        screenStream.getVideoTracks()[0].onended = stopScreenSharing;
+
+    } catch (err) {
+        console.error("LOG ERROR: Fallo al iniciar Screen Sharing:", err);
+        isScreenSharing = false; 
+    }
+}
+
+async function stopScreenSharing() {
+    if (!isScreenSharing) return;
+    
+    // 1. Notificar al servidor que se detiene la compartición
+    socket.send(JSON.stringify({ type: "screen_share_stop", user_id: USER_ID }));
+    console.log("LOG: Enviado screen_share_stop al servidor.");
+
+    // 2. Detener las pistas del screenStream
+    screenStream.getTracks().forEach(track => track.stop());
+    screenStream = null;
+    isScreenSharing = false;
+    
+    // 3. Reemplazar tracks con los streams locales originales
+    const originalVideoTrack = localStream ? localStream.getVideoTracks()[0] : null;
+    const originalAudioTrack = localStream ? localStream.getAudioTracks()[0] : null;
+    
+    if (videoSender && originalVideoTrack) {
+        await videoSender.replaceTrack(originalVideoTrack);
+        // Si la cámara estaba apagada originalmente, asegurar que permanezca apagada
+        originalVideoTrack.enabled = currentVideoEnabled; 
+    } else if (videoSender) {
+        // Si no hay video local (cámara no disponible), se detiene el track
+        videoSender.replaceTrack(null); 
+    }
+    
+    if (audioSender && originalAudioTrack) {
+        await audioSender.replaceTrack(originalAudioTrack);
+        // Si el micro estaba muteado, asegurar que permanezca muteado
+        originalAudioTrack.enabled = currentAudioEnabled;
+    } else if (audioSender) {
+         // Si no hay audio local (micro no disponible), se detiene el track
+        audioSender.replaceTrack(null);
+    }
+
+
+    // 4. Mostrar el stream local original
+    localVideo.srcObject = localStream;
+
+    btnShareScreen.classList.remove('btn-warning');
+    btnShareScreen.classList.add('btn-secondary');
+    btnShareScreen.innerHTML = '<i class="bi bi-display-fill me-1"></i> Compartir';
+}
+
+function toggleRecording() {
+    isRecording = !isRecording;
+    const icon = btnRecord.querySelector('i');
+
+    if (isRecording) {
+        // Lógica simulada para iniciar grabación
+        console.log("LOG: [Grabación Simulada] Iniciando...");
+        btnRecord.classList.remove('btn-info');
+        btnRecord.classList.add('btn-danger');
+        icon.classList.add('text-white');
+        icon.classList.add('bi-stop-circle-fill');
+        icon.classList.remove('bi-record-circle-fill');
+        btnRecord.title = 'Detener Grabación';
+        btnRecord.innerHTML = '<i class="bi bi-stop-circle-fill me-1"></i> Detener';
+        statusEl.textContent = "Grabación en curso... 🔴 (Requiere backend para persistencia)";
+        statusEl.style.color = "red";
+    } else {
+        // Lógica simulada para detener grabación
+        console.log("LOG: [Grabación Simulada] Deteniendo...");
+        btnRecord.classList.remove('btn-danger');
+        btnRecord.classList.add('btn-info');
+        icon.classList.remove('bi-stop-circle-fill');
+        icon.classList.add('bi-record-circle-fill');
+        btnRecord.title = 'Iniciar Grabación';
+        btnRecord.innerHTML = '<i class="bi bi-record-circle-fill me-1"></i> Grabar';
+        statusEl.textContent = "Conectado ✅"; 
+        statusEl.style.color = "green";
+    }
+}
+
+
+function endCall() {
+    console.log("LOG: Finalizando la llamada...");
+    
+    // 1. Detener streams locales
+    if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+        localStream = null;
+    }
+    if (screenStream) {
+        screenStream.getTracks().forEach(track => track.stop());
+        screenStream = null;
+    }
+    
+    // 2. Cerrar PeerConnection
+    if (peerConnection) {
+        peerConnection.close();
+        peerConnection = null;
+    }
+    
+    // 3. Cerrar WebSocket (cierre limpio con código 1000)
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.close(1000, "User ended call");
+    }
+
+    // 4. Limpiar UI
+    localVideo.srcObject = null;
+    remoteVideo.srcObject = null;
+    statusEl.textContent = "Llamada finalizada 🛑"; statusEl.style.color = "red";
+    
+    // Deshabilitar todo
+    btnEndCall.disabled = true;
+    btnToggleCam.disabled = true;
+    btnToggleMic.disabled = true;
+    btnShareScreen.disabled = true;
+    btnRecord.disabled = true;
+}
+
+
+// =========================================================
+// 6. LISTENERS DE BOTONES E INICIO
+// =========================================================
+document.addEventListener("DOMContentLoaded", () => {
+    console.log("LOG: DOMContentLoaded. Iniciando flujo de aplicación."); 
+
+    actionsContainer = document.getElementById('tutoriaActions');
+    btnSubirDocumento = document.getElementById('btnSubirDocumento');
+    btnRealizarEvaluacion = document.getElementById('btnRealizarEvaluacion'); 
+    btnResponderEvaluacion = document.getElementById('btnResponderEvaluacion');
+
+    // Funciones helper (mantenidas)
+    function displayFileName(input) {
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
+        if (input.files && input.files[0]) {
+            fileNameDisplay.textContent = `Archivo seleccionado: ${input.files[0].name}`;
+        } else {
+            fileNameDisplay.textContent = "Solo se aceptan archivos PDF.";
+        }
+    }
+
+    // --- 6.1. Controles Básicos ---
+    btnToggleMic.addEventListener('click', toggleMic);
+    btnToggleCam.addEventListener('click', toggleCam);
+    btnEndCall.addEventListener('click', endCall);
+    btnToggleFullscreen.addEventListener('click', toggleFullscreen);
+
+    // --- 6.2. Lógica de Rol para Botones de Acción (CORRECCIÓN FINAL) ---
+    
+    updateActionButtonsVisibility(); // 👈 Llama a la función aquí
+    
+    // --- 6.3. Controles Avanzados ---
+    btnShareScreen.addEventListener('click', () => {
+        if (isScreenSharing) {
+            stopScreenSharing();
+        } else {
+            startScreenSharing();
+        }
+    });
+
+    btnRecord.addEventListener('click', toggleRecording);
+    
+    // --- 6.4. Chat Listeners
+    btnSendMessage.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+
+    // --- 6.5. Inicio de WebRTC
+    initMedia().then(connectWebSocket);
+
+});
+</script>
+
+{% else %}
+<div class="container mt-5">
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Tutoría No Disponible</h4>
+        <p>La tutoría con ID **{{ tutoria.id }}** no está marcada como "En curso" o no existe.</p>
+        <hr>
+        <p class="mb-0">Por favor, verifique el estado en su panel de control.</p>
+    </div>
+</div>
 {% endif %}
 {% endblock %}

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activa tu cuenta - TutorPlus</title>
+</head>
+<body style="margin: 0; padding: 40px 20px; font-family: 'Segoe UI', Arial, sans-serif; background: linear-gradient(135deg, #f0f7ff 0%, #e6f2ff 100%);">
+    <div style="max-width: 580px; margin: auto; background-color: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 8px 32px rgba(0, 107, 255, 0.12); border: 1px solid #e1f0ff;">
+        
+        <!-- Header con icono -->
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="background: linear-gradient(135deg, #0066ff 0%, #0044cc 100%); width: 80px; height: 80px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="white" stroke-width="2"/>
+                    <path d="M16 10L10.5 15.5L8 13" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </div>
+            <h1 style="color: #0066ff; margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">¡Bienvenido a TuToria!</h1>
+        </div>
+
+        <!-- Mensaje de bienvenida -->
+        <div style="text-align: center; margin-bottom: 10px;">
+            <h2 style="color: #1a365d; font-size: 24px; font-weight: 600; margin: 0 0 10px 0;">Hola {{ usuario.nombre }} 👋</h2>
+            <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin: 0;">
+                Estamos emocionados de tenerte en nuestra comunidad.
+            </p>
+        </div>
+
+        <!-- Instrucciones -->
+        <div style="background: #f7faff; padding: 25px; border-radius: 12px; border-left: 4px solid #0066ff; margin: 30px 0;">
+            <p style="color: #2d3748; font-size: 16px; line-height: 1.6; margin: 0;">
+                <strong>Último paso:</strong> Para comenzar a explorar todas las funcionalidades y conectar con tutores, 
+                necesitas activar tu cuenta haciendo clic en el botón de abajo.
+            </p>
+        </div>
+
+        <!-- Botón de activación -->
+        <div style="text-align: center; margin: 40px 0;">
+            <a href="{{ activation_link }}" 
+               style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #0066ff 0%, #0044cc 100%); 
+                      color: white; text-decoration: none; border-radius: 50px; font-weight: 700; font-size: 16px; 
+                      box-shadow: 0 4px 15px rgba(0, 102, 255, 0.3); transition: all 0.3s ease; border: none;">
+                🚀 Activar Mi Cuenta
+            </a>
+        </div>
+
+        <!-- Información adicional -->
+        <div style="text-align: center; margin: 30px 0;">
+            <p style="color: #718096; font-size: 14px; line-height: 1.5; margin: 0 0 15px 0;">
+                <strong>¿Problemas con el botón?</strong><br>
+                Copia y pega este enlace en tu navegador:
+            </p>
+            <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px dashed #cbd5e0;">
+                <p style="color: #0066ff; font-size: 12px; word-break: break-all; margin: 0; font-family: monospace;">
+                    {{ activation_link }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Seguridad -->
+        <div style="background: #fffaf0; padding: 20px; border-radius: 12px; border: 1px solid #fed7aa; margin: 25px 0;">
+            <div style="display: flex; align-items: flex-start; gap: 12px;">
+                <span style="color: #dd6b20; font-size: 18px;">🔒</span>
+                <div>
+                    <p style="color: #744210; font-size: 14px; line-height: 1.5; margin: 0; font-weight: 600;">
+                        Por tu seguridad
+                    </p>
+                    <p style="color: #744210; font-size: 13px; line-height: 1.5; margin: 5px 0 0 0;">
+                        Este enlace expirará en 24 horas. Si no solicitaste esta cuenta, ignora este mensaje.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 30px; text-align: center;">
+            <p style="color: #696d70ff; font-size: 12px; margin: 0;">
+                Si necesitas ayuda, contáctanos en 
+                <a href="mailto:soporte@TuToria.cl" style="color: #0066ff; text-decoration: none;">soporte@TuToria.cl</a>
+            </p>
+        </div>
+
+        <!-- Mini footer -->
+        <div style="text-align: center; margin-top: 25px; padding-top: 20px; border-top: 1px solid #f7fafc;">
+            <p style="color: #696d70ff; font-size: 11px; margin: 0;">
+                © 2025 TuToria. Todos los derechos reservados.<br>
+                <a href="#" style="color: #696d70ff; text-decoration: none; margin: 0 8px;">Privacidad</a> • 
+                <a href="#" style="color: #696d70ff; text-decoration: none; margin: 0 8px;">Términos</a> • 
+                <a href="#" style="color: #696d70ff; text-decoration: none; margin: 0 8px;">Ayuda</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

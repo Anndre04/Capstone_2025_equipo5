@@ -9,6 +9,8 @@ from .models import Comuna, Rol, AreaInteres, Ocupacion, Usuario
 from django.core.signing import Signer, SignatureExpired, BadSignature
 from .tasks import enviar_verificacion_email_task
 from google.cloud import storage
+from django.contrib.auth.views import PasswordResetView
+from django.urls import reverse_lazy
 from google.cloud.exceptions import GoogleCloudError
 from django.conf import settings
 
@@ -243,3 +245,15 @@ def obtener_comunas(request, region_id):
     except Exception as e:
         print("Error en obtener_comunas:", e)
         return JsonResponse({"error": str(e)}, status=500)
+    
+class CustomPasswordResetView(PasswordResetView):
+    template_name = "autenticacion/password_reset/password_reset.html"  # Formulario (HTML)
+    
+    # 🚨 CORRECCIÓN CLAVE: Usar 'html_email_template_name' para el HTML
+    html_email_template_name = "emails/reset_password.html" 
+    
+    # Opcional: Define una plantilla de texto plano de respaldo (es buena práctica)
+    email_template_name = "emails/reset_password.txt" 
+    
+    subject_template_name = "emails/password_reset_subject.txt"
+    success_url = reverse_lazy('password_reset_done')

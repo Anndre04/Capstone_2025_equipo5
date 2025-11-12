@@ -17,7 +17,6 @@ urlpatterns = [
     path('eliminaranuncio/<uuid:anuncio_id>/', views.eliminar_anuncio, name='eliminar_anuncio'),
     path('perfiltutor/<uuid:tutor_id>', views.perfiltutor, name='perfiltutor'),
     path('registrotutor', views.registrotutor, name='registrotutor'),
-    path('gestortutorias/<uuid:user_id>', views.gestortutorias, name='gestortutorias'),
     path("obtener-alumnos/<uuid:anuncio_id>/", views.obtener_alumnos_anuncio, name="obtener_alumnos_por_anuncio"),
     path('crear-solicitud-tutoria/', views.crear_solicitud_tutoria, name='crear_solicitud_tutoria'),
     path('estado-solicitud/<uuid:solicitud_id>/', views.estado_solicitud_tutoria, name='estado_solicitud_tutoria'),
@@ -25,4 +24,7 @@ urlpatterns = [
     path('estado-tutoria/<uuid:tutoria_id>/', views.estado_tutoria, name='estadotutoria'),
     path('tutoria-completada/<uuid:tutoria_id>/', views.tutoria_completada, name='estadotutoria'),
     path('reseña/<uuid:tutoria_id>/', views.crear_reseña, name='crear_reseña'),
+    path('archivostutoria/<uuid:tutoria_id>', views.archivos_tutoria, name='archivostutoria'),
+    path('archivo/descargar/<uuid:archivo_id>/', views.descargar_archivo, name='descargar_archivo'),
+    path('detalle_tutoria/<uuid:tutoria_id>/', views.detalle_tutoria, name='detalle_tutoria'),
 ]

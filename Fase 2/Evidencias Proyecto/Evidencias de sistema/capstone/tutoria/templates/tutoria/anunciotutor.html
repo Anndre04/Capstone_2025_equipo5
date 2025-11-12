@@ -1,97 +1,20 @@
 {% extends 'base.html' %}
 {% load static %}
 {% load precios %}
+{% load precios %}  {# IMPORTANTE: Cargar el filtro get_item #}
 
-{% block title %}Tutoría - {{ tutoria.titulo }} | Tutorías Online{% endblock %}
+{% block title %}Tutoría - {{ anuncio.titulo }} | Tutorías Online{% endblock %}
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/css_tutoria/tutoria.css' %}">
+{# Asumo que css/css_tutoria/tutoria.css y js/tutoria.js existen #}
 
 {% if anuncio %}
 <div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
     <div class="row justify-content-center">
         <div class="col-12 col-lg-10 col-xl-8">
 
-            <!-- TARJETA INFORMACIÓN TUTORÍA -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-start mb-4">
-                        <div class="position-relative me-4">
-                            <div class="rounded-circle bg-info d-flex align-items-center justify-content-center"
-                                style="width: 70px; height: 70px;">
-                                <span class="text-white fw-bold fs-5"><i class="bi bi-book"></i></span>
-                            </div>
-                            <div class="position-absolute bottom-0 end-0 border-3"
-                                style="width: 16px; height: 16px;"></div>
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <h2 class="fw-bold text-dark mb-2">{{ anuncio.titulo }}</h2>
-                                    <div class="d-flex align-items-center flex-wrap gap-2">
-                                        <span class="badge bg-success bg-opacity-10 text-success border-0">
-                                            <i class="bi bi-clock me-1"></i>60 minutos
-                                        </span>
-                                        <span
-                                            class="badge bg-primary bg-opacity-10 text-primary border-0">Avanzado</span>
-                                        <span class="badge bg-info bg-opacity-10 text-info border-0">Matemáticas</span>
-                                    </div>
-                                </div>
-                                <span class="fs-4 fw-bold text-success">{{anuncio.precio|clp}}/hr</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- DESCRIPCIÓN -->
-                    <div class="mb-4">
-                        <h5 class="fw-bold text-dark mb-3">Descripción de la Tutoría</h5>
-                        <p class="text-muted mb-0">
-                            {{anuncio.descripcion}}
-                        </p>
-                    </div>
-
-                    <!-- INFORMACIÓN DETALLADA -->
-                    <div class="row g-3 mb-4">
-                        <div class="col-6 col-md-3">
-                            <div class="text-center border rounded p-3">
-                                <h6 class="text-muted mb-2 small fw-normal">Duracion</h6>
-                                <strong class="text-dark">60 min</strong>
-                            </div>
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <div class="text-center border rounded p-3">
-                                <h6 class="text-muted mb-2 small fw-normal">Área conocimiento</h6>
-                                <strong class="text-dark">{{anuncio.area}}</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- FECHA DE PUBLICACIÓN -->
-                    <div class="border-top pt-3">
-                        <small class="text-muted">
-                            <i class="bi bi-calendar me-1"></i>
-                            Publicado el {{ anuncio.fecha_creacion }}
-                        </small>
-                    </div>
-
-
-                    <!-- BOTONES  -->
-                    <div class="d-grid gap-2 mt-3 pt-2 border-top">
-                        <form action="{% url 'tutoria:enviarsolicitud' anuncio.id %}" method="POST" class="d-inline">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-success py-2 w-100">
-                                <i class="bi bi-send me-2"></i>Enviar solicitud de tutoría
-                            </button>
-                        </form>
-                        <a href="{% url 'crearchat' anuncio.tutor.usuario.id %}" class="btn btn-primary py-2">
-                            <i class="bi bi-chat-dots me-2"></i>Iniciar Chat con el Profesor
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-
-            <!-- TARJETA INFORMACIÓN PROFESOR  -->
+            <!-- TARJETA INFORMACIÓN PROFESOR -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-body p-4">
                     <!-- FOTO NOMBRE-->
@@ -104,20 +27,22 @@
                             <div class="position-absolute bottom-0 end-0 bg-success rounded-circle border border-3 border-white"
                                 style="width: 16px; height: 16px;"></div>
                         </div>
-                        <h4 class="fw-bold text-dark mb-1">{{ anuncio.tutor.usuario.nombre }} {{ anuncio.tutor.usuario.p_apellido }}</h4>
-                        <p class="text-muted mb-3"></p>
-                        
-                        <!-- RATING -->
-                        <div class="mb-3">
-                            <div class="d-flex align-items-center justify-content-center">
-                                <span class="text-warning fs-5">
-                                    <i class="bi bi-star-fill"></i>
-                                    <i class="bi bi-star-fill"></i>
-                                    <i class="bi bi-star-fill"></i>
-                                    <i class="bi bi-star-fill"></i>
-                                    <i class="bi bi-star-half"></i>
-                                </span>
-                                <span class="text-muted ms-2">4.5 (128 reseñas)</span>
+                        <div class="flex-grow-1">
+                            <h4 class="fw-bold text-dark mb-1">{{ anuncio.tutor.usuario.nombre }} {{ anuncio.tutor.usuario.p_apellido }} {{ anuncio.tutor.usuario.s_apellido }}</h4>
+                            <p class="text-muted mb-3"></p>
+                            
+                            <!-- RATING -->
+                            <div class="mb-3">
+                                <div class="d-flex align-items-center">
+                                    <span class="text-warning fs-5">
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-fill"></i>
+                                        <i class="bi bi-star-half"></i>
+                                    </span>
+                                    <span class="text-muted ms-2">4.5 (128 reseñas)</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -178,6 +103,136 @@
                             <i class="bi bi-chat-dots me-2"></i>Iniciar Chat con el Profesor
                         </a>
                     </div>
+                </div>
+            </div>
+
+            <!-- TARJETA INFORMACIÓN TUTORÍA PRINCIPAL -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start mb-4">
+                        <div class="position-relative me-4">
+                            <div class="rounded-circle bg-info d-flex align-items-center justify-content-center"
+                                style="width: 70px; height: 70px;">
+                                <span class="text-white fw-bold fs-5"><i class="bi bi-book"></i></span>
+                            </div>
+                            <div class="position-absolute bottom-0 end-0 border-3"
+                                style="width: 16px; height: 16px;"></div>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h2 class="fw-bold text-dark mb-2">{{ anuncio.titulo }}</h2>
+                                </div>
+                                {# Uso del filtro clp para formatear el precio #}
+                                <span class="fs-4 fw-bold text-success">{{ anuncio.precio|clp }}/hr</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DESCRIPCIÓN -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold text-dark mb-3">Descripción de la Tutoría</h5>
+                        <p class="text-muted mb-0">
+                            {{ anuncio.descripcion }}
+                        </p>
+                    </div>
+
+                    <!-- INFORMACIÓN DETALLADA (DURACIÓN/ÁREA) -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-6 col-md-3">
+                            <div class="text-center border rounded p-3">
+                                <h6 class="text-muted mb-2 small fw-normal">Duracion</h6>
+                                <strong class="text-dark">60 min</strong>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="text-center border rounded p-3">
+                                <h6 class="text-muted mb-2 small fw-normal">Área conocimiento</h6>
+                                <strong class="text-dark">{{ anuncio.area }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FECHA DE PUBLICACIÓN -->
+                    <div class="border-top pt-3">
+                        <small class="text-muted">
+                            <i class="bi bi-calendar me-1"></i>
+                            Publicado el {{ anuncio.fecha_creacion }}
+                        </small>
+                    </div>
+
+
+                    <!-- BOTONES ACCIÓN -->
+                    <div class="d-grid gap-2 mt-3 pt-2 border-top">
+                        <form action="{% url 'tutoria:enviarsolicitud' anuncio.id %}" method="POST" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success py-2 w-100">
+                                <i class="bi bi-send me-2"></i>Enviar solicitud de tutoría
+                            </button>
+                        </form>
+                        <a href="{% url 'crearchat' anuncio.tutor.usuario.id %}" class="btn btn-primary py-2">
+                            <i class="bi bi-chat-dots me-2"></i>Iniciar Chat con el Profesor
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- TARJETA DISPONIBILIDAD HORARIA -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold text-dark mb-4 d-flex align-items-center">
+                        <i class="bi bi-calendar-check me-2 text-info fs-5"></i>Disponibilidad Horaria
+                    </h5>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-borderless align-middle mb-0">
+                            <thead class="border-bottom">
+                                <tr class="text-muted small fw-semibold">
+                                    <th>Día</th>
+                                    <th class="text-center">Mañana (8:00am a 12:00pm)</th>
+                                    <th class="text-center">Tarde (13:00pm a 19:00pm)</th>
+                                    <th class="text-center">Noche (20:00pm a 12:00am)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {# Itera sobre la lista ordenada de días que viene del view #}
+                                {% for dia_key, dia_label in dias_ordenados %} 
+                                {# Usa el filtro get_item para acceder al mapa de disponibilidad #}
+                                {% with disp=disponibilidad_map|get_item:dia_key %}
+                                <tr>
+                                    <td class="fw-bold text-dark">{{ dia_label }}</td>
+                                    <td class="text-center">
+                                        {# Si el día no tiene disponibilidad registrada, 'disp' es {} y disp.mañana es False #}
+                                        {% if disp.mañana %}
+                                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                        {% else %}
+                                            <i class="bi bi-dash-circle-fill text-muted opacity-50 fs-5"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if disp.tarde %}
+                                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                        {% else %}
+                                            <i class="bi bi-dash-circle-fill text-muted opacity-50 fs-5"></i>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if disp.noche %}
+                                            <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                                        {% else %}
+                                            <i class="bi bi-dash-circle-fill text-muted opacity-50 fs-5"></i>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endwith %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <small class="text-muted mt-3 d-block">
+                        <i class="bi bi-info-circle me-1"></i> La disponibilidad puede variar y debe ser confirmada por chat.
+                    </small>
                 </div>
             </div>
         </div>

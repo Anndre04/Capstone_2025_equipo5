@@ -94,7 +94,7 @@ class Solicitud(models.Model):
 class Tutor(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
-    sobremi = models.TextField(null=True, blank=True)
+    sobremi = models.TextField(null=True, blank=True, default="")
     areas_conocimiento = models.ManyToManyField(
         to=AreaInteres,
         through='TutorArea',
@@ -111,7 +111,7 @@ class Tutor(models.Model):
     
 class TutorArea(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    tutor = models.ForeignKey(to=Tutor, on_delete=models.PROTECT, null=True)
+    tutor = models.ForeignKey(to=Tutor, on_delete=models.PROTECT, null=True, related_name='areastutor')
     area = models.ForeignKey(to=AreaInteres, on_delete=models.PROTECT)
     activo = models.BooleanField(default=True)
     fecha_agregado = models.DateTimeField(auto_now_add=True)
@@ -240,10 +240,13 @@ class Archivo(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nombre = models.CharField(max_length=80, null=True)
-    contenido = models.URLField(max_length=500, verbose_name='URL_bucket')    
+    url = models.TextField(verbose_name='URL_bucket')    
     tutor = models.ForeignKey(Tutor, on_delete=models.PROTECT, related_name="certificados",  blank=True, null=True)
     tutoria = models.ForeignKey(Tutoria, on_delete=models.PROTECT, related_name="archivos", null=True, default=None)
     estado = models.CharField(max_length=20, choices=estado_choices, null=True, default="Pendiente")
+
+    def __str__(self):
+        return f"Link :{self.url}"
 
 class ComentarioPredefinido(models.Model): 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False) 

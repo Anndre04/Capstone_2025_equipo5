@@ -101,7 +101,14 @@
             </button>
             
             <div class="d-flex align-items-center flex-grow-1">
-              <p class="mb-0 fw-bold" id="chat-nombre">{{ chat_data.0.contacto }}</p>
+              <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center me-3" 
+                  style="width: 40px; height: 40px;">
+                <span class="text-primary fw-bold">{{ chat_data.0.contacto|slice:":1" }}</span>
+              </div>
+              <div>
+                <p class="mb-0 fw-bold" id="chat-nombre">{{ chat_data.0.contacto }}</p>
+                <small class="text-muted" id="chat-estado">En línea</small>
+              </div>
             </div>
           </div>
         </div>
@@ -117,12 +124,12 @@
             <form id="message-form" class="d-flex gap-2 gap-md-3 align-items-center" action="javascript:void(0)">
                 <div class="flex-grow-1">
                     <input type="text" 
-                          class="form-control form-control-md" 
-                          placeholder="Selecciona una conversación para enviar mensajes..." 
-                          id="message-input">
+                      class="form-control form-control-md" 
+                      placeholder="Escribe un mensaje..." 
+                      id="message-input">
                 </div>
                 <button type="submit" class="btn btn-primary px-3 px-md-4 flex-shrink-0" id="btn-enviar">
-                    <i class="bi bi-send"></i>
+                  <i class="bi bi-send"></i>
                 </button>
             </form>
           </div>
@@ -210,6 +217,14 @@
 /* Estados iniciales */
 .text-muted i {
   opacity: 0.5;
+}
+
+#chat-messages {
+  background-color: #ffffff;
+  background-image: 
+    radial-gradient(circle at 25px 25px, rgba(255,255,255,0.2) 2%, transparent 40%),
+    radial-gradient(circle at 75px 75px, rgba(255,255,255,0.1) 2%, transparent 40%);
+  background-size: 100px 100px;
 }
 </style>
 {% endblock %}
