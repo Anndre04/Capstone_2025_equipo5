@@ -240,7 +240,7 @@ class Archivo(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     nombre = models.CharField(max_length=80, null=True)
-    url = models.TextField(verbose_name='URL_bucket')    
+    url = models.TextField(verbose_name='URL_bucket', null=True, blank=True)    
     tutor = models.ForeignKey(Tutor, on_delete=models.PROTECT, related_name="certificados",  blank=True, null=True)
     tutoria = models.ForeignKey(Tutoria, on_delete=models.PROTECT, related_name="archivos", null=True, default=None)
     estado = models.CharField(max_length=20, choices=estado_choices, null=True, default="Pendiente")
