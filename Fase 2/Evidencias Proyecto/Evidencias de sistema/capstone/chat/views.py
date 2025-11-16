@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from .models import Chat, Mensaje
 from autenticacion.models import Usuario
+from django.contrib import messages
 import logging
 
 logger = logging.getLogger(__name__)
@@ -91,19 +92,20 @@ def mensajes_view(request, chat_id):  # chat_id ya es UUID
 
 @login_required
 def crear_chat(request, user_id):
-    user = request.user
+    usuario = request.user
     otro_usuario = get_object_or_404(Usuario, id=user_id)
 
-    if user.id == int(user_id):
-        return JsonResponse({"error": "No puedes chatear contigo mismo"}, status=400)
+    if usuario.id == user_id:
+        messages.error(request, "No puede chatear contigo mismo")
+        return redirect('home')
 
-    chat_existente = Chat.objects.filter(users=user).filter(users=otro_usuario).first()
+    chat_existente = Chat.objects.filter(users=usuario).filter(users=otro_usuario).first()
 
     if chat_existente:
         chat = chat_existente
     else:
         chat = Chat.objects.create()
-        chat.users.add(user, otro_usuario)
+        chat.users.add(usuario, otro_usuario)
         chat.save()
 
     # Guardar en sesión el ID (como string para compatibilidad JSON)

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Tutoría{% endblock %}
 
@@ -20,6 +21,10 @@
                     
                     <div id="remoteVideoWrapper" class="w-100 h-100 bg-dark bg-opacity-10 d-flex align-items-center justify-content-center main-video-wrapper">
                         <video id="remoteVideo" autoplay playsinline class="w-100 h-100 main-video" style="object-fit: contain;"></video>
+                        <div id="waitingMessage" class="text-center text-muted py-2">
+                            Esperando a que el otro usuario se conecte...
+                        </div>
+
 
                         <div id="videoControls" class="position-absolute bottom-0 start-50 translate-middle-x p-2 mb-3 rounded-pill shadow-lg bg-dark bg-opacity-75 d-flex gap-3">
         
@@ -30,10 +35,6 @@
                             <button class="btn btn-sm btn-secondary" id="btnShareScreen" title="Compartir Pantalla">
                                 <i class="bi bi-display-fill me-1"></i> Compartir
                             </button>
-                            <!-- El botón de grabación usa el color info (más suave) -->
-                            <button class="btn btn-sm btn-info text-white" id="btnRecord" title="Iniciar Grabación">
-                                <i class="bi bi-record-circle-fill me-1"></i> Grabar
-                            </button>
                             
                             <button class="btn btn-sm btn-danger" id="btnEndCall" title="Colgar"><i class="bi bi-telephone-fill"></i></button>
                             
@@ -42,12 +43,7 @@
                             </button>
 
                         </div>
-                        
-                        <div id="waitingMessage" class="position-absolute top-50 start-50 translate-middle text-center text-muted p-4">
-                            <i class="bi bi-camera-video-off display-4 d-block mb-3"></i>
-                            <h5>Esperando conexión...</h5>
-                            <p>La videollamada se iniciará cuando el otro usuario se una</p>
-                        </div>
+                
                     </div>
 
                     <div id="localVideoContainer" class="position-absolute bottom-0 end-0 m-3 z-1 shadow-lg border border-3 border-primary rounded" style="width: 200px; height: 120px; background: #000;">
@@ -79,31 +75,64 @@
                 </button>
             </div>
         </div>
-
         <div class="col-12 col-lg-4">
-            <div class="card border-0 shadow-sm h-100 chat-card">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0">Chat</h5>
-                </div>
-                <div class="card-body p-0 d-flex flex-column">
-                    <div id="chatMessages" class="flex-grow-1 p-3" style="height: 300px; overflow-y: auto;">
-                        <div class="text-center text-muted py-4">
-                            <i class="bi bi-chat-dots display-6 d-block mb-2"></i>
-                            <p>El chat está listo para usar</p>
-                        </div>
-                    </div>
+        <div class="card border-0 shadow-sm h-100 chat-card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Chat</h5>
+            </div>
 
-                    <div class="border-top p-3">
-                        <div class="input-group">
-                            <input type="text" id="chatInput" class="form-control" placeholder="Escribe un mensaje..." disabled>
-                            <button class="btn btn-primary" id="btnSendMessage" disabled>
-                                <i class="bi bi-send-fill"></i>
-                            </button>
+            <div class="card-body p-0 d-flex flex-column">
+
+                <!-- CONTENEDOR PARA chat.js (metadatos) -->
+                <div 
+                    id="chat-container"
+                    data-user="{{ request.user.id }}"
+                    data-chat-id="{{ chat_id }}"
+                ></div>
+
+                <!-- MENSAJES DEL CHAT -->
+                <div id="chat-messages" 
+                    class="flex-grow-1 p-3"
+                    style="height: 300px; overflow-y: auto;">
+
+                    {% for m in mensajes %}
+                        <div class="mb-2 {% if m.remitente.id == request.user.id %}text-end{% else %}text-start{% endif %}">
+                            
+                            <div class="d-inline-block px-3 py-2 rounded-3
+                                {% if m.remitente.id == request.user.id %}
+                                    bg-primary text-white
+                                {% else %}
+                                    bg-light border
+                                {% endif %}
+                            ">
+                                {{ m.texto }}
+                            </div>
+
+                            <div class="small text-muted mt-1">
+                                {{ m.fecha_envio|date:"H:i" }}
+                            </div>
                         </div>
-                    </div>
+                    {% endfor %}
                 </div>
+
+                <!-- INPUT DE MENSAJE -->
+                <div class="border-top p-3">
+                    <form id="message-form" class="d-flex gap-2" action="javascript:void(0)">
+                        <input 
+                            type="text" 
+                            id="message-input" 
+                            class="form-control" 
+                            placeholder="Escribe un mensaje..."
+                        >
+                        <button class="btn btn-primary" id="btn-enviar">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </form>
+                </div>
+
             </div>
         </div>
+    </div>
     </div>
 </div>
 
@@ -197,6 +226,9 @@
     </div>
   </div>
 </div>
+
+<script src="{% static 'js/chat.js' %}"></script>
+
 
 <script>
     // --------------------------------------------------------------------------
@@ -752,9 +784,6 @@ function reindexarOpciones(preguntaId) {
 
 <script>
 // --- Variables de configuración de Django y WS ---
-// Las URLs de Grabación están comentadas, ya que la lógica P2P es compleja y requiere back-end.
-// const GRABAR_URL = "{% url 'iniciar_grabacion' tutoria.id %}";
-// const DETENER_URL = "{% url 'detener_grabacion' tutoria.id %}";
 const TUTORIA_ID = "{{ tutoria.id }}";
 const USER_ID = "{{ request.user.id }}";
 const ROLE = sessionStorage.getItem('rol_actual');
@@ -831,6 +860,7 @@ function showResponseButtonDynamically(evaluacionId) {
 }
 
 
+// --- CONFIGURACIÓN DE CONEXIÓN ---
 console.log("CONFIG: TUTORIA_ID:", TUTORIA_ID, "USER_ID:", USER_ID, "ROLE:", ROLE);
 if (!TUTORIA_ID || TUTORIA_ID.includes('tutoria.id')) {
     console.error("CONFIG ERROR: TUTORIA_ID no está correctamente interpolado por Django.");
@@ -839,7 +869,9 @@ if (!TUTORIA_ID || TUTORIA_ID.includes('tutoria.id')) {
 const wsScheme = window.location.protocol === "https:" ? "wss" : "ws";
 const wsPath = `${wsScheme}://${window.location.host}/ws/tutoria/${TUTORIA_ID}/`;
 console.log("CONFIG: WebSocket Path:", wsPath); 
-let socket;
+
+// --- ESTADO GLOBAL AJUSTADO: Usamos el gestor en lugar del socket directo ---
+let wsManager;
 
 // --- Estado de la Sesión ---
 let localStream = null; 
@@ -851,11 +883,11 @@ let remoteVideoTrack;
 let isScreenSharing = false;
 let isRemoteSharing = false;
 let p2pReconnectTimeout;
-
-// --- Variables de Grabación (Simulada) ---
-let isRecording = false;
+let dataChannel; // DataChannel se mantiene: hook para futuras integraciones
 
 // --- Referencias al DOM ---
+// Nota: pueden ser null si el script se ejecuta antes de renderizar el DOM.
+// En acciones posteriores siempre verificamos existencia (if (elem) ...).
 const localVideo = document.getElementById("localVideo");
 const remoteVideo = document.getElementById("remoteVideo");
 const statusEl = document.getElementById("status");
@@ -866,11 +898,10 @@ const btnToggleMic = document.getElementById("btnToggleMic");
 const btnToggleCam = document.getElementById("btnToggleCam");
 const btnEndCall = document.getElementById("btnEndCall");
 const btnShareScreen = document.getElementById("btnShareScreen");
-const btnRecord = document.getElementById("btnRecord");
 const btnToggleFullscreen = document.getElementById("btnToggleFullscreen");
 const remoteVideoWrapper = document.getElementById("remoteVideoWrapper"); // Necesario para fullscreen
 
-// Chat
+// Chat DOM elements (se mantienen en DOM pero NO tendrán lógica interna aquí)
 const chatInput = document.getElementById("chatInput");
 const btnSendMessage = document.getElementById("btnSendMessage");
 const chatMessages = document.getElementById("chatMessages");
@@ -879,69 +910,237 @@ const chatMessages = document.getElementById("chatMessages");
 const configuration = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
 
 // =========================================================
+// GESTOR DE WEBSOCKET ROBUSTO (CLASE)
+// =========================================================
+
+// --- CONSTANTES DE CONEXIÓN Y RECONEXIÓN ---
+const MAX_RECONNECT_ATTEMPTS = 15; // Límite de intentos de reconexión
+const INITIAL_RECONNECT_DELAY = 1000; // 1 segundo de retraso inicial
+const MAX_RECONNECT_DELAY = 30000; // Máximo 30 segundos de retraso
+
+// --- CONSTANTES DE HEARTBEAT ---
+const HEARTBEAT_INTERVAL = 30000; // Enviar un PING cada 30 segundos
+const HEARTBEAT_TIMEOUT = 5000;   // Esperar PONG por 5 segundos
+
+class TutoriaWebsocketManager {
+    constructor(url, messageHandler) {
+        this.url = url;
+        this.messageHandler = messageHandler;
+
+        this.socket = null;
+        this.reconnectAttempts = 0;
+        this.isConnected = false;
+        this.isUserClosing = false;
+        
+        this.pingTimer = null;
+        this.pongTimeout = null;
+    }
+
+    connect() {
+        if (this.socket) {
+            // Asegura que la conexión anterior se cierre antes de crear una nueva
+            this.socket.onclose = null; 
+            this.socket.close(); 
+        }
+
+        console.log(`[WS] Intentando conectar a ${this.url}`);
+        this.socket = new WebSocket(this.url);
+        this.isUserClosing = false; // Reset al intentar conectar
+
+        this.socket.onopen = this.onOpen.bind(this);
+        this.socket.onmessage = this.onMessage.bind(this);
+        this.socket.onclose = this.onClose.bind(this);
+        this.socket.onerror = this.onError.bind(this);
+    }
+
+    onOpen() {
+        console.log(`[WS] Conectado exitosamente. Intentos de reconexión: ${this.reconnectAttempts}`);
+        this.isConnected = true;
+        
+        if (this.reconnectAttempts > 0) {
+            // Notificar a la aplicación principal que se reanudó la conexión P2P
+            this.messageHandler({ type: 'reconnect_success' });
+        }
+        
+        this.reconnectAttempts = 0; // Resetear contador al tener éxito
+        if (statusEl) statusEl.textContent = "WebSocket Conectado. Enviando join...";
+        
+        // Iniciar el Heartbeat
+        this.startHeartbeat();
+
+        // Enviar el mensaje de JOIN después de conectar/reconectar
+        this.send({ type: "join", user_id: USER_ID, role: ROLE });
+    }
+
+    onClose(event) {
+        this.isConnected = false;
+        this.stopHeartbeat(); // Detener Heartbeat al cerrar
+        
+        if (this.isUserClosing) {
+            console.log("[WS] Desconexión limpia iniciada por el usuario (Código 1000).");
+            return;
+        }
+
+        console.warn(`[WS] Conexión cerrada. Código: ${event.code}.`);
+        
+        if (this.reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+            this.reconnectAttempts++;
+            
+            // Fórmula de Exponential Backoff
+            let delay = INITIAL_RECONNECT_DELAY * Math.pow(2, this.reconnectAttempts);
+            delay = Math.min(delay, MAX_RECONNECT_DELAY);
+            
+            console.log(`[WS] Reintentando en ${delay / 1000}s (Intento #${this.reconnectAttempts})...`);
+            if (statusEl) { statusEl.textContent = `Reconectando WebSocket... Intento #${this.reconnectAttempts} 🔄`; statusEl.style.color = "orange"; }
+            
+            setTimeout(() => {
+                this.connect();
+            }, delay);
+        } else {
+            console.error("[WS] Límite de reconexión alcanzado. Conexión fallida permanente.");
+            this.messageHandler({type: 'connection_failed_permanent'});
+        }
+    }
+
+    onError(error) {
+        console.error("[WS] Error de WebSocket:", error);
+    }
+
+    // --- Heartbeat Logic ---
+    startHeartbeat() {
+        if (this.pingTimer) clearInterval(this.pingTimer);
+        this.pingTimer = setInterval(() => {
+            this.send({ type: 'ping' });
+            if (this.pongTimeout) clearTimeout(this.pongTimeout);
+            this.pongTimeout = setTimeout(() => {
+                // Si el PONG no llega a tiempo, forzar cierre para iniciar la reconexión
+                console.warn("[WS] Heartbeat fallido (no se recibió PONG). Forzando desconexión.");
+                // Forzar el cierre inicia el proceso de reconexión en onClose()
+                if (this.socket) this.socket.close(); 
+            }, HEARTBEAT_TIMEOUT);
+        }, HEARTBEAT_INTERVAL);
+    }
+
+    stopHeartbeat() {
+        if (this.pingTimer) {
+            clearInterval(this.pingTimer);
+            this.pingTimer = null;
+        }
+        if (this.pongTimeout) {
+            clearTimeout(this.pongTimeout);
+            this.pongTimeout = null;
+        }
+    }
+
+    onMessage(event) {
+        try {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'pong') {
+                // Recibido el PONG, limpiar el timeout
+                clearTimeout(this.pongTimeout);
+                this.pongTimeout = null;
+                return;
+            }
+            
+            // Reenvía todos los demás mensajes al manejador principal de la aplicación
+            this.messageHandler(data);
+
+        } catch (e) {
+            console.error("[WS] Error al procesar mensaje JSON:", e);
+        }
+    }
+
+    // --- Métodos Públicos ---
+    close() {
+        this.isUserClosing = true;
+        this.stopHeartbeat();
+        if (this.socket) {
+            this.socket.close(1000, "User ended call"); // Cierre limpio
+        }
+    }
+    
+    send(data) {
+        if (this.isConnected && this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(JSON.stringify(data));
+        } else {
+            console.warn(`[WS] Intento de envío fallido: WebSocket no está abierto. Mensaje: ${data.type}`);
+        }
+    }
+}
+
+// =========================================================
 // 1. INICIALIZACIÓN DE DISPOSITIVOS
 // =========================================================
 
 /**
  * Intenta obtener media de forma flexible, primero audio, luego video.
  */
-async function initMedia() {
+async function initMedia(timeoutMs = 1500) {
     console.log("LOG: Iniciando acceso flexible a media..."); 
     const newStream = new MediaStream();
     let audioReady = false;
     let videoReady = false;
-    
-    // --- 1. Intentar obtener el Micrófono (Audio) ---
-    try {
-        const audioStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+
+    // Función helper para obtener media con timeout
+    async function tryGetMedia(constraints) {
+        try {
+            return await Promise.race([
+                navigator.mediaDevices.getUserMedia(constraints),
+                new Promise((_, reject) => setTimeout(() => reject("timeout"), timeoutMs))
+            ]);
+        } catch (err) {
+            return null;
+        }
+    }
+
+    // --- 1. Micrófono ---
+    const audioStream = await tryGetMedia({ audio: true, video: false });
+    if (audioStream && audioStream.getAudioTracks().length > 0) {
         newStream.addTrack(audioStream.getAudioTracks()[0]);
         audioReady = true;
         console.log("LOG: Micrófono (Audio) obtenido OK.");
-    } catch (err) {
-        console.warn(`LOG WARNING: Fallo al obtener Micrófono: ${err.name} - ${err.message}`);
-        btnToggleMic.disabled = true;
-        btnToggleMic.classList.remove('btn-light');
-        btnToggleMic.classList.add('btn-danger'); // Marcar como no disponible
+    } else {
+        console.warn("LOG WARNING: No se pudo obtener micrófono.");
+        if (btnToggleMic) {
+            btnToggleMic.disabled = true;
+            btnToggleMic.classList.replace('btn-light', 'btn-danger');
+        }
     }
 
-    // --- 2. Intentar obtener la Cámara (Video) ---
-    try {
-        const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+    // --- 2. Cámara ---
+    const videoStream = await tryGetMedia({ audio: false, video: true });
+    if (videoStream && videoStream.getVideoTracks().length > 0) {
         newStream.addTrack(videoStream.getVideoTracks()[0]);
         videoReady = true;
-        console.log("LOG: Cámara (Video) obtenido OK.");
-    } catch (err) {
-        console.warn(`LOG WARNING: Fallo al obtener Cámara: ${err.name} - ${err.message}`);
-        btnToggleCam.disabled = true;
-        btnToggleCam.classList.remove('btn-light');
-        btnToggleCam.classList.add('btn-danger'); // Marcar como no disponible
+        console.log("LOG: Cámara (Video) obtenida OK.");
+    } else {
+        console.warn("LOG WARNING: No se pudo obtener cámara.");
+        if (btnToggleCam) {
+            btnToggleCam.disabled = true;
+            btnToggleCam.classList.replace('btn-light', 'btn-danger');
+        }
     }
 
     // --- 3. Finalización ---
     if (audioReady || videoReady) {
         localStream = newStream;
-        localVideo.srcObject = localStream;
-        
-        console.log("LOG: Acceso a media OK. Total tracks obtenidos:", localStream.getTracks().length); 
-        statusEl.textContent = "Media local lista. Conectando...";
-        statusEl.style.color = "blue";
+        if (localVideo) localVideo.srcObject = localStream;
+        console.log("LOG: Acceso a media OK. Tracks obtenidos:", localStream.getTracks().length); 
+        if (statusEl) { statusEl.textContent = "Media local lista. Conectando..."; statusEl.style.color = "blue"; }
     } else {
         localStream = null;
-        console.warn("LOG WARNING: No se pudo obtener ningún dispositivo de media (cámara ni micrófono).");
-        statusEl.textContent = "Advertencia: No se pudo acceder a Cámara ni Micrófono."; 
-        statusEl.style.color = "orange";
-
-        // Deshabilitar completamente los botones de media si no se obtuvo nada
-        btnToggleMic.disabled = true;
-        btnToggleCam.disabled = true;
-        btnShareScreen.disabled = true;
+        console.warn("LOG WARNING: Ningún dispositivo de media disponible.");
+        if (statusEl) { statusEl.textContent = "Conectando sin cámara ni micrófono…"; statusEl.style.color = "orange"; }
+        if (btnToggleMic) btnToggleMic.disabled = true;
+        if (btnToggleCam) btnToggleCam.disabled = true;
+        if (btnShareScreen) btnShareScreen.disabled = true;
     }
-    
-    // El chat siempre debe estar habilitado
-    chatInput.disabled = false;
-    btnSendMessage.disabled = false;
-}
 
+    // HOOK: habilitar inputs de chat (se mantienen en DOM, pero no funcionales aquí).
+    if (chatInput) chatInput.disabled = false;
+    if (btnSendMessage) btnSendMessage.disabled = false;
+}
 
 // =========================================================
 // 2. LÓGICA DE CONEXIÓN WEBRTC (P2P)
@@ -959,14 +1158,17 @@ function createPeerConnection() {
     if (peerConnection) peerConnection.close(); 
     
     peerConnection = new RTCPeerConnection(configuration);
+
+    attachP2PUnloadGuard(peerConnection);
     
     // --- DataChannel Setup ---
-    if (ROLE === "tutor") {
-        // Tutor crea y configura el canal
+    // NOTA: mantenemos la creación del DataChannel para que no rompa P2P ni features futuras,
+    // pero NO implementamos lógica de chat aquí. Para integrar el chat general, usa el hook
+    // initChatGeneral() o window.handleDataChannelMessage en el futuro.
+    if (ROLE === "Tutor") {
         dataChannel = peerConnection.createDataChannel("chat");
         setupDataChannel(dataChannel);
     } else {
-        // Estudiante espera el canal
         peerConnection.ondatachannel = (event) => {
             dataChannel = event.channel;
             setupDataChannel(dataChannel);
@@ -975,7 +1177,6 @@ function createPeerConnection() {
     
     // 2. AÑADIR TRACKS LOCALES Y GUARDAR SENDERS
     if (localStream && localStream.getTracks().length > 0) {
-        // Recorrer el localStream para añadir todos los tracks existentes
         localStream.getTracks().forEach(track => {
             if (track.kind === 'video') {
                 videoSender = peerConnection.addTrack(track, localStream);
@@ -992,9 +1193,10 @@ function createPeerConnection() {
     // 3. Recibir tracks remotos
     peerConnection.ontrack = e => {
         console.log("LOG: Track remoto recibido:", e.track.kind); 
-        // Mostrar el video remoto
-        remoteVideo.srcObject = e.streams[0]; 
-        waitingMessage.classList.add("d-none"); 
+        // Compatibilidad: algunos browsers no rellenan e.streams
+        const remoteStream = (e.streams && e.streams[0]) || new MediaStream([e.track]);
+        if (remoteVideo) remoteVideo.srcObject = remoteStream;
+        if (waitingMessage) waitingMessage.classList.add("d-none"); 
         
         if (e.track.kind === 'audio') {
             remoteAudioTrack = e.track;
@@ -1005,17 +1207,18 @@ function createPeerConnection() {
 
     // 4. ICE y Negociación
     peerConnection.onicecandidate = event => {
-        if (event.candidate) socket.send(JSON.stringify({ type: "ice-candidate", candidate: event.candidate }));
+        if (event.candidate && wsManager && wsManager.isConnected) {
+            wsManager.send({ type: "ice-candidate", candidate: event.candidate });
+        }
     };
 
     peerConnection.onnegotiationneeded = async () => {
         console.log("LOG: Negociación necesaria. Enviando nueva oferta.");
-        if (ROLE === "tutor" && socket && socket.readyState === WebSocket.OPEN) {
+        if (ROLE === "Tutor" && wsManager && wsManager.isConnected) { 
             try {
-                // Forzar un iceRestart ayuda a resolver problemas de conexión/reconexión
                 const offer = await peerConnection.createOffer({ iceRestart: true }); 
                 await peerConnection.setLocalDescription(offer);
-                socket.send(JSON.stringify({ type: "offer", sdp: offer }));
+                wsManager.send({ type: "offer", sdp: offer }); 
                 console.log("LOG: Oferta de renegociación enviada.");
             } catch (err) {
                 console.error("LOG ERROR: Error al crear oferta en negociación:", err);
@@ -1029,68 +1232,78 @@ function createPeerConnection() {
         console.log("LOG: PeerConnection State:", state); 
         
         if (state === "disconnected" || state === "failed") {
-            statusEl.textContent = "Desconexión P2P. Reintentando... 🔄"; statusEl.style.color = "orange";
-            if (ROLE === "tutor" && socket.readyState === WebSocket.OPEN) {
+            if (statusEl) { statusEl.textContent = "Desconexión P2P. Reintentando... 🔄"; statusEl.style.color = "orange"; }
+            if (ROLE === "Tutor" && wsManager && wsManager.isConnected) { 
                 if (p2pReconnectTimeout) clearTimeout(p2pReconnectTimeout);
                 p2pReconnectTimeout = setTimeout(() => {
                     console.log("LOG: Forzando renegociación ICE...");
-                    // No recrear la conexión, solo forzar ICE Restart
-                    if (peerConnection.signalingState !== 'closed') {
-                       peerConnection.restartIce();
-                    } 
+                    try {
+                        if (peerConnection && peerConnection.signalingState !== 'closed') {
+                           peerConnection.restartIce();
+                        } 
+                    } catch (e) {
+                        console.warn("Error al forzar restartIce:", e);
+                    }
                 }, 5000); 
             }
         } else if (state === "connected") {
-            statusEl.textContent = "Conectado ✅"; statusEl.style.color = "green";
+            if (statusEl) { statusEl.textContent = "Conectado ✅"; statusEl.style.color = "green"; }
             if (p2pReconnectTimeout) clearTimeout(p2pReconnectTimeout);
         }
     };
 }
 
-
 // =========================================================
-// 3. LÓGICA DE CHAT (DataChannel)
+// 3. LÓGICA DE DATA CHANNEL (NO-CHAT / HOOKS)
 // =========================================================
 
 function setupDataChannel(channel) {
     dataChannel = channel;
-    console.log("LOG: DataChannel establecido.");
+    console.log("LOG: DataChannel establecido (sin lógica de chat por defecto).");
     
     dataChannel.onopen = () => {
-        console.log("LOG: DataChannel abierto. Chat activo.");
-        appendMessage("El chat está listo.", "system");
+        console.log("LOG: DataChannel abierto.");
+        // HOOK: si quieres notificar UI sobre el canal abierto, implementa:
+        // window.onDataChannelOpen && window.onDataChannelOpen();
     };
 
     dataChannel.onclose = () => {
         console.warn("LOG WARNING: DataChannel cerrado.");
-        appendMessage("El chat se ha desconectado.", "system-error");
+        // HOOK: window.onDataChannelClose && window.onDataChannelClose();
     };
 
+    // Mensajes entrantes por DataChannel: **no procesamos como chat interno**.
+    // Devolveremos el payload a un handler global si existe (para integraciones futuras).
     dataChannel.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        if (msg.type === 'chat') {
-            appendMessage(msg.message, "remote");
+        try {
+            const payload = JSON.parse(event.data);
+            console.log("LOG: Mensaje recibido por DataChannel (payload):", payload);
+            // HOOK: si implementas una función global para manejar mensajes DC:
+            if (typeof window.handleDataChannelMessage === 'function') {
+                window.handleDataChannelMessage(payload);
+            }
+            // No mostramos mensajes en UI aquí (chat se manejará por el chat general).
+        } catch (err) {
+            console.warn("LOG WARNING: Mensaje DC no JSON o error al parsear:", err);
         }
     };
 }
 
+// Fullscreen helper (sin cambios)
 function toggleFullscreen() {
     const isFullscreen = document.fullscreenElement;
-    const icon = btnToggleFullscreen.querySelector('i');
+    const icon = btnToggleFullscreen ? btnToggleFullscreen.querySelector('i') : null;
 
     if (!isFullscreen) {
-        // Entrar en pantalla completa
-        if (remoteVideoWrapper.requestFullscreen) {
+        if (remoteVideoWrapper && remoteVideoWrapper.requestFullscreen) {
             remoteVideoWrapper.requestFullscreen();
-        } else if (remoteVideoWrapper.webkitRequestFullscreen) { /* Safari */
+        } else if (remoteVideoWrapper && remoteVideoWrapper.webkitRequestFullscreen) { /* Safari */
             remoteVideoWrapper.webkitRequestFullscreen();
-        } else if (remoteVideoWrapper.msRequestFullscreen) { /* IE11 */
+        } else if (remoteVideoWrapper && remoteVideoWrapper.msRequestFullscreen) { /* IE11 */
             remoteVideoWrapper.msRequestFullscreen();
         }
-        icon.classList.remove('bi-arrows-fullscreen');
-        icon.classList.add('bi-fullscreen-exit');
+        if (icon) { icon.classList.remove('bi-arrows-fullscreen'); icon.classList.add('bi-fullscreen-exit'); }
     } else {
-        // Salir de pantalla completa
         if (document.exitFullscreen) {
             document.exitFullscreen();
         } else if (document.webkitExitFullscreen) { /* Safari */
@@ -1098,151 +1311,186 @@ function toggleFullscreen() {
         } else if (document.msExitFullscreen) { /* IE11 */
             document.msExitFullscreen();
         }
-        icon.classList.remove('bi-fullscreen-exit');
-        icon.classList.add('bi-arrows-fullscreen');
+        if (icon) { icon.classList.remove('bi-fullscreen-exit'); icon.classList.add('bi-arrows-fullscreen'); }
     }
 }
 
-function appendMessage(message, sender) {
-    const isSystem = sender.startsWith("system");
-    const isRemote = sender === "remote";
-    const className = isSystem ? "text-center text-muted" : (isRemote ? "text-start" : "text-end");
-    const colorClass = sender === "remote" ? "bg-light" : (sender === "local" ? "bg-primary text-white" : "");
-    const name = isRemote ? "Otro Usuario" : (sender === "local" ? "Tú" : "");
-    
-    const messageHtml = `
-        <div class="${className} mb-2">
-            ${!isSystem ? `<small class="text-muted d-block">${name}</small>` : ''}
-            <div class="d-inline-block p-2 rounded ${colorClass} ${sender === "system-error" ? "text-danger fw-bold" : ""}" style="max-width: 80%;">
-                ${message}
-            </div>
-        </div>
-    `;
-    chatMessages.innerHTML += messageHtml;
-    chatMessages.scrollTop = chatMessages.scrollHeight;
+// Placeholder no-op appendMessage (mantener hook; NO muestra nada)
+function appendMessage(/* message, sender */) {
+    // NO-OP: el chat se gestiona con el chat general externo.
+    // Si quieres ver logs para debugging, descomenta:
+    // console.log("appendMessage() llamado pero chat local está desactivado.");
 }
 
+// sendMessage ahora es un stub que muestra cómo conectar el chat general
 function sendMessage() {
-    const message = chatInput.value.trim();
-    if (message && dataChannel && dataChannel.readyState === 'open') {
-        const msgObject = { type: "chat", message: message };
-        dataChannel.send(JSON.stringify(msgObject));
-        appendMessage(message, "local");
-        chatInput.value = '';
-    } else if (message) {
-        appendMessage("Error: Chat no conectado o mensaje vacío.", "system-error");
-    }
+    // NO-OP: aquí no enviamos al DataChannel como chat interno.
+    // Si quieres que el botón de enviar invoque el chat general, implementa:
+    // window.sendChatGeneral && window.sendChatGeneral(chatInput.value);
+    console.warn("sendMessage() llamado pero chat local está desactivado. Usa tu chat general.");
 }
-
 
 // =========================================================
 // 4. SEÑALIZACIÓN (WEBSOCKETS) Y AUXILIARES
 // =========================================================
 
-function connectWebSocket() {
-    console.log("LOG: Intentando conectar WebSocket a:", wsPath); 
-    socket = new WebSocket(wsPath);
+async function handleWebsocketMessage(data) {
+    console.log("LOG: Mensaje WS recibido:", data.type); 
 
-    socket.onopen = () => {
-        console.log("LOG: WebSocket Conectado. Enviando join..."); 
-        statusEl.textContent = "Esperando al otro usuario..."; 
-        statusEl.style.color = "orange";
-        socket.send(JSON.stringify({ type: "join", user_id: USER_ID, role: ROLE }));
-    };
+    try {
+        switch (data.type) {
+            case "reset_connection":
+                console.log("LOG: Usuario remoto se reconectó, reiniciando PeerConnection.");
+                if (peerConnection) peerConnection.close();
+                createPeerConnection();
+                // Notifica al usuario que recargó para que haga offer
+                if (wsManager && wsManager.isConnected) wsManager.send({ type: "reconnect_success" });
+                break;
 
-    socket.onclose = (event) => {
-        console.warn("LOG WARNING: WebSocket Cerrado (Code:", event.code, "). Reconectando..."); 
-        // No reconectar si el cierre es intencional (EndCall)
-        if (event.code !== 1000) { 
-            statusEl.textContent = "Reconectando WebSocket..."; statusEl.style.color = "orange";
-            setTimeout(connectWebSocket, 2000);
-        }
-    };
+            case "reconnect_success":
+                console.log("LOG: Reconexión de WS exitosa. Forzando renegociación P2P.");
+                if (peerConnection && peerConnection.connectionState !== "closed" && ROLE === "Tutor") {
+                    try {
+                        await peerConnection.setLocalDescription(
+                             await peerConnection.createOffer({ iceRestart: true })
+                        );
+                        if (wsManager && wsManager.isConnected) wsManager.send({ type: "offer", sdp: peerConnection.localDescription.sdp });
+                    } catch (err) {
+                        console.error("Error forzando renegociación:", err);
+                    }
+                }
+                break;
+            
+            case "connection_failed_permanent":
+                endCall(true);
+                if (statusEl) { statusEl.textContent = "Error: Conexión perdida permanentemente. 🛑"; statusEl.style.color = "red"; }
+                break;
 
-    socket.onerror = (error) => {
-        console.error("LOG ERROR: WebSocket Error:", error); 
-    };
-
-    socket.onmessage = async (event) => {
-        const data = JSON.parse(event.data);
-        console.log("LOG: Mensaje WS recibido:", data.type); 
-
-        try {
-            switch (data.type) {
-                case "user_joined":
-                    if (!peerConnection || peerConnection.connectionState === "closed") {
-                        createPeerConnection();
-                        // El rol de 'tutor' siempre inicia la oferta para simplificar la negociación
-                        if (ROLE === "tutor") {
-                            console.log("LOG: Tutor enviando Offer inicial.");
+            case "user_joined":
+                if (!peerConnection || peerConnection.connectionState === "closed") {
+                    createPeerConnection();
+                    if (ROLE === "Tutor") {
+                        console.log("LOG: Tutor enviando Offer inicial.");
+                        try {
                             const offer = await peerConnection.createOffer();
                             await peerConnection.setLocalDescription(offer);
-                            socket.send(JSON.stringify({ type: "offer", sdp: offer }));
+                            if (wsManager && wsManager.isConnected) wsManager.send({ type: "offer", sdp: offer.sdp });
+                        } catch (err) {
+                            console.error("Error creando offer al unirse usuario:", err);
                         }
                     }
-                    break;
-                case "offer":
-                    console.log("LOG: Recibida Offer. Enviando Answer.");
-                    if (!peerConnection || peerConnection.connectionState === "closed") createPeerConnection();
-                    
-                    await peerConnection.setRemoteDescription(data.sdp);
+                }
+                break;
+
+            case "offer":
+                console.log("LOG: Recibida Offer. Enviando Answer.");
+                if (!peerConnection || peerConnection.connectionState === "closed") createPeerConnection();
+                
+                try {
+                    await peerConnection.setRemoteDescription({ type: "offer", sdp: data.sdp });
                     await flushPendingIceCandidates();
                     const answer = await peerConnection.createAnswer();
                     await peerConnection.setLocalDescription(answer);
-                    socket.send(JSON.stringify({ type: "answer", sdp: answer }));
-                    break;
-                case "answer":
-                    console.log("LOG: Recibida Answer.");
-                    if (!peerConnection || peerConnection.connectionState === "closed") createPeerConnection();
-                    
-                    await peerConnection.setRemoteDescription(data.sdp);
+                    if (wsManager && wsManager.isConnected) wsManager.send({ type: "answer", sdp: answer.sdp });
+                } catch (err) {
+                    console.error("Error procesando offer:", err);
+                }
+                break;
+
+            case "answer":
+                console.log("LOG: Recibida Answer.");
+                if (!peerConnection || peerConnection.connectionState === "closed") createPeerConnection();
+                
+                try {
+                    await peerConnection.setRemoteDescription({ type: "answer", sdp: data.sdp });
                     await flushPendingIceCandidates();
-                    break;
-                case "ice-candidate":
-                    if (!data.candidate) break;
-                    // Asegurar que el peerConnection exista y el RemoteDescription esté configurado
-                    if (!peerConnection || peerConnection.remoteDescription === null) {
-                        pendingIceCandidates.push(data.candidate);
-                    } else {
+                } catch (err) {
+                    console.error("Error procesando answer:", err);
+                }
+                break;
+
+            case "ice-candidate":
+                if (!data.candidate) break;
+                if (!peerConnection || peerConnection.remoteDescription === null) {
+                    pendingIceCandidates.push(data.candidate);
+                } else {
+                    try {
                         await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+                    } catch (err) {
+                        console.warn("LOG WARNING: Error al añadir ICE candidate:", err);
                     }
-                    break;
-                case "screen_share_start":
-                    if (data.user_id !== USER_ID) {
-                        isRemoteSharing = true;
-                        statusEl.textContent = "El otro usuario está compartiendo su pantalla. 🖥️";
-                        statusEl.style.color = "blue";
-                        btnShareScreen.disabled = true; // Deshabilitar botón local
-                    }
-                    break;
-                    
-                case "screen_share_stop":
-                    if (data.user_id !== USER_ID) {
-                        isRemoteSharing = false;
-                        statusEl.textContent = "Conectado ✅";
-                        statusEl.style.color = "green";
-                        btnShareScreen.disabled = false; // Habilitar botón local
-                    }
-                    break;
-                case "user_left":
-                    console.log("LOG: Usuario remoto salió.");
-                    remoteVideo.srcObject = null;
-                    remoteVideoTrack = null;
-                    remoteAudioTrack = null;
-                    statusEl.textContent = "El otro usuario salió ❌"; statusEl.style.color = "red";
-                    waitingMessage.classList.remove("d-none"); 
-                    break;
-                case 'evaluacion_publicada':
-                    // Solo llama a la función de renderizado si eres Estudiante
-                    if (sessionStorage.getItem('rol_actual') === 'Estudiante') {
-                        showResponseButtonDynamically(data.evaluacion_id);
-                    }
-                    break;
-            }
-        } catch (err) {
-            console.error("LOG ERROR: Error manejando mensaje WS:", err, data);
+                }
+                break;
+
+            case "screen_share_start":
+                if (data.user_id !== USER_ID) {
+                    isRemoteSharing = true;
+                    if (statusEl) { statusEl.textContent = "El otro usuario está compartiendo su pantalla. 🖥️"; statusEl.style.color = "blue"; }
+                    if (btnShareScreen) btnShareScreen.disabled = true;
+                }
+                break;
+
+            case "screen_share_stop":
+                if (data.user_id !== USER_ID) {
+                    isRemoteSharing = false;
+                    if (statusEl) { statusEl.textContent = "Conectado ✅"; statusEl.style.color = "green"; }
+                    if (btnShareScreen) btnShareScreen.disabled = false;
+                }
+                break;
+
+            case "user_left":
+                console.log("LOG: Usuario remoto salió.");
+                if (remoteVideo) remoteVideo.srcObject = null;
+                remoteVideoTrack = null;
+                remoteAudioTrack = null;
+                if (statusEl) { statusEl.textContent = "El otro usuario salió ❌"; statusEl.style.color = "red"; }
+                if (waitingMessage) waitingMessage.classList.remove("d-none");
+                break;
+
+            case "evaluacion_publicada":
+                if (typeof showResponseButtonDynamically === 'function' && ROLE === 'Estudiante') {
+                    showResponseButtonDynamically(data.evaluacion_id);
+                }
+                break;
+
+            // Nota: No procesamos 'chat_message' localmente; el chat general debe usar su propio WS/consumer.
         }
+    } catch (err) {
+        console.error("LOG ERROR: Error manejando mensaje WS:", err, data);
+    }
+}
+
+function enableUnloadProtection() {
+    window.onbeforeunload = (e) => {
+        e.preventDefault();
+        e.returnValue = "";
     };
+}
+
+function disableUnloadProtection() {
+    window.onbeforeunload = null;
+}
+
+// Activar / desactivar según estado real del WebRTC
+function attachP2PUnloadGuard(pc) {
+    pc.addEventListener("connectionstatechange", () => {
+        const state = pc.connectionState;
+        console.log("LOG: Estado P2P:", state);
+
+        if (state === "connected" || state === "connecting") {
+            enableUnloadProtection();
+        } else {
+            disableUnloadProtection();
+        }
+    });
+}
+
+/**
+ * Inicializa el Gestor de WebSocket y conecta.
+ */
+function connectWebSocket() {
+    wsManager = new TutoriaWebsocketManager(wsPath, handleWebsocketMessage);
+    wsManager.connect();
 }
 
 async function flushPendingIceCandidates() {
@@ -1258,7 +1506,6 @@ async function flushPendingIceCandidates() {
     }
 }
 
-
 // =========================================================
 // 5. LÓGICA DE CONTROLES
 // =========================================================
@@ -1269,21 +1516,21 @@ function toggleTrack(track, button, isAudio) {
     if (!track) return;
     track.enabled = !track.enabled;
     let enabled = track.enabled;
-    const icon = button.querySelector('i');
+    const icon = button ? button.querySelector('i') : null;
 
     if (isAudio) {
         currentAudioEnabled = enabled;
-        icon.classList.toggle('bi-mic-fill', enabled);
-        icon.classList.toggle('bi-mic-mute-fill', !enabled);
+        if (icon) { icon.classList.toggle('bi-mic-fill', enabled); icon.classList.toggle('bi-mic-mute-fill', !enabled); }
     } else {
         currentVideoEnabled = enabled;
-        icon.classList.toggle('bi-camera-video-fill', enabled);
-        icon.classList.toggle('bi-camera-video-off-fill', !enabled);
+        if (icon) { icon.classList.toggle('bi-camera-video-fill', enabled); icon.classList.toggle('bi-camera-video-off-fill', !enabled); }
     }
 
-    button.classList.toggle('btn-light', enabled);
-    button.classList.toggle('btn-danger', !enabled);
-    button.title = enabled ? (isAudio ? 'Silenciar' : 'Cámara On/Off') : (isAudio ? 'Activar Mic' : 'Cámara Off/On');
+    if (button) {
+        button.classList.toggle('btn-light', enabled);
+        button.classList.toggle('btn-danger', !enabled);
+        button.title = enabled ? (isAudio ? 'Silenciar' : 'Cámara On/Off') : (isAudio ? 'Activar Mic' : 'Cámara Off/On');
+    }
 }
 
 function toggleMic() {
@@ -1303,16 +1550,12 @@ async function startScreenSharing() {
     
     if (isRemoteSharing) {
         console.warn("LOG WARNING: El usuario remoto ya está compartiendo la pantalla. Espere.");
-        statusEl.textContent = "El otro usuario está compartiendo. Espera tu turno.";
-        statusEl.style.color = "red";
+        if (statusEl) { statusEl.textContent = "El otro usuario está compartiendo. Espera tu turno."; statusEl.style.color = "red"; }
         setTimeout(() => {
-             // Restaurar estado si no ha cambiado remotamente
              if (isRemoteSharing) {
-                 statusEl.textContent = "El otro usuario está compartiendo su pantalla. 🖥️";
-                 statusEl.style.color = "blue";
+                 if (statusEl) { statusEl.textContent = "El otro usuario está compartiendo su pantalla. 🖥️"; statusEl.style.color = "blue"; }
              } else {
-                 statusEl.textContent = "Conectado ✅"; 
-                 statusEl.style.color = "green";
+                 if (statusEl) { statusEl.textContent = "Conectado ✅"; statusEl.style.color = "green"; }
              }
         }, 5000);
         return; 
@@ -1320,47 +1563,37 @@ async function startScreenSharing() {
 
     console.log("LOG: Iniciando Screen Sharing...");
     try {
-        // Incluir audio del sistema/micrófono si es posible
         screenStream = await navigator.mediaDevices.getDisplayMedia({ 
             video: true, 
             audio: true 
         });
         isScreenSharing = true;
 
-        // A. Notificar al otro usuario y al servidor 
-        socket.send(JSON.stringify({ type: "screen_share_start", user_id: USER_ID }));
+        if (wsManager && wsManager.isConnected) wsManager.send({ type: "screen_share_start", user_id: USER_ID });
         
-        // B. Reemplazar la pista de video y audio
         const screenVideoTrack = screenStream.getVideoTracks()[0];
         const screenAudioTrack = screenStream.getAudioTracks()[0]; // Puede ser undefined
         
         if (videoSender) {
-            await videoSender.replaceTrack(screenVideoTrack);
+            try { await videoSender.replaceTrack(screenVideoTrack); } catch (e) { console.warn("replaceTrack video failed:", e); }
         } else if (peerConnection && screenVideoTrack) {
-            // Si no había video antes, añadirlo
             videoSender = peerConnection.addTrack(screenVideoTrack, screenStream);
         }
 
         if (screenAudioTrack) {
             if (audioSender) {
-                await audioSender.replaceTrack(screenAudioTrack);
+                try { await audioSender.replaceTrack(screenAudioTrack); } catch (e) { console.warn("replaceTrack audio failed:", e); }
             } else if (peerConnection) {
-                // Si no había audio, añadirlo
                 audioSender = peerConnection.addTrack(screenAudioTrack, screenStream);
             }
         } else if (audioSender) {
-             // Si el stream de la pantalla no tiene audio, detener el audio local
-             audioSender.replaceTrack(null);
+             try { await audioSender.replaceTrack(null); } catch(e) { console.warn("replaceTrack(null) no soportado:", e); }
         }
         
-        // C. Actualizar UI y manejar el final de la compartición
-        localVideo.srcObject = screenStream;
-        btnShareScreen.classList.remove('btn-secondary');
-        btnShareScreen.classList.add('btn-warning');
-        btnShareScreen.innerHTML = '<i class="bi bi-x-circle-fill me-1"></i> Detener';
+        if (localVideo) localVideo.srcObject = screenStream;
+        if (btnShareScreen) { btnShareScreen.classList.remove('btn-secondary'); btnShareScreen.classList.add('btn-warning'); btnShareScreen.innerHTML = '<i class="bi bi-x-circle-fill me-1"></i> Detener'; }
         
-        // Evento cuando la pantalla deja de compartirse (ej. usuario hace clic en el botón del navegador)
-        screenStream.getVideoTracks()[0].onended = stopScreenSharing;
+        if (screenStream.getVideoTracks()[0]) screenStream.getVideoTracks()[0].onended = stopScreenSharing;
 
     } catch (err) {
         console.error("LOG ERROR: Fallo al iniciar Screen Sharing:", err);
@@ -1371,81 +1604,40 @@ async function startScreenSharing() {
 async function stopScreenSharing() {
     if (!isScreenSharing) return;
     
-    // 1. Notificar al servidor que se detiene la compartición
-    socket.send(JSON.stringify({ type: "screen_share_stop", user_id: USER_ID }));
+    if (wsManager && wsManager.isConnected) wsManager.send({ type: "screen_share_stop", user_id: USER_ID });
     console.log("LOG: Enviado screen_share_stop al servidor.");
 
-    // 2. Detener las pistas del screenStream
-    screenStream.getTracks().forEach(track => track.stop());
-    screenStream = null;
+    if (screenStream) {
+        screenStream.getTracks().forEach(track => track.stop());
+        screenStream = null;
+    }
     isScreenSharing = false;
     
-    // 3. Reemplazar tracks con los streams locales originales
     const originalVideoTrack = localStream ? localStream.getVideoTracks()[0] : null;
     const originalAudioTrack = localStream ? localStream.getAudioTracks()[0] : null;
     
     if (videoSender && originalVideoTrack) {
-        await videoSender.replaceTrack(originalVideoTrack);
-        // Si la cámara estaba apagada originalmente, asegurar que permanezca apagada
-        originalVideoTrack.enabled = currentVideoEnabled; 
+        try { await videoSender.replaceTrack(originalVideoTrack); } catch(e){ console.warn("replaceTrack original video failed:", e); }
+        if (originalVideoTrack) originalVideoTrack.enabled = currentVideoEnabled; 
     } else if (videoSender) {
-        // Si no hay video local (cámara no disponible), se detiene el track
-        videoSender.replaceTrack(null); 
+        try { await videoSender.replaceTrack(null); } catch(e){ console.warn("replaceTrack(null) video failed:", e); }
     }
     
     if (audioSender && originalAudioTrack) {
-        await audioSender.replaceTrack(originalAudioTrack);
-        // Si el micro estaba muteado, asegurar que permanezca muteado
-        originalAudioTrack.enabled = currentAudioEnabled;
+        try { await audioSender.replaceTrack(originalAudioTrack); } catch(e){ console.warn("replaceTrack original audio failed:", e); }
+        if (originalAudioTrack) originalAudioTrack.enabled = currentAudioEnabled;
     } else if (audioSender) {
-         // Si no hay audio local (micro no disponible), se detiene el track
-        audioSender.replaceTrack(null);
+        try { await audioSender.replaceTrack(null); } catch(e){ console.warn("replaceTrack(null) audio failed:", e); }
     }
 
+    if (localVideo) localVideo.srcObject = localStream;
 
-    // 4. Mostrar el stream local original
-    localVideo.srcObject = localStream;
-
-    btnShareScreen.classList.remove('btn-warning');
-    btnShareScreen.classList.add('btn-secondary');
-    btnShareScreen.innerHTML = '<i class="bi bi-display-fill me-1"></i> Compartir';
+    if (btnShareScreen) { btnShareScreen.classList.remove('btn-warning'); btnShareScreen.classList.add('btn-secondary'); btnShareScreen.innerHTML = '<i class="bi bi-display-fill me-1"></i> Compartir'; }
 }
 
-function toggleRecording() {
-    isRecording = !isRecording;
-    const icon = btnRecord.querySelector('i');
-
-    if (isRecording) {
-        // Lógica simulada para iniciar grabación
-        console.log("LOG: [Grabación Simulada] Iniciando...");
-        btnRecord.classList.remove('btn-info');
-        btnRecord.classList.add('btn-danger');
-        icon.classList.add('text-white');
-        icon.classList.add('bi-stop-circle-fill');
-        icon.classList.remove('bi-record-circle-fill');
-        btnRecord.title = 'Detener Grabación';
-        btnRecord.innerHTML = '<i class="bi bi-stop-circle-fill me-1"></i> Detener';
-        statusEl.textContent = "Grabación en curso... 🔴 (Requiere backend para persistencia)";
-        statusEl.style.color = "red";
-    } else {
-        // Lógica simulada para detener grabación
-        console.log("LOG: [Grabación Simulada] Deteniendo...");
-        btnRecord.classList.remove('btn-danger');
-        btnRecord.classList.add('btn-info');
-        icon.classList.remove('bi-stop-circle-fill');
-        icon.classList.add('bi-record-circle-fill');
-        btnRecord.title = 'Iniciar Grabación';
-        btnRecord.innerHTML = '<i class="bi bi-record-circle-fill me-1"></i> Grabar';
-        statusEl.textContent = "Conectado ✅"; 
-        statusEl.style.color = "green";
-    }
-}
-
-
-function endCall() {
-    console.log("LOG: Finalizando la llamada...");
+function endCall(isExternalFailure = false) {
+    console.log(`LOG: Finalizando la llamada (Fallo externo: ${isExternalFailure})...`);
     
-    // 1. Detener streams locales
     if (localStream) {
         localStream.getTracks().forEach(track => track.stop());
         localStream = null;
@@ -1455,64 +1647,43 @@ function endCall() {
         screenStream = null;
     }
     
-    // 2. Cerrar PeerConnection
     if (peerConnection) {
         peerConnection.close();
         peerConnection = null;
     }
     
-    // 3. Cerrar WebSocket (cierre limpio con código 1000)
-    if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.close(1000, "User ended call");
+    if (wsManager) {
+        wsManager.close();
     }
 
-    // 4. Limpiar UI
-    localVideo.srcObject = null;
-    remoteVideo.srcObject = null;
-    statusEl.textContent = "Llamada finalizada 🛑"; statusEl.style.color = "red";
+    if (localVideo) localVideo.srcObject = null;
+    if (remoteVideo) remoteVideo.srcObject = null;
+    if (!isExternalFailure && statusEl) { statusEl.textContent = "Llamada finalizada 🛑"; statusEl.style.color = "red"; }
     
-    // Deshabilitar todo
-    btnEndCall.disabled = true;
-    btnToggleCam.disabled = true;
-    btnToggleMic.disabled = true;
-    btnShareScreen.disabled = true;
-    btnRecord.disabled = true;
+    if (btnEndCall) btnEndCall.disabled = true;
+    if (btnToggleCam) btnToggleCam.disabled = true;
+    if (btnToggleMic) btnToggleMic.disabled = true;
+    if (btnShareScreen) btnShareScreen.disabled = true;
 }
-
 
 // =========================================================
 // 6. LISTENERS DE BOTONES E INICIO
 // =========================================================
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("LOG: DOMContentLoaded. Iniciando flujo de aplicación."); 
+    console.log("LOG: DOMContentLoaded. Iniciando flujo de aplicación.");
 
+    // Asignar referencias a botones de acciones si existen (local scope)
     actionsContainer = document.getElementById('tutoriaActions');
     btnSubirDocumento = document.getElementById('btnSubirDocumento');
     btnRealizarEvaluacion = document.getElementById('btnRealizarEvaluacion'); 
     btnResponderEvaluacion = document.getElementById('btnResponderEvaluacion');
 
-    // Funciones helper (mantenidas)
-    function displayFileName(input) {
-        const fileNameDisplay = document.getElementById('fileNameDisplay');
-        if (input.files && input.files[0]) {
-            fileNameDisplay.textContent = `Archivo seleccionado: ${input.files[0].name}`;
-        } else {
-            fileNameDisplay.textContent = "Solo se aceptan archivos PDF.";
-        }
-    }
-
     // --- 6.1. Controles Básicos ---
-    btnToggleMic.addEventListener('click', toggleMic);
-    btnToggleCam.addEventListener('click', toggleCam);
-    btnEndCall.addEventListener('click', endCall);
-    btnToggleFullscreen.addEventListener('click', toggleFullscreen);
-
-    // --- 6.2. Lógica de Rol para Botones de Acción (CORRECCIÓN FINAL) ---
-    
-    updateActionButtonsVisibility(); // 👈 Llama a la función aquí
-    
-    // --- 6.3. Controles Avanzados ---
-    btnShareScreen.addEventListener('click', () => {
+    if (btnToggleMic) btnToggleMic.addEventListener('click', toggleMic);
+    if (btnToggleCam) btnToggleCam.addEventListener('click', toggleCam);
+    if (btnEndCall) btnEndCall.addEventListener('click', endCall);
+    if (btnToggleFullscreen) btnToggleFullscreen.addEventListener('click', toggleFullscreen);
+    if (btnShareScreen) btnShareScreen.addEventListener('click', () => {
         if (isScreenSharing) {
             stopScreenSharing();
         } else {
@@ -1520,20 +1691,36 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    btnRecord.addEventListener('click', toggleRecording);
-    
-    // --- 6.4. Chat Listeners
-    btnSendMessage.addEventListener('click', sendMessage);
-    chatInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            sendMessage();
-        }
-    });
-
-    // --- 6.5. Inicio de WebRTC
+    // --- 6.5. Inicio de WebRTC ---
     initMedia().then(connectWebSocket);
 
+
+    // ==========================
+    // 💬 CHAT GENERAL
+    // ==========================
+    // Verificar que chat.js cargó el módulo
+    if (window.ChatModule) {
+
+        // Obtener la conversación actual o la primera
+        let chatDefault =
+            document.querySelector(".conversation-item.active") ||
+            document.querySelector(".conversation-item");
+
+        if (chatDefault) {
+            console.log("💬 Abriendo chat general desde videollamada...");
+            window.ChatModule.openChat(chatDefault);
+        } else {
+            console.warn("⚠️ No hay conversaciones disponibles para el chat.");
+        }
+
+    } else {
+        console.warn("⚠️ ChatModule no está disponible — ¿cargaste chat.js?");
+    }
+
+    console.log("✅ Chat general conectado a la UI de videollamada");
 });
+
+
 </script>
 
 {% else %}

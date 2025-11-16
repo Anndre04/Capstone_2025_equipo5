@@ -174,9 +174,8 @@ GOOGLE_CLOUD_BUCKET = config("GOOGLE_CLOUD_BUCKET")
 LOGOUT_REDIRECT_URL = '' 
 
 # --- CONFIGURACIÓN DE REDIS ---
-REDIS_HOST = os.environ.get('REDIS_HOST') 
-REDIS_PORT = os.environ.get('REDIS_PORT')
-
+REDIS_HOST = config("REDIS_HOST", default="localhost")
+REDIS_PORT = config("REDIS_PORT", default="6379")
 
 CHANNEL_LAYERS = {
     "default": {

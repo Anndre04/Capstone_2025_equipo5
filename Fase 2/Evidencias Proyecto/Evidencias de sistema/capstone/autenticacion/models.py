@@ -5,35 +5,12 @@ from datetime import timedelta
 from django.conf import settings
 from google.cloud import storage
 import logging
+from services.gcp import get_bucket, generar_url_firmada
+
+bucket = get_bucket()
 
 # Create your models here.
 logger = logging.getLogger(__name__)
-
-try:
-    GCP_CLIENT = storage.Client.from_service_account_json(
-        settings.GOOGLE_APPLICATION_CREDENTIALS
-    )
-    GCP_BUCKET = GCP_CLIENT.get_bucket(settings.GOOGLE_CLOUD_BUCKET)
-except Exception as e:
-    logger.error("Error al inicializar el cliente de GCP en models.py", exc_info=True)
-    GCP_BUCKET = None
-
-
-def generar_url_firmada(nombre_objeto, expiracion=3600):
-    """Genera una URL firmada de Cloud Storage para lectura (GET)."""
-    
-    if GCP_BUCKET is None:
-        raise ConnectionError("GCP Bucket no inicializado. Revisar configuración.")
-    
-    blob = GCP_BUCKET.blob(nombre_objeto)
-    
-    # Genera la URL temporal (v4)
-    url = blob.generate_signed_url(
-        version="v4",
-        expiration=timedelta(seconds=expiracion), 
-        method="GET"
-    )
-    return url
 
 class Pais(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -208,6 +185,9 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
             # Capturar otros errores (ej. fallo de comunicación con la API de GCP)
             logger.error(f"Error al generar URL firmada para {self.foto}", exc_info=True)
             return None
+        
+    def es_tutor_activo(self):
+        return self.roles.filter(nombre="Tutor").exists() and hasattr(self, 'tutor') and self.tutor.estado.lower() == "activo"
 
     def __str__(self):
         return f"{self.email},  {str(self.id)}"

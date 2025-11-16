@@ -1,152 +1,206 @@
 import json
+import logging
+import uuid
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from tutoria.models import Tutoria
-import uuid
+# NOTA: Asegúrate de importar tu modelo Tutoria aquí
+from tutoria.models import Tutoria 
+
+# Configuración de Logging
+logger = logging.getLogger(__name__)
 
 class TutoriaConsumer(AsyncWebsocketConsumer):
-    
-    # --- Métodos de Conexión y Desconexión ---
-    
+    pc = None 
+
+    # --- Conexión y desconexión ---
     async def connect(self):
-        # ... (Tu lógica de conexión existente) ...
-        self.tutoria_id = uuid.UUID(self.scope['url_route']['kwargs']['tutoria_id'])
-        self.user = self.scope['user']
-
-        self.tutoria = await self.get_tutoria()
-        tutor_user = await self.get_tutor_user()
-        estudiante_user = await self.get_estudiante_user()
-
-        if self.user != tutor_user and self.user != estudiante_user:
+        # 1. Validación segura de UUID y gestión de errores
+        try:
+            self.tutoria_id = uuid.UUID(self.scope['url_route']['kwargs']['tutoria_id'])
+        except ValueError:
+            logger.error("ID de tutoría inválido.")
             await self.close()
             return
 
+        self.user = self.scope['user']
+
+        # 2. Validación de la tutoría y usuarios (Manejo de Tutoria.DoesNotExist)
+        self.tutoria = await self.get_tutoria()
+        if not self.tutoria:
+             logger.warning(f"Tutoria ID {self.tutoria_id} no encontrada. Cerrando conexión.")
+             await self.close()
+             return
+
+        tutor_user = await self.get_tutor_user()
+        estudiante_user = await self.get_estudiante_user()
+
+        # 3. Control de acceso
+        if self.user != tutor_user and self.user != estudiante_user:
+            logger.warning(f"Usuario {self.user.id} intentó acceder a tutoria {self.tutoria_id} sin permiso.")
+            await self.close()
+            return
+
+        # 4. Setup de Grupo y Aceptación
         self.room_group_name = f"tutoria_{self.tutoria_id}"
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
+        logger.info(f"Usuario {self.user.id} conectado a {self.room_group_name}.")
 
-        # Notificar conexión
+        # Notificar conexión (Incluye sender_channel para evitar eco)
         await self.channel_layer.group_send(
             self.room_group_name,
-            {
-                "type": "user.joined", # Usamos user.joined para diferenciar del tipo de mensaje cliente
-                "email": self.user.email
-            }
+            {"type": "user.joined", "email": self.user.email, "sender_channel": self.channel_name}
         )
-        
+
     async def disconnect(self, close_code):
-        await self.channel_layer.group_discard(self.room_group_name, self.channel_name)
+        user_id_str = str(self.user.id)
+        room_name = self.room_group_name
+        
+        logger.info(f"Usuario {user_id_str} desconectado de {room_name} (Código: {close_code}).")
+            
+        await self.channel_layer.group_discard(room_name, self.channel_name)
+        
+        # Notificar desconexión (Incluye sender_channel)
         await self.channel_layer.group_send(
-            self.room_group_name,
-            {
-                "type": "user.left", # Usamos user.left para diferenciar del tipo de mensaje cliente
-                "user_id": str(self.user.id)
-            }
+            room_name,
+            {"type": "user.left", "user_id": user_id_str, "sender_channel": self.channel_name}
         )
 
-    # --- Manejo de Mensajes Recibidos (CLAVE: Optimización) ---
-    
+    # --- Manejo de mensajes recibidos (Reenvío consolidado) ---
     async def receive(self, text_data):
-        """Maneja los mensajes entrantes del WebSocket (Offer, Answer, ICE, Chat)."""
-        data = json.loads(text_data)
-        message_type = data.get("type")
-        
-        # 1. Si es un mensaje de señalización (WebRTC)
-        if message_type in ["offer", "answer", "ice-candidate"]:
-            # Reenviar el mensaje de señalización tal cual al otro miembro del grupo
+        try:
+            data = json.loads(text_data)
+            message_type = data.get("type")
+        except json.JSONDecodeError:
+            logger.error(f"Error decodificando JSON: {text_data}")
+            return
+
+        # Añadir sender_channel para evitar eco
+        data["sender_channel"] = self.channel_name
+
+        # --- Señalización WebRTC ---
+        if message_type in ["offer", "answer"]:
+            sdp_obj = data.get("sdp", {})
+            if isinstance(sdp_obj, dict):
+                data["sdp"] = sdp_obj.get("sdp", "")
             await self.channel_layer.group_send(
                 self.room_group_name,
-                {
-                    "type": "signal.message", # Nuevo handler más directo
-                    "message": data,
-                    "sender_channel": self.channel_name # Usamos sender_channel para evitar enviarlo a sí mismo
-                }
+                {"type": "forward.message", "content": data}
             )
-            
-        # 2. Si es un mensaje de unión (Solo se usa al inicio, pero lo mantenemos)
-        elif message_type == "join":
-            # Si el cliente se une, simplemente confirma la conexión (la notificación ya se envió en connect)
-            # Podríamos enviar una lista de usuarios conectados, pero por simplicidad, no hacemos nada más.
-            pass
-            
-        # 3. Si es un mensaje de Chat (DataChannel)
+
+        elif message_type == "ice-candidate":
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {"type": "forward.message", "content": data}
+            )
+
+        # --- Chat ---
         elif message_type == "chat":
-            # Reenviar el mensaje de chat al grupo
             await self.channel_layer.group_send(
                 self.room_group_name,
-                {
-                    "type": "chat.message", # Handler específico para chat
-                    "message": data,
-                    "sender_channel": self.channel_name
-                }
+                {"type": "forward.message", "content": data}
             )
-        # 3. CLAVE: Mensajes de Coordinación de Pantalla
+
+        # --- Screen sharing ---
         elif message_type in ["screen_share_start", "screen_share_stop"]:
             await self.channel_layer.group_send(
                 self.room_group_name,
+                {"type": "forward.message", "content": data}
+            )
+
+        # --- Evaluación publicada ---
+        elif message_type == "evaluacion_publicada":
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {"type": "evaluacion.publicada", "content": data}
+            )
+
+        # --- Heartbeat / Pong ---
+        elif message_type == "ping":
+            await self.send(text_data=json.dumps({"type": "pong"}))
+
+        # --- Usuario recién conectado ---
+        elif message_type == "join":
+            await self.channel_layer.group_send(
+                self.room_group_name,
                 {
-                    "type": "screen.status", # Nuevo handler
-                    "message": data,
+                    "type": "user.joined",
+                    "email": self.user.email,
                     "sender_channel": self.channel_name
                 }
             )
-        
+
+        # --- Usuario que recarga la página ---
+        elif message_type == "reconnect_request":
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {
+                    "type": "user.reconnect_request",
+                    "sender_channel": self.channel_name,
+                    "user_id": str(self.user.id)
+                }
+            )
+
         else:
-            print(f"Tipo de mensaje desconocido: {message_type}")
+            logger.warning(f"Tipo de mensaje desconocido: {message_type}")
 
 
-    # --- Handlers de Grupo (Envío a Cliente) ---
+    # --- Handler del grupo para reconexión ---
+    async def user_reconnect_request(self, event):
+        if self.channel_name != event.get("sender_channel"):
+            await self.send(text_data=json.dumps({
+                "type": "reconnect_request",
+                "user_id": event.get("user_id")
+            }))
 
-    async def signal_message(self, event):
-        """Reenvía mensajes de señalización (SDP, ICE) al receptor."""
-        # Evita que el remitente se envíe el mensaje a sí mismo
-        if self.channel_name != event["sender_channel"]:
-            await self.send(text_data=json.dumps(event["message"]))
 
-    async def chat_message(self, event):
-        """Reenvía mensajes de chat (DataChannel) al receptor."""
-        if self.channel_name != event["sender_channel"]:
-            await self.send(text_data=json.dumps(event["message"]))
+    async def forward_message(self, event):
+        """Handler genérico para reenviar mensajes de señalización, chat y control."""
+        content = event["content"]
+        # Filtra por sender_channel para evitar el eco
+        if self.channel_name != content.get("sender_channel"):
+            await self.send(text_data=json.dumps(content)) 
 
     async def user_joined(self, event):
-        """Notifica que un usuario se unió."""
-        await self.send(text_data=json.dumps({
-            "type": "user_joined",
-            "email": event["email"]
-        }))
+        """Notifica que un usuario se unió, con prevención de eco."""
+        if self.channel_name != event.get("sender_channel"):
+            await self.send(text_data=json.dumps({
+                "type": "user_joined",
+                "email": event.get("email", "Usuario")
+            }))
 
     async def user_left(self, event):
-        """Notifica que un usuario salió."""
-        await self.send(text_data=json.dumps({
-            "type": "user_left",
-            "user_id": str(event["user_id"])
-        }))
-
-    async def screen_status(self, event):
-        """Reenvía mensajes de inicio/fin de compartición de pantalla."""
-        if self.channel_name != event["sender_channel"]:
-            await self.send(text_data=json.dumps(event["message"]))
+        """Notifica que un usuario se fue, con prevención de eco."""
+        if self.channel_name != event.get("sender_channel"):
+             await self.send(text_data=json.dumps({
+                "type": "user_left",
+                "user_id": str(event.get("user_id"))
+            }))
 
     async def evaluacion_publicada(self, event):
-        """Envía el ID de la evaluación publicada a los clientes."""
-        evaluacion_id = event['evaluacion_id']
-
-        # Envía el mensaje de vuelta al WebSocket del cliente
-        await self.send(text_data=json.dumps({
-            'type': 'evaluacion_publicada', # Usamos el mismo tipo para que JS lo reconozca
-            'evaluacion_id': evaluacion_id
-        }))
-        
+        """Handler para la publicación de evaluaciones."""
+        content = event["content"]
+        if self.channel_name != content.get("sender_channel"):
+            await self.send(text_data=json.dumps({
+                'type': 'evaluacion_publicada',
+                'evaluacion_id': content.get('evaluacion_id')
+            }))
+            
     # --- Métodos de Base de Datos ---
-    
     @database_sync_to_async
     def get_tutoria(self):
-        return Tutoria.objects.get(id=self.tutoria_id)
+        try:
+            # Retorna None si no existe la tutoría
+            return Tutoria.objects.get(id=self.tutoria_id)
+        except Tutoria.DoesNotExist:
+            return None
 
     @database_sync_to_async
     def get_tutor_user(self):
-        return self.tutoria.tutor.usuario
+        # Accede de forma segura al usuario del tutor
+        return getattr(getattr(self.tutoria, 'tutor', None), 'usuario', None)
 
     @database_sync_to_async
     def get_estudiante_user(self):
-        return self.tutoria.estudiante
+        # Accede de forma segura al usuario del estudiante
+        return getattr(self.tutoria, 'estudiante', None)

@@ -39,6 +39,14 @@
                                     <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditarPerfil">
                                       <i class="bi bi-pencil"></i> Editar Perfil
                                     </button>
+                                    {% if es_tutor %}
+                                    <form id="form-dejar-tutor" action="{% url 'dejar_de_ser_tutor' %}" method="POST" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="button" id="btn-dejar-tutor" class="btn btn-outline-danger btn-sm">
+                                            <i class="bi bi-x-circle"></i> Dejar de ser tutor
+                                        </button>
+                                    </form>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -481,19 +489,84 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll(".btn-ver-pdf").forEach(btn => {
-    btn.addEventListener("click", e => {
-      e.preventDefault();
-      const url = btn.dataset.url;
-      const titulo = btn.dataset.titulo || "Vista previa del archivo";
+    const btnGuardarUniversal = document.getElementById('btnGuardarUniversal');
 
-      if (url) {
-        BS5Helper.Modal.PDFViewer({ url, titulo });
-      } else {
-        console.error("No se encontró la URL del PDF");
-      }
+    btnGuardarUniversal.addEventListener('click', async () => {
+        console.log("=== Botón de guardar universal presionado ===");
+
+        // Lista de formularios a procesar
+        const formularios = [
+            {id: 'formUsuario', nombre: 'Usuario'},
+            {id: 'formAreasUsuario', nombre: 'Usuario Área'},
+            {id: 'formTutor', nombre: 'Tutor'},
+            {id: 'formAreasTutor', nombre: 'Tutor Área'},
+            {id: 'formArchivo', nombre: 'Archivo', esArchivo: true} // indicar que es archivo
+        ];
+
+        let resultados = [];
+
+        for (const f of formularios) {
+            const formEl = document.getElementById(f.id);
+            if (!formEl) {
+                console.log(`Formulario ${f.nombre} no encontrado, se omite`);
+                continue;
+            }
+
+            const formData = new FormData(formEl);
+
+            // Solo agregar archivo si existe y es válido
+            if (f.esArchivo) {
+                const archivoInput = formEl.querySelector('input[type="file"]');
+                if (archivoInput && archivoInput.files.length === 0) {
+                    console.log(`No se seleccionó archivo para ${f.nombre}, se omite`);
+                    continue; // saltar este formulario
+                }
+            }
+
+            // Mostrar datos en consola (depuración)
+            console.log(`Procesando formulario ${f.nombre}...`);
+            for (const [k, v] of formData.entries()) {
+                console.log(`${f.nombre} -> ${k}:`, v);
+            }
+
+            try {
+                const response = await fetch("{% url 'editar_perfil' %}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                });
+
+                const data = await response.json();
+                console.log(`Respuesta ${f.nombre}:`, data);
+                resultados.push({form: f.nombre, ok: data.ok, msg: data.msg});
+
+            } catch (error) {
+                console.error(`Error al guardar ${f.nombre}:`, error);
+                resultados.push({form: f.nombre, ok: false, msg: error.message});
+            }
+        }
+
+        // Mostrar resumen final al usuario
+        let mensajeResumen = resultados.map(r => `${r.form}: ${r.ok ? '✅' : '❌'} ${r.msg}`).join('\n');
+        alert("Resultado de la actualización:\n\n" + mensajeResumen);
+
     });
-  });
+
+    document.querySelectorAll(".btn-ver-pdf").forEach(btn => {
+        btn.addEventListener("click", e => {
+        e.preventDefault();
+        const url = btn.dataset.url;
+        const titulo = btn.dataset.titulo || "Vista previa del archivo";
+
+        if (url) {
+            BS5Helper.Modal.PDFViewer({ url, titulo });
+        } else {
+            console.error("No se encontró la URL del PDF");
+        }
+        });
+    });
 });
 </script>
 

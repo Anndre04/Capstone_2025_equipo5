@@ -133,20 +133,21 @@ document.addEventListener('DOMContentLoaded', function () {
   actualizarTodo();
   togglePasswordVisibility();
 
-  if (typeof jQuery !== 'undefined') {
-    $(document).ready(function () {
-      $('.select2-multiple').select2({
-        placeholder: "Selecciona una o más áreas de interés",
-        allowClear: true,
-        width: '100%'
-      });
-
-      console.log("Select2 inicializado correctamente.");
+  document.querySelectorAll('.tomselect-multiple').forEach((select) => {
+    const ts = new TomSelect(select, {
+        plugins: ['remove_button'],
+        maxItems: null,
+        hideSelected: true,
+        placeholder: select.selectedOptions.length === 0 ? 'Selecciona una o más opciones...' : '',
     });
 
-  } else {
-    console.error("jQuery no está cargado. Select2 no se inicializará.");
-  }
+    // Forzar que el wrapper tenga clases de Bootstrap
+    if (ts.wrapper) {
+        ts.wrapper.classList.add('form-control', 'form-control-sm');
+        ts.wrapper.style.minHeight = 'calc(1.5em + 0.75rem + 2px)'; // altura de form-control-sm
+    }
+});
+
 
   const hoy = new Date();
   const minEdad = 13;
