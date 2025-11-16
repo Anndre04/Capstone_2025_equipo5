@@ -351,7 +351,7 @@ function conectarNotificaciones() {
             } else {
                 console.error("❌ tutoriaId no definido en datos_extra", data);
             }
-        } else {
+        } else if((rolActual === "Tutor" && data.tipo === "tutoria_finalizada")) {
             Swal.fire({
                 icon: "info",
                 title: "Tutoría finalizada",

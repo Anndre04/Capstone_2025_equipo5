@@ -13,6 +13,7 @@ from django.contrib.auth.views import PasswordResetView
 from django.urls import reverse_lazy
 from google.cloud.exceptions import GoogleCloudError
 from django.conf import settings
+from services.gcp import subir_foto_perfil_gcp
 
 logger = logging.getLogger(__name__)
 
@@ -47,53 +48,6 @@ def verificar_email(request, token):
     # siempre redirige a la página de inicio de sesión o a donde consideres adecuado.
     return redirect("login")
 
-def fotogcp(archivo, email_usuario, carpeta='fotos_perfil'):
-    """
-    Sube un archivo a GCP, eliminando cualquier foto de perfil anterior para ese usuario.
-    Retorna solo la ruta relativa del nuevo objeto.
-    """
-
-    # 1. Crear el objeto Client usando las credenciales
-    GCP_CLIENT = storage.Client.from_service_account_json(
-        settings.GOOGLE_APPLICATION_CREDENTIALS
-    )
-    
-    # 2. Obtener el objeto Bucket (GCP_BUCKET) que tiene los métodos
-    GCP_BUCKET = GCP_CLIENT.get_bucket(settings.GOOGLE_CLOUD_BUCKET)
-
-    if GCP_BUCKET is None:
-        raise Exception("Servicio de almacenamiento no disponible.")
-
-    # 1. Definir la base del nombre del archivo (sin extensión)
-    # Esto es lo que usaremos para buscar archivos existentes.
-    nombre_base = f"{carpeta}/{email_usuario}"
-    
-    # 2. **BUSCAR Y ELIMINAR ARCHIVOS ANTIGUOS**
-    
-    # El método list_blobs permite filtrar por prefijo.
-    # Buscamos todos los blobs que comienzan con la ruta y el email del usuario.
-    blobs_a_eliminar = GCP_BUCKET.list_blobs(prefix=nombre_base)
-    
-    # Eliminamos cada blob encontrado
-    for blob in blobs_a_eliminar:
-        blob.delete()
-    
-    # 3. Definir el nombre del nuevo archivo (con extensión)
-    extension = archivo.name.split('.')[-1]
-    nombre_archivo_nuevo = f"{nombre_base}.{extension}"
-
-    # 4. Subir el nuevo archivo
-    blob_nuevo = GCP_BUCKET.blob(nombre_archivo_nuevo)
-    
-    # Si estás en el contexto de Django, recuerda que 'archivo' necesita 'seek(0)'
-    # antes de la subida si ya fue leído (ej. en la validación).
-    # archivo.seek(0)
-    
-    blob_nuevo.upload_from_file(archivo, content_type=archivo.content_type)
-
-    # 5. Retornar solo la ruta relativa para guardar en la base de datos
-    return nombre_archivo_nuevo
-
 def registro_view(request):
     if request.method == 'POST':
         form = RegistroForm(request.POST, request.FILES)
@@ -114,7 +68,7 @@ def registro_view(request):
                         foto.seek(0)
 
                         # 2. Llamada a GCP
-                        url_foto = fotogcp(foto, form.cleaned_data.get('email'))
+                        url_foto = subir_foto_perfil_gcp(foto, user.email)
                         
                         # 3. Asignación si la subida fue exitosa
                         user.foto = url_foto

@@ -43,27 +43,31 @@ def notificacion_mensaje_chat(sender, instance, created, **kwargs):
         logger.error(f"Error en notificación de mensaje: {e}")
 
 @receiver(post_save, sender=Solicitud)
-def notificar_nueva_solicitud(sender, instance, created, **kwargs):
-    print("🚨 Signal ejecutado: notificar_nueva_solicitud")  # 👈
-    if created:
-        try:
-            print(f"✅ Nueva solicitud creada por {instance.usuarioenvia.nombre} para {instance.usuarioreceive.nombre}")
-            # Crear notificación
-            NotificationService.crear_notificacion(
-                usuario=instance.usuarioreceive,  # el que recibe la solicitud
-                codigo_tipo="solicitud_recibida",
-                titulo="Nueva solicitud recibida",
-                mensaje=f"{instance.usuarioenvia.nombre} te ha enviado una solicitud.",
-                datos_extra={
-                    "solicitud_id": str(instance.id),
-                    # REVISAR
-                    "url" : f"tutoria/solicitudesprof/{instance.usuarioreceive.id}"
-                    },
-            )
+def notificar_nueva_solicitud_alumno(sender, instance, created, **kwargs):
+    if not created:
+        return
 
-            logger.info(f"📨 Notificación enviada a {instance.usuarioreceive.nombre}")
-        except Exception as e:
-            logger.error(f"❌ Error en notificación de solicitud: {e}")
+    # 🔍 SOLO SI el tipo de solicitud es "alumno"
+    if instance.tipo.nombre.lower() != "alumno":
+        return
+
+    try:
+        NotificationService.crear_notificacion(
+            usuario=instance.usuarioreceive,
+            codigo_tipo="solicitud_alumno",
+            titulo="Nueva solicitud recibida",
+            mensaje=f"{instance.usuarioenvia.nombre} te ha enviado una solicitud de alumno.",
+            datos_extra={
+                "solicitud_id": str(instance.id),
+                "url": f"/tutoria/solicitudesprof/{instance.usuarioreceive.id}",
+            },
+        )
+
+        logger.info(f"📨 Notificación enviada al tipo 'alumno' para {instance.usuarioreceive.nombre}")
+
+    except Exception as e:
+        logger.error(f"❌ Error en notificación de solicitud alumno: {e}")
+
 
 @receiver(post_save, sender=Tutoria)
 def notificacion_tutoria_completada(sender, instance, created, **kwargs):

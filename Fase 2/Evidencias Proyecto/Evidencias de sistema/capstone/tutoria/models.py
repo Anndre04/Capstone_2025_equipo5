@@ -1,3 +1,4 @@
+from django.utils import timezone
 import uuid
 from django.db import models
 from django.forms import ValidationError
@@ -92,6 +93,12 @@ class Solicitud(models.Model):
     
 
 class Tutor(models.Model):
+
+    class EstadoTutor(models.TextChoices):
+        ACTIVO = 'Activo', 'Activo'
+        INACTIVO = 'Inactivo', 'Inactivo'
+        PENDIENTE = 'Pendiente', 'Pendiente'
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     usuario = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.PROTECT)
     sobremi = models.TextField(null=True, blank=True, default="")
@@ -101,10 +108,15 @@ class Tutor(models.Model):
         related_name='tutores'
     )
 
-    estado = models.CharField(max_length=30)
+    estado = models.CharField(
+        max_length=30,
+        choices=EstadoTutor.choices,
+        default=EstadoTutor.PENDIENTE
+    )
 
     def __str__(self):
         return str(self.usuario)
+
     
     def __str__(self):
         return str(self.id) or "Archivo sin nombre"
@@ -118,10 +130,21 @@ class TutorArea(models.Model):
     fecha_desactivado = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        unique_together = ('tutor', 'area') 
+        unique_together = ('tutor', 'area')
+
+    def desactivar(self):
+        self.activo = False
+        self.fecha_desactivado = timezone.now()
+        self.save()
+
+    def activar(self):
+        self.activo = True
+        self.fecha_desactivado = None
+        self.save()
 
     def __str__(self):
         return self.area.nombre
+
 
 class Anuncio(models.Model):
 

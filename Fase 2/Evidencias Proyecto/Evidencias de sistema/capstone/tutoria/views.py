@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from django.utils import timezone
 import json
 import logging
 import mimetypes
@@ -12,7 +13,8 @@ from django.http import HttpRequest, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-
+from uuid import UUID
+from chat.models import Chat, Mensaje
 from evaluaciones.models import Evaluacion, Realizacion
 from .models import Anuncio, ComentarioPredefinido, TipoSolicitud, Solicitud, Usuario, Tutor, TutorArea, Disponibilidad, Archivo, Tutoria, ReseñaTutor  
 from .forms import TutorRegistrationForm
@@ -20,109 +22,11 @@ from autenticacion.models import AreaInteres, Rol
 from notificaciones.services import NotificationService
 import uuid
 from google.cloud import storage
+from services.gcp import subir_archivo_gcp
 
 logger = logging.getLogger(__name__)
 
-
 dias_semana = [d[0] for d in Disponibilidad.DIAS_SEMANA]
-
-def subir_archivo_gcp(archivo, tutor_id=None, tutoria_id=None):
-    """
-    Sube un archivo individual a Google Cloud Storage (GCS), eligiendo la ruta
-    basada estrictamente en si se proporciona tutor_id O tutoria_id.
-    Prioriza tutor_id si ambos están presentes.
-    """
-    if not archivo:
-        return None
-        
-    
-    # 1. Definir la ruta base según el ID disponible (La lógica correcta)
-    directorio_base = None
-    
-    # 🟢 Prioridad 1: Si tutor_id existe y no es None (Subida de certificación)
-    if tutor_id:
-        directorio_base = f'PDFs/certificaciones/tutor_{tutor_id}'
-        logger.debug(f"Ruta definida para Certificación (Tutor ID: {tutor_id})")
-
-    # 🟡 Prioridad 2: Si el anterior FALLÓ (tutor_id es None), y SÍ existe tutoria_id 
-    elif tutoria_id:
-        directorio_base = f'PDFs/Archivos_tutoria/tutoria_{tutoria_id}'
-        logger.debug(f"Ruta definida para Archivo de Tutoría (Tutoria ID: {tutoria_id})")
-    
-    # 🔴 Error: No se proporcionó ningún ID válido.
-    else:
-        logger.error("Error: Se requiere tutor_id o tutoria_id para definir la ruta de subida a GCS.")
-        return None
-
-    
-    try:
-        # 2. Inicializar GCS (Bloque UNIFICADO)
-        storage_client = storage.Client.from_service_account_json(
-            settings.GOOGLE_APPLICATION_CREDENTIALS
-        )
-        bucket = storage_client.bucket(settings.GOOGLE_CLOUD_BUCKET)
-
-        # 3. Construir la ruta final
-        nombre_seguro = os.path.basename(archivo.name)
-        # Aquí directorio_base ya tiene un ID válido (tutor_id o tutoria_id)
-        ruta_destino_gcs = f'{directorio_base}/{nombre_seguro}'
-
-        logger.error(f"funcion: {ruta_destino_gcs}")
-            
-        # 4. Preparar y Subir el archivo
-        blob = bucket.blob(ruta_destino_gcs)
-        content_type = mimetypes.guess_type(archivo.name)[0] or 'application/octet-stream'
-        
-        blob.upload_from_file(
-            archivo,
-            content_type=content_type,
-            # Se omite 'predefined_acl' para evitar el error 400
-        )
-        
-        logger.info(f"Archivo subido a GCS: {ruta_destino_gcs}")
-        
-        # 5. Resetear el puntero y retornar la ruta
-        archivo.seek(0)
-        return ruta_destino_gcs
-
-    except Exception as e:
-        logger.error(f"Error al subir el archivo {archivo.name} a GCS. Ruta: {directorio_base}. Error: {e}", exc_info=True)
-        return None
-
-def generar_url_firmada_gcs(ruta_gcs, expiracion_segundos=3600, descargar=False):
-    """
-    Genera una URL firmada para acceder a un archivo en Google Cloud Storage.
-    Si descargar=True => fuerza descarga (attachment)
-    Si descargar=False => vista previa (inline)
-    """
-    try:
-        ruta_gcs_str = str(ruta_gcs).strip()
-    except Exception as e:
-        logger.error(f"FALLO CRÍTICO: No se pudo convertir la ruta a string: {e}")
-        return None
-
-    try:
-        storage_client = storage.Client.from_service_account_json(
-            settings.GOOGLE_APPLICATION_CREDENTIALS
-        )
-        bucket = storage_client.bucket(settings.GOOGLE_CLOUD_BUCKET)
-        blob = bucket.blob(ruta_gcs_str)
-
-        # 👇 Cambiamos según el parámetro "descargar"
-        disposition = "attachment" if descargar else "inline"
-
-        url = blob.generate_signed_url(
-            version="v4",
-            expiration=timedelta(seconds=expiracion_segundos),
-            method="GET",
-            response_disposition=f"{disposition}; filename={os.path.basename(ruta_gcs_str)}"
-        )
-        return url
-
-    except Exception as e:
-        logger.error(f"Error generando URL firmada para {ruta_gcs_str}. GCS Error: {e}", exc_info=True)
-        return None
-
 
 @login_required
 def descargar_archivo(request, archivo_id):
@@ -653,9 +557,8 @@ def registrotutor(request):
     user = request.user
     logger.debug(f"Usuario logueado: {user.nombre} (ID: {user.id})")
 
-    # Evita registro duplicado
-    if hasattr(user, 'tutor'):
-        logger.warning(f"Intento de registro duplicado para usuario: {user.id}")
+    # Si ya es tutor activo → no permitir registro
+    if hasattr(user, 'tutor') and user.tutor.estado == Tutor.EstadoTutor.ACTIVO:
         messages.warning(request, "Ya estás registrado como tutor.")
         return redirect('home')
 
@@ -664,7 +567,6 @@ def registrotutor(request):
     if request.method == 'POST':
         logger.debug("--- INICIO POST REGISTROTUTOR ---")
 
-        # 1. Obtener la lista de archivos subidos
         archivos_certificacion = request.FILES.getlist('certificacion')
         logger.debug(f"Archivos 'certificacion' recibidos: {len(archivos_certificacion)}")
 
@@ -675,25 +577,62 @@ def registrotutor(request):
 
         try:
             with transaction.atomic():
-                # 1️⃣ Crear tutor
-                tutor = Tutor.objects.create(
-                    usuario=request.user,
-                    estado="Pendiente"
+
+                # ------------------------------------------
+                # 1️⃣ Crear o reactivar tutor
+                # ------------------------------------------
+                if hasattr(user, 'tutor'):
+                    tutor = Tutor.objects.select_for_update().get(pk=user.tutor.id)
+                    tutor.estado = Tutor.EstadoTutor.ACTIVO
+                    tutor.save()
+                else:
+                    tutor = Tutor.objects.create(
+                        usuario=user,
+                        estado=Tutor.EstadoTutor.ACTIVO
+                    )
+
+                areas_seleccionadas = request.POST.getlist("areas")
+
+            if not areas_seleccionadas:
+                raise Exception("Debe seleccionar al menos un área.")
+
+            # Desactivar áreas antiguas NO seleccionadas
+            TutorArea.objects.filter(tutor=tutor).exclude(
+                area_id__in=areas_seleccionadas
+            ).update(
+                activo=False,
+                fecha_desactivado=timezone.now()
+            )
+
+            # Crear o reactivar áreas seleccionadas
+            for area_id in areas_seleccionadas:
+
+                area = AreaInteres.objects.get(id=area_id)
+
+                relacion, creada = TutorArea.objects.get_or_create(
+                    tutor=tutor,
+                    area=area,
+                    defaults={"activo": True}
                 )
-                logger.info(f"Tutor creado con ID: {tutor.id}")
 
-                # 2️⃣ Asignar áreas de conocimiento
-                for area_id in form.cleaned_data['areas']:
-                    TutorArea.objects.create(tutor=tutor, area_id=area_id)
-                logger.info(f"Áreas asignadas: {form.cleaned_data['areas']}")
+                # Reactivar si existía pero estaba desactivada
+                if not creada and not relacion.activo:
+                    relacion.activo = True
+                    relacion.fecha_desactivado = None
+                    relacion.save()
 
-                # 3️⃣ Subir archivos a GCP y asociar nombres personalizados
+                # ------------------------------------------
+                # 3️⃣ Subida de certificaciones a GCP
+                # ------------------------------------------
                 if archivos_certificacion:
                     logger.info(f"Subiendo {len(archivos_certificacion)} certificaciones a GCP.")
                     
                     for i, archivo_subido in enumerate(archivos_certificacion):
-                        
-                        nombre_personalizado = request.POST.get(f'nombre_archivo_{i}', archivo_subido.name)
+
+                        nombre_personalizado = request.POST.get(
+                            f'nombre_archivo_{i}',
+                            archivo_subido.name
+                        )
 
                         ruta_relativa = subir_archivo_gcp(
                             archivo=archivo_subido,
@@ -701,34 +640,32 @@ def registrotutor(request):
                             tutoria_id=None
                         )
 
-                        if ruta_relativa:
-                            Archivo.objects.create(
-                                tutor=tutor,
-                                url=ruta_relativa,
-                                nombre=nombre_personalizado
-                            )
-                            logger.info(f"Archivo '{nombre_personalizado}' (Original: {archivo_subido.name}) subido exitosamente.")
-                        else:
-                            messages.error(request, f"Fallo la subida del archivo '{nombre_personalizado}'. Se revertirá el registro.")
-                            logger.error(f"Fallo crítico de subida para el archivo: {archivo_subido.name}. Revirtiendo transacción.")
-                            raise Exception("Error en la subida a GCP. Transacción revertida.")
+                        if not ruta_relativa:
+                            messages.error(request, f"Falló la subida del archivo '{nombre_personalizado}'. Se revertirá el registro.")
+                            raise Exception("Error en la subida a GCP.")
+
+                        Archivo.objects.create(
+                            tutor=tutor,
+                            url=ruta_relativa,
+                            nombre=nombre_personalizado
+                        )
                 else:
                     logger.info("No se recibieron archivos de certificación (campo opcional).")
 
+                # ------------------------------------------
+                # 4️⃣ Asignar rol Tutor si no lo tiene
+                # ------------------------------------------
                 rol_tutor = Rol.objects.get(nombre="Tutor")
-                user.roles.add(rol_tutor)
+                if not user.roles.filter(id=rol_tutor.id).exists():
+                    user.roles.add(rol_tutor)
 
                 messages.success(request, "Registro completado exitosamente. Está pendiente de aprobación.")
                 return redirect('home')
 
         except Exception as e:
-            # La excepción aquí captura tanto errores de DB como el error de subida lanzado arriba.
             logger.error(f"Error durante el registro o subida a GCP: {e}", exc_info=True)
-            # El mensaje de error general ya se habrá establecido si la subida falló.
             if not messages.get_messages(request):
                 messages.error(request, f"Ocurrió un error inesperado. Intenta de nuevo.")
-            
-            # Si hubo un error, la transacción se revierte.
             return render(request, 'tutoria/registrotutor.html', {'form': form})
 
     return render(request, 'tutoria/registrotutor.html', {'form': form})
@@ -810,19 +747,34 @@ def estado_solicitud_tutoria(request, solicitud_id):
 @login_required
 def tutoria(request, tutoria_id):
     tutoria = get_object_or_404(Tutoria, id=tutoria_id)
-    c = ComentarioPredefinido.objects.all
 
-    # Validar que el usuario sea parte de la tutoría
-    if request.user != tutoria.solicitud.usuarioenvia and request.user != tutoria.solicitud.usuarioreceive:
-        messages.error(request, "No tienes permisos para ver esta tutoría.")
-        return redirect('home')
+    # Usuarios de la conversación
+    u1 = tutoria.solicitud.usuarioenvia
+    u2 = tutoria.solicitud.usuarioreceive
+
+    # Buscar si YA existe un chat creado entre ellos
+    chat = Chat.objects.filter(users=u1).filter(users=u2).first()
+
+    # Si no existe, lo creas
+    if not chat:
+        chat = Chat.objects.create(
+            nombre=f"Chat tutoria {tutoria_id}",
+            estado="activo"
+        )
+        chat.users.add(u1, u2)
+        chat.save()
+
+    # Traer los mensajes del chat
+    mensajes = Mensaje.objects.filter(chat=chat).order_by("timestamp")
 
     contexto = {
-        'tutoria': tutoria,
-        'c' : c
+        "tutoria": tutoria,
+        "chat_id": chat.id,
+        "mensajes": mensajes
     }
 
-    return render(request, 'tutoria/tutoria.html', contexto)
+    return render(request, "tutoria/tutoria.html", contexto)
+
 
 @login_required
 def estado_tutoria(request, tutoria_id):

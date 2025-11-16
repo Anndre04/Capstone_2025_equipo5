@@ -7,13 +7,14 @@ from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db import transaction
 from autenticacion.tasks import BASE_URL
 from tutoria.models import Anuncio, Archivo, TipoSolicitud, Tutor, TutorArea, Tutoria
 from autenticacion.models import AreaInteres, Usuario, UsuarioArea
 from tutoria.models import Anuncio, Solicitud
-from django.db.models import Avg, Case, When, Value, IntegerField
-
-from tutoria.views import generar_url_firmada_gcs
+from django.db.models import Avg, Case, When, Value, IntegerField, Q
+from django.contrib.auth import logout
+from services.gcp import generar_url_firmada
 
 
 logger = logging.getLogger(__name__)
@@ -21,7 +22,13 @@ logger = logging.getLogger(__name__)
 def home(request):
 
     try:
-        anuncios = Anuncio.objects.filter(estado='Activo')
+        anuncios = Anuncio.objects.filter(
+            tutor__usuario__roles__nombre='Tutor',
+            tutor__estado='Activo',
+            estado='Activo'
+        ).select_related('tutor', 'tutor__usuario').distinct()
+
+
         areainteres = AreaInteres.objects.all()
 
         # Obtener filtros del GET
@@ -83,58 +90,63 @@ def home(request):
 
 @login_required
 def perfilusuario(request):
-    # 1. Obtenemos el objeto Usuario autenticado (sin consulta extra)
     usuario = request.user
+    contexto = {'usuario': usuario}
 
-    contexto = {
-            'usuario': usuario
-        }
-    
     try:
+        # Validar si es tutor activo usando el método del modelo
+        if not usuario.es_tutor_activo():
+            contexto['es_tutor'] = False
+            return render(request, 'home/perfilusuario.html', contexto)
+
+        # Consultar tutor y prefetch
         tutor = Tutor.objects.prefetch_related('areastutor', 'certificados').get(usuario=usuario)
 
-        logger.warning(vars(tutor))
+        contexto.update({
+            'es_tutor': True,
+            'tutor': tutor,
+            'areastutor': tutor.areastutor.filter(activo=True),
+            'archivos': [
+                {
+                    "nombre": c.nombre,
+                    "estado": c.estado,
+                    "url_ver": generar_url_firmada(c.url, descargar=False),
+                    "url_descargar": generar_url_firmada(c.url, descargar=True)
+                }
+                for c in tutor.certificados.all()
+            ]
+        })
 
-        contexto['tutor'] = tutor
-        contexto['areastutor'] = tutor.areastutor.filter(activo=True)
-        contexto['es_tutor'] = True
-
-        archivos = tutor.certificados.all()
-        archivos_con_url = []
-
-        for archivo in archivos:
-            archivos_con_url.append({
-                "nombre": archivo.nombre,
-                "estado": archivo.estado,
-                "url_ver": generar_url_firmada_gcs(archivo.url, descargar=False),
-                "url_descargar": generar_url_firmada_gcs(archivo.url, descargar=True)
-            })
-
-        contexto["archivos"] = archivos_con_url
-        
     except Tutor.DoesNotExist:
         contexto['es_tutor'] = False
-        
+
     except Exception as e:
         messages.error(request, "Hubo un error cargando su perfil. Inténtelo más tarde.")
-        logger.error(f"Error cargando perfil del usuario {usuario.id}", exc_info=True)
+        logger.error(f"Error cargando perfil del usuario {usuario.id}: {e}", exc_info=True)
         return redirect("home")
 
     return render(request, 'home/perfilusuario.html', contexto)
+
 
 # perfil/views.py
 @login_required
 def editar_perfil(request):
     usuario = request.user
+    logger.debug(f"[editar_perfil] Usuario actual: {usuario.email} ({usuario.id})")
 
-    # Obtener instancias relacionadas (si existen)
+    # Obtener instancias relacionadas
     tutor = getattr(usuario, 'tutor', None)
+    logger.debug(f"[editar_perfil] Tutor asociado: {tutor}")
+
     usuario_areas = UsuarioArea.objects.filter(usuario=usuario, activo=True)
     tutor_areas = TutorArea.objects.filter(tutor=tutor, activo=True) if tutor else []
     archivos = Archivo.objects.filter(tutor=tutor) if tutor else []
 
     if request.method == 'POST':
-        tipo = request.POST.get('tipo')  # Identificar qué sección se envía
+        tipo = request.POST.get('tipo')
+        logger.debug(f"[editar_perfil] POST recibido. Tipo: {tipo}")
+        logger.debug(f"[editar_perfil] Datos POST: {request.POST}")
+        logger.debug(f"[editar_perfil] Archivos enviados: {request.FILES}")
 
         # --- DATOS PERSONALES (Usuario) ---
         if tipo == 'usuario':
@@ -147,7 +159,7 @@ def editar_perfil(request):
             usuario.n_educacion_id = request.POST.get('n_educacion')
             usuario.institucion_id = request.POST.get('institucion')
             usuario.save()
-
+            logger.debug(f"[editar_perfil] Usuario actualizado: {usuario.nombre_completo}")
             return JsonResponse({'ok': True, 'msg': 'Datos personales actualizados'})
 
         # --- PERFIL TUTOR ---
@@ -155,47 +167,53 @@ def editar_perfil(request):
             if tutor:
                 tutor.sobremi = request.POST.get('sobremi')
                 tutor.save()
+                logger.debug(f"[editar_perfil] Tutor actualizado: {tutor}")
                 return JsonResponse({'ok': True, 'msg': 'Perfil de tutor actualizado'})
             else:
+                logger.warning(f"[editar_perfil] Usuario {usuario.email} no tiene perfil de tutor")
                 return JsonResponse({'ok': False, 'msg': 'No tienes perfil de tutor'})
 
         # --- ÁREAS DE INTERÉS (UsuarioArea) ---
         elif tipo == 'usuario_area':
             areas_ids = request.POST.getlist('areas[]')
+            logger.debug(f"[editar_perfil] Áreas de interés seleccionadas: {areas_ids}")
             UsuarioArea.objects.filter(usuario=usuario).update(activo=False)
             for area_id in areas_ids:
-                UsuarioArea.objects.update_or_create(
+                ua, created = UsuarioArea.objects.update_or_create(
                     usuario=usuario,
                     area_id=area_id,
                     defaults={'activo': True}
                 )
+                logger.debug(f"[editar_perfil] UsuarioArea {'creada' if created else 'actualizada'}: {ua}")
             return JsonResponse({'ok': True, 'msg': 'Áreas de interés actualizadas'})
 
         # --- ÁREAS DE CONOCIMIENTO (TutorArea) ---
         elif tipo == 'tutor_area' and tutor:
             areas_ids = request.POST.getlist('areas[]')
+            logger.debug(f"[editar_perfil] Áreas de conocimiento seleccionadas: {areas_ids}")
             TutorArea.objects.filter(tutor=tutor).update(activo=False)
             for area_id in areas_ids:
-                TutorArea.objects.update_or_create(
+                ta, created = TutorArea.objects.update_or_create(
                     tutor=tutor,
                     area_id=area_id,
                     defaults={'activo': True}
                 )
+                logger.debug(f"[editar_perfil] TutorArea {'creada' if created else 'actualizada'}: {ta}")
             return JsonResponse({'ok': True, 'msg': 'Áreas de conocimiento actualizadas'})
 
         # --- ARCHIVOS (Archivo) ---
         elif tipo == 'archivo' and tutor:
             archivo = request.FILES.get('archivo')
             nombre = request.POST.get('nombre')
+            logger.debug(f"[editar_perfil] Archivo recibido: nombre={nombre}, archivo={archivo}")
 
-            # Aquí subirías el archivo al bucket o filesystem
-            # y guardarías la URL resultante en `Archivo.url`
             Archivo.objects.create(
                 tutor=tutor,
                 nombre=nombre,
                 url='ruta/o/url/generada',
                 estado='Pendiente'
             )
+            logger.debug(f"[editar_perfil] Archivo creado para tutor {tutor}")
             return JsonResponse({'ok': True, 'msg': 'Archivo subido con éxito'})
 
     # GET → Renderizar la página
@@ -206,8 +224,8 @@ def editar_perfil(request):
         'tutor_areas': tutor_areas,
         'archivos': archivos,
     }
+    logger.debug(f"[editar_perfil] Renderizando modal con contexto: {context}")
     return render(request, 'perfil/editar_perfil.html', context)
-
 
 @login_required
 def solicitudesusuario(request, user_id):
@@ -355,3 +373,44 @@ def historial_tutoria(request, user_id):
 
     return render(request, 'home/historialtutorias.html', contexto)
 
+@login_required
+def dejar_de_ser_tutor(request):
+    if request.method != "POST":
+        return redirect("perfilusuario")
+
+    usuario = request.user
+
+    try:
+        with transaction.atomic():
+
+            # Quitar rol de tutor si existe
+            try:
+                rol_tutor = usuario.roles.get(nombre="Tutor")
+                usuario.roles.remove(rol_tutor)
+            except usuario.roles.model.DoesNotExist:
+                pass
+
+            # Marcar el modelo Tutor como inactivo si existe
+            try:
+                tutor = Tutor.objects.select_for_update().get(usuario=usuario)
+                tutor.estado = Tutor.EstadoTutor.INACTIVO
+                tutor.save()
+
+                # Desactivar áreas
+                for ta in tutor.areastutor.filter(activo=True):
+                    ta.desactivar()
+            except Tutor.DoesNotExist:
+                pass
+
+        # ÉXITO → forzar logout
+        logout(request)
+        messages.success(request, "Has dejado de ser tutor. Tu sesión ha sido cerrada.")
+        return redirect("login")  # O la ruta que uses
+
+    except Exception as e:
+        messages.error(request, "No se pudo completar la operación. Intente nuevamente.")
+        logger.error(
+            f"Error en dejar_de_ser_tutor para usuario {usuario.id}: {e}",
+            exc_info=True
+        )
+        return redirect("perfilusuario")

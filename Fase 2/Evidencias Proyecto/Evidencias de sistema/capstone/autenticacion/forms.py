@@ -189,8 +189,12 @@ class RegistroForm(UserCreationForm):
     areas_interes = forms.ModelMultipleChoiceField(
         queryset=AreaInteres.objects.all(),
         required=True,
-        widget=forms.SelectMultiple(attrs={'class': 'form-control form-control-sm select2-multiple', 'size': 5})
+        widget=forms.SelectMultiple(attrs={
+            'class': 'form-control form-control-sm tomselect-multiple',
+            'size': 5
+        })
     )
+
 
     foto = forms.ImageField(
         required=False,

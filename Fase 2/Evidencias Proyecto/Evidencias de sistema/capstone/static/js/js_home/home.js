@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const slider = document.getElementById('precio-slider');
     const label = document.getElementById('precio-label');
     const hiddenInput = document.getElementById('precio_max');
+    const btn_tutor = document.getElementById("btn-dejar-tutor");
+    const form_tutor = document.getElementById("form-dejar-tutor");
 
     if (banner) {
         // 1. Forzamos un pequeño retraso (incluso 0ms) para asegurar que el navegador 
@@ -34,14 +36,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 50); 
     }
 
-    slider.addEventListener('input', function () {
-        const value = parseInt(slider.value);
-        const formatted = new Intl.NumberFormat('es-CL', { minimumFractionDigits: 0 }).format(value);
-        label.textContent = `$${formatted}`;
-        hiddenInput.value = value;
-    });
-
-
     // ANIMACION
     const cards = document.querySelectorAll('.tutoring-card');
     const observer = new IntersectionObserver((entries) => {
@@ -68,4 +62,23 @@ document.addEventListener('DOMContentLoaded', function () {
             console.log('🔍 Filtro aplicado:', this.name, this.value);
         });
     });
+
+    console.log(btn_tutor)
+
+   if (btn_tutor) {
+    btn_tutor.addEventListener("click", async () => {
+      const confirmado = await BS5Helper.Modal.confirmacion({
+        titulo: "Confirmar acción",
+        mensaje: "¿Realmente quieres dejar de ser tutor?",
+        tipo: "danger",
+        textoSi: "Sí, dejar de ser tutor",
+        textoNo: "Cancelar",
+        eliminar: 1
+      });
+
+      if (confirmado) {
+        form_tutor.submit();
+      }
+    });
+  }
 });
