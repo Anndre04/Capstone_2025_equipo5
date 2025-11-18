@@ -18,24 +18,13 @@
                         </span>      
                     </div>
                 </div>
-                <div class="dropdown">
-                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-gear me-2"></i>Acciones
-                    </button>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-chat me-2"></i>Enviar Mensaje</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-calendar-event me-2"></i>Reagendar</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-x-circle me-2"></i>Cancelar Tutoría</a></li>
-                    </ul>
-                </div>
             </div>
         </div>
     </div>
 
     <div class="row">
         <!-- Información Principal -->
-        <div class="col-lg-8">
+        <div class="col-lg-12">
             <!-- Card de Información General -->
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-transparent border-0 py-3">
@@ -122,64 +111,6 @@
                                         </a>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sidebar de Acciones y Estado -->
-        <div class="col-lg-4">
-            <!-- Card de Acciones Rápidas -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-transparent border-0 py-3">
-                    <h3 class="h5 fw-bold mb-0"><i class="bi bi-lightning me-2 text-primary"></i>Acciones Rápidas</h3>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        {% if tutoria.estado == 'Completada' %}
-                        <button class="btn btn-outline-primary btn-lg py-2 fw-semibold">
-                            <i class="bi bi-star me-2"></i>Dejar Reseña
-                        </button>
-                        {% endif %}
-                        
-                        <button class="btn btn-outline-dark btn-lg py-2 fw-semibold">
-                            <i class="bi bi-chat-dots me-2"></i>Enviar Mensaje
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Card de Estado y Métricas -->
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-transparent border-0 py-3">
-                    <h3 class="h5 fw-bold mb-0"><i class="bi bi-graph-up me-2 text-primary"></i>Métricas</h3>
-                </div>
-                <div class="card-body">
-                    <div class="row text-center g-3">
-                        <div class="col-6">
-                            <div class="p-3 bg-primary bg-opacity-10 rounded">
-                                <div class="h4 fw-bold text-primary mb-1">{{ tutoria.tutor.tutorias_completadas }}</div>
-                                <small class="text-muted">Tutorías Completadas</small>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="p-3 bg-success bg-opacity-10 rounded">
-                                <div class="h4 fw-bold text-success mb-1">{{ tutoria.estudiante.tutorias_tomadas }}</div>
-                                <small class="text-muted">Sesiones del Estudiante</small>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <div class="p-3 bg-info bg-opacity-10 rounded">
-                                <div class="h4 fw-bold text-info mb-1">
-                                    {% if tutoria.anuncio.calificacion_promedio %}
-                                        {{ tutoria.anuncio.calificacion_promedio }}/5.0
-                                    {% else %}
-                                        N/A
-                                    {% endif %}
-                                </div>
-                                <small class="text-muted">Calificación del Tutor</small>
                             </div>
                         </div>
                     </div>

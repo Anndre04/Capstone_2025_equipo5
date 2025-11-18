@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     'channels',
     'videollamadas',
     'evaluaciones',
-    'storages',
+    #'storages',
     'widget_tweaks',
 ]
 
