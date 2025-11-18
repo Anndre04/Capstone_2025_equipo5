@@ -516,6 +516,13 @@
     padding-left: 2rem !important;
 }
 
+.badge-fixed-width {
+    display: inline-block; /* Crucial para que max-width funcione */
+    max-width: 250px; /* Ancho cómodo para escritorio */
+    white-space: normal; /* Permite el salto de línea en general */
+    text-align: left; /* Opcional: para que el texto justifique a la izquierda si salta */
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .card-body {
@@ -537,6 +544,11 @@
     
     .border-start {
         border-left: 3px solid #0d6efd !important;
+    }
+
+    .badge-fixed-width {
+        max-width: 130px; /* Ancho reducido en celular */
+        /* white-space: normal; ya no es necesario aquí si lo definiste arriba */
     }
 }
 

@@ -31,7 +31,7 @@ def generar_url_firmada(ruta_gcs, expiracion_segundos=3600, descargar=False):
         logger.error(f"Error generando URL firmada para {ruta_gcs}: {e}", exc_info=True)
         return None
 
-def subir_archivo_gcp(archivo, tutor_id=None, tutoria_id=None):
+def subir_archivo_gcp(archivo, nombre, tutor_id=None, tutoria_id=None):
     """
     Sube un archivo a GCS. Sobrescribe si ya existe.
     Solo se debe pasar tutor_id O tutoria_id, no ambos.
@@ -57,7 +57,7 @@ def subir_archivo_gcp(archivo, tutor_id=None, tutoria_id=None):
 
     try:
         bucket = get_bucket()
-        nombre_seguro = os.path.basename(archivo.name)
+        nombre_seguro = os.path.basename(nombre)
         ruta_destino_gcs = f'{directorio_base}/{nombre_seguro}'
         blob = bucket.blob(ruta_destino_gcs)
         content_type = mimetypes.guess_type(archivo.name)[0] or 'application/octet-stream'

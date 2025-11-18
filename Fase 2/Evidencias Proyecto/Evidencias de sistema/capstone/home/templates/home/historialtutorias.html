@@ -80,17 +80,13 @@
                             <div class="col-12 col-md-4 col-lg-3 mt-3 mt-md-0">
                                 <div class="d-flex flex-column gap-2">
                                     <div class="d-grid gap-2">
-                                        {% for tutoria in tutorias %}
-                                            <div class="card border-primary mt-3 position-relative">
-                                                <!-- Cabecera como botón -->
-                                                <div class="card-header bg-primary text-white p-2" 
-                                                    style="cursor:pointer;"
+                                            <div class="card border-primary mt-3">
+                                                <div class="card-header bg-primary text-white p-2" style="cursor:pointer;"
                                                     onclick="document.getElementById('evaluacionesTutoria{{ tutoria.id }}').classList.toggle('show-dropdown');">
                                                     <i class="bi bi-journal-text me-2"></i> Evaluaciones de la Tutoría
                                                     <i class="bi bi-chevron-down float-end"></i>
                                                 </div>
 
-                                                <!-- Contenido colapsable flotante -->
                                                 <ul class="list-group list-group-flush dropdown-content" id="evaluacionesTutoria{{ tutoria.id }}">
                                                     {% for evaluacion in tutoria.evaluaciones.all %}
                                                         <li class="list-group-item py-2 px-3">
@@ -98,11 +94,13 @@
                                                                 <a href="{% url 'responder_evaluacion' evaluacion.id %}" class="text-decoration-none">
                                                                     <i class="bi bi-journal-text me-1"></i> {{ evaluacion.titulo }}
                                                                 </a>
-                                                            {% else %}
+                                                            {% elif evaluacion.realizacion %}
                                                                 <a href="{% url 'resultados_evaluacion' evaluacion.realizacion.id %}" class="text-success text-decoration-none">
                                                                     <i class="bi bi-bar-chart me-1"></i> {{ evaluacion.titulo }} - 
                                                                     {{ evaluacion.realizacion.puntaje_obtenido_total }}/{{ evaluacion.puntaje_total }}
                                                                 </a>
+                                                            {% else %}
+                                                                <span class="text-muted">Sin resultados aún</span>
                                                             {% endif %}
                                                         </li>
                                                     {% empty %}
@@ -112,10 +110,6 @@
                                                     {% endfor %}
                                                 </ul>
                                             </div>
-                                            {% empty %}
-                                            <p class="text-muted small mb-0">No hay tutorías disponibles.</p>
-                                            {% endfor %}
-
                                     </div>
                                     {% if tutoria %}
                                     <div class="card border-success mt-3 position-relative">

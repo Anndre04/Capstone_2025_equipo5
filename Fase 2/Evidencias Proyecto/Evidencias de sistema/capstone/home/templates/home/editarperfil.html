@@ -1,0 +1,239 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-4">
+
+    <h3 class="mb-4"><i class="bi bi-person-gear"></i> Editar Perfil</h3>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- TABS -->
+        <ul class="nav nav-tabs mb-3" id="perfilTab" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active" id="personal-tab" data-bs-toggle="tab" data-bs-target="#personal" type="button">
+                    Perfil Personal
+                </button>
+            </li>
+
+            {% if tutor %}
+            <li class="nav-item">
+                <button class="nav-link" id="tutor-tab" data-bs-toggle="tab" data-bs-target="#tutor" type="button">
+                    Perfil Tutor
+                </button>
+            </li>
+            {% endif %}
+        </ul>
+
+        <div class="tab-content">
+
+            <!-- TAB 1: PERFIL PERSONAL -->
+            <div class="tab-pane fade show active p-3 border rounded-3" id="personal">
+
+                <div class="row mb-3">
+
+                    <div class="col-12 col-md-4 mb-3">
+                        <label>Nombre</label>
+                        <input class="form-control" name="nombre" value="{{ usuario.nombre }}" disabled>
+                    </div>
+                    <div class="col-12 col-md-4 mb-3">
+                        <label>Primer apellido</label>
+                        <input class="form-control" name="p_apellido" value="{{ usuario.p_apellido }}" disabled>
+                    </div>
+                    <div class="col-12 col-md-4 mb-3">
+                        <label>Segundo apellido</label>
+                        <input class="form-control" name="s_apellido" value="{{ usuario.s_apellido }}" disabled>
+                    </div>
+
+                    <div class="col-12 col-md-4 mb-3">
+                        <label>RUN</label>
+                        <input class="form-control" name="run" value="{{ usuario.run }}" disabled>
+                    </div>
+
+                    <div class="col-12 col-md-4 mb-3">
+                        <label>Género</label>
+                        {% if usuario.genero == 'H' %}
+                            <input class="form-control" name="genero" value="Hombre" disabled>
+                        {% elif usuario.genero == 'M' %}
+                            <input class="form-control" name="genero" value="Mujer" disabled>
+                        {% elif usuario.genero == 'O' %}
+                            <input class="form-control" name="genero" value="Otro" disabled>
+                        {% elif usuario.genero == 'P' %}
+                            <input class="form-control" name="genero" value="Prefiero no decirlo" disabled>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-12 col-md-4 mb-3">
+                        <label>Fecha de Nacimiento</label>
+                        <input class="form-control" name="fecha_nac" value="{{ usuario.fecha_nac }}" disabled>
+                    </div>
+
+                    <div class="col-12 col-md-4 mb-3">
+                        <label>País</label>
+                        <select class="form-select" name="pais">
+                            {% for pais in paises %}
+                                <option value="{{ pais.id }}" {% if usuario.pais_id == pais.id %}selected{% endif %}>{{ pais.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-4 mb-3">
+                        <label>Región</label>
+                        <select class="form-select" name="region" id="region-select">
+                            {% for region in regiones %}
+                                <option value="{{ region.id }}" {% if usuario.region_id == region.id %}selected{% endif %}>{{ region.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-4 mb-3">
+                        <label>Comuna</label>
+                        <select class="form-select" name="comuna" id="comuna-select">
+                            {% for comuna in comunas %}
+                                <option value="{{ comuna.id }}" data-region="{{ comuna.region_id }}" 
+                                    {% if usuario.comuna_id == comuna.id %}selected{% endif %}>
+                                    {{ comuna.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-4 mb-3">
+                        <label>Ocupación</label>
+                        <select class="form-select" name="ocupacion" id="ocupacion-select">
+                            {% for ocupacion in ocupaciones %}
+                                <option value="{{ ocupacion.id }}" {% if usuario.ocupacion_id == ocupacion.id %}selected{% endif %}>
+                                    {{ ocupacion.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-4 mb-3">
+                        <label>Nivel Educacional</label>
+                        <select class="form-select" name="n_educacion" id="n-educacion-select">
+                            {% for nivel in niveles %}
+                                <option value="{{ nivel.id }}" {% if usuario.n_educacion_id == nivel.id %}selected{% endif %}>{{ nivel.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-4 mb-3">
+                        <label>Institución</label>
+                        <select class="form-select" name="institucion" id="institucion-select">
+                            {% for institucion in instituciones %}
+                                <option value="{{ institucion.id }}" {% if usuario.institucion_id == institucion.id %}selected{% endif %}>{{ institucion.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-12 mb-3">
+                        <label>Áreas de interés</label>
+                        <select class="form-control form-control-sm"  name="areas_interes" id="areas_interes" multiple>
+                            {% for area in areas %}
+                                <option value="{{ area.id }}"
+                                    {% if area.id in areas_usuario_ids %}selected{% endif %}>
+                                    {{ area.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- TAB 2: PERFIL TUTOR -->
+            {% if tutor %}
+            <div class="tab-pane fade p-3 border rounded-3" id="tutor">
+
+                <!-- Sobre mí -->
+                <div class="mb-3">
+                    <label>Sobre mi</label>
+                    <textarea class="form-control" name="Sobremi" rows="3" placeholder="No has definido este apartado...">{{ tutor.sobremi|default:"" }}</textarea>
+                </div>
+
+                <!-- Áreas de conocimiento -->
+                <div class="mb-3">
+                    <label>Áreas de conocimiento</label>
+                    <select class="form-control form-control-sm"  name="areas_conocimiento" id="areas_conocimiento" multiple>
+                        {% for area in areas %}
+                            <option value="{{ area.id }}" {% if area.id in areastutor_ids %}selected{% endif %}>
+                                {{ area.nombre }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!-- Archivos ya existentes -->
+                {% if archivos_tutor %}
+                <div class="mb-3">
+                    <p class="fw-semibold small mb-1">Archivos actuales:</p>
+                    <ul class="list-group list-group-flush border rounded-3 small">
+                        {% for c in archivos_tutor %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span class="text-truncate" style="max-width: 60%;">{{ c.nombre }}</span>
+                            <div>
+                                <input type="checkbox" name="eliminar_archivos" value="{{ c.id }}"> Eliminar
+                                <a href="{{ c.url_firmada }}" target="_blank" class="btn btn-sm btn-outline-primary ms-2">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                            </div>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- Subir archivos nuevos -->
+                <div class="mb-4">
+                    <label for="id_certificacion" class="form-label fw-semibold">Certificaciones (PDF)</label>
+                    <input type="file" name="certificacion" id="id_certificacion" class="form-control" accept="application/pdf" multiple>
+                    <div class="form-text text-muted">Sube uno o más archivos PDF válidos.</div>
+                </div>
+
+                <!-- Lista dinámica de archivos seleccionados -->
+                <div id="archivos-seleccionados-container" class="mt-3">
+                    <p class="fw-semibold small mb-1">Archivos seleccionados para subir:</p>
+                    <ul id="lista-archivos-seleccionados" class="list-group list-group-flush border rounded-3 small">
+                        <li class="list-group-item text-muted" id="initial-message">Ningún archivo seleccionado.</li>
+                    </ul>
+                </div>
+            {% endif %}
+            </div>
+
+        <div class="mt-4 text-end">
+            <a href="{% url 'perfilusuario' %}" class="btn btn-secondary">Cancelar</a>
+            <button class="btn btn-primary">Guardar Cambios</button>
+        </div>
+
+    </form>
+</div>
+
+<style>
+.ts-control {
+    height: auto; /* permite que crezca según contenido */
+    min-height: calc(1.5em + 0.75rem + 2px);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    flex-wrap: wrap;
+}
+
+.ts-control input {
+    font-size: 0.875rem;
+    min-width: 2em;
+}
+
+.ts-dropdown {
+    font-size: 0.875rem;
+    max-height: 200px;
+    overflow-y: auto;
+    width: 100% !important;
+}
+</style>
+
+
+
+<script src="{% static 'js/js_home/editarperfil.js' %}"></script>
+
+{% endblock %}

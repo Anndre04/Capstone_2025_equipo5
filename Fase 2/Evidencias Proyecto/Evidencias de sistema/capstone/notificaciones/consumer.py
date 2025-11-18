@@ -52,9 +52,11 @@ class NotificacionConsumer(WebsocketConsumer):
             logger.debug(f"📢 Notificación recibida en consumer para enviar: {event}")  # <-- log agregado
             self.send(text_data=json.dumps({
                 "id": event["id"],
-                "tipo": event.get("tipo", "test"),
+                "tipo": event.get("tipo"),
                 "titulo": event.get("titulo"),
                 "mensaje": event.get("mensaje"),
+                "icono": event.get("icono"),
+                "color": event.get("color"),
                 "datos_extra": event.get("datos_extra", {}),
                 "fecha_creacion": event.get("fecha_creacion"),
                 "leida": event.get("leida", False)

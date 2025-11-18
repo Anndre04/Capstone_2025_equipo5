@@ -252,15 +252,35 @@
          margin-left: 0.5rem;
      }
 
+     #notifications-dropdown-menu {
+         max-height: 300px;
+         max-width: 90vw !important;
+         left: 5vw !important;
+         right: 5vw !important;
+         width: auto !important;
+         position: absolute !important;
+         z-index: 1050;
+         margin-top: 0 !important;
+     }
+
  }
 
+  @media (max-width: 425px) {
 
+     #notifications-dropdown-menu {
+
+         position: absolute !important;
+         z-index: 2050;
+     }
+
+ }
 
  /* ESTILOS ADICIONALES */
 
 
  /* Estilos para el dropdown de notificaciones */
- .notifications-dropdown {
+ .notifications-dropdown,
+ #notifications-dropdown-menu {
      width: 350px;
      max-height: 400px;
  }
@@ -277,8 +297,9 @@
  }
 
  .notification-item.unread {
-     background-color: #f0f7ff;
-     border-left-color: #0d6efd;
+     /* CSS solo se activa cuando ambas clases están presentes */
+     background-color: #e8f4fd !important;
+     border-left-color: #0d6efd !important;
  }
 
  .notification-icon {
@@ -336,21 +357,27 @@
      }
  }
 
-#tutoria-encurso {
-  display: inline-block;
-  padding: 0.25em 0.5em;
-  font-size: 0.55rem;
-  font-weight: 250;
-  border-radius: 0.5rem;
-  animation: blink 1.5s infinite;
-  letter-spacing: 0.5px;
-  vertical-align: middle;
-  margin-left: 0.25rem;
-}
+ #tutoria-encurso {
+     display: inline-block;
+     padding: 0.25em 0.5em;
+     font-size: 0.55rem;
+     font-weight: 250;
+     border-radius: 0.5rem;
+     animation: blink 1.5s infinite;
+     letter-spacing: 0.5px;
+     vertical-align: middle;
+     margin-left: 0.25rem;
+ }
 
-/* Animación de parpadeo */
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
+ /* Animación de parpadeo */
+ @keyframes blink {
 
+     0%,
+     100% {
+         opacity: 1;
+     }
+
+     50% {
+         opacity: 0;
+     }
+ }

@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from django.utils import timezone
 from django.conf import settings
 from django.urls import reverse
 import logging
@@ -10,11 +11,11 @@ from django.contrib import messages
 from django.db import transaction
 from autenticacion.tasks import BASE_URL
 from tutoria.models import Anuncio, Archivo, TipoSolicitud, Tutor, TutorArea, Tutoria
-from autenticacion.models import AreaInteres, Usuario, UsuarioArea
+from autenticacion.models import AreaInteres, Comuna, Institucion, Nivel_educacional, Ocupacion, Pais, Region, Usuario, UsuarioArea
 from tutoria.models import Anuncio, Solicitud
 from django.db.models import Avg, Case, When, Value, IntegerField, Q
 from django.contrib.auth import logout
-from services.gcp import generar_url_firmada
+from services.gcp import generar_url_firmada, get_bucket, subir_archivo_gcp
 
 
 logger = logging.getLogger(__name__)
@@ -91,141 +92,204 @@ def home(request):
 @login_required
 def perfilusuario(request):
     usuario = request.user
-    contexto = {'usuario': usuario}
+
+    # Log del perfil
+    logger.info(f"Usuario: {usuario.email}")
+
+    contexto = {
+        "usuario": usuario,
+        "areas": AreaInteres.objects.all(),
+        "areas_usuario": usuario.areas_interes,  # QuerySet por tu property
+    }
+
+    logger.warning(usuario.areas_interes.values_list("nombre", flat=True))
+
+    # Si NO es tutor activo → return inmediato
+    if not usuario.es_tutor_activo():
+        contexto["es_tutor"] = False
+        return render(request, "home/perfilusuario.html", contexto)
 
     try:
-        # Validar si es tutor activo usando el método del modelo
-        if not usuario.es_tutor_activo():
-            contexto['es_tutor'] = False
-            return render(request, 'home/perfilusuario.html', contexto)
-
-        # Consultar tutor y prefetch
-        tutor = Tutor.objects.prefetch_related('areastutor', 'certificados').get(usuario=usuario)
+        tutor = Tutor.objects.prefetch_related(
+            "areastutor", "certificados"
+        ).get(usuario=usuario)
 
         contexto.update({
-            'es_tutor': True,
-            'tutor': tutor,
-            'areastutor': tutor.areastutor.filter(activo=True),
-            'archivos': [
+            "es_tutor": True,
+            "tutor": tutor,
+            "areastutor": tutor.areastutor.filter(activo=True),
+            "archivos": [
                 {
                     "nombre": c.nombre,
                     "estado": c.estado,
                     "url_ver": generar_url_firmada(c.url, descargar=False),
-                    "url_descargar": generar_url_firmada(c.url, descargar=True)
+                    "url_descargar": generar_url_firmada(c.url, descargar=True),
                 }
                 for c in tutor.certificados.all()
-            ]
+            ],
         })
 
     except Tutor.DoesNotExist:
-        contexto['es_tutor'] = False
+        contexto["es_tutor"] = False
 
     except Exception as e:
         messages.error(request, "Hubo un error cargando su perfil. Inténtelo más tarde.")
-        logger.error(f"Error cargando perfil del usuario {usuario.id}: {e}", exc_info=True)
+        logger.error(f"Error cargando perfil: {usuario.id}: {e}", exc_info=True)
         return redirect("home")
 
-    return render(request, 'home/perfilusuario.html', contexto)
+    return render(request, "home/perfilusuario.html", contexto)
 
-
-# perfil/views.py
 @login_required
-def editar_perfil(request):
+def editarperfil(request):
     usuario = request.user
-    logger.debug(f"[editar_perfil] Usuario actual: {usuario.email} ({usuario.id})")
+    tutor = getattr(usuario, "tutor", None)
 
-    # Obtener instancias relacionadas
-    tutor = getattr(usuario, 'tutor', None)
-    logger.debug(f"[editar_perfil] Tutor asociado: {tutor}")
+    areas_usuario_ids = list(usuario.areas_interes.values_list('id', flat=True))
+    areastutor_ids = []
+    if tutor:
+        areastutor_ids = list(
+            TutorArea.objects.filter(tutor=tutor, activo=True).values_list('area_id', flat=True)
+        )
 
-    usuario_areas = UsuarioArea.objects.filter(usuario=usuario, activo=True)
-    tutor_areas = TutorArea.objects.filter(tutor=tutor, activo=True) if tutor else []
-    archivos = Archivo.objects.filter(tutor=tutor) if tutor else []
+    areas = AreaInteres.objects.all()
 
-    if request.method == 'POST':
-        tipo = request.POST.get('tipo')
-        logger.debug(f"[editar_perfil] POST recibido. Tipo: {tipo}")
-        logger.debug(f"[editar_perfil] Datos POST: {request.POST}")
-        logger.debug(f"[editar_perfil] Archivos enviados: {request.FILES}")
+    if request.method == "POST":
+        logger.info("POST recibido en editarperfil")
 
-        # --- DATOS PERSONALES (Usuario) ---
-        if tipo == 'usuario':
-            usuario.nombre = request.POST.get('nombre')
-            usuario.p_apellido = request.POST.get('p_apellido')
-            usuario.s_apellido = request.POST.get('s_apellido')
-            usuario.genero = request.POST.get('genero')
-            usuario.fecha_nac = request.POST.get('fecha_nac')
-            usuario.ocupacion_id = request.POST.get('ocupacion')
-            usuario.n_educacion_id = request.POST.get('n_educacion')
-            usuario.institucion_id = request.POST.get('institucion')
-            usuario.save()
-            logger.debug(f"[editar_perfil] Usuario actualizado: {usuario.nombre_completo}")
-            return JsonResponse({'ok': True, 'msg': 'Datos personales actualizados'})
+        pais_id = request.POST.get("pais")
+        if pais_id:
+            try:
+                usuario.pais = Pais.objects.get(id=pais_id)
+            except Pais.DoesNotExist:
+                logger.warning(f"[home.views] Pais con id {pais_id} no existe")
 
-        # --- PERFIL TUTOR ---
-        elif tipo == 'tutor':
-            if tutor:
-                tutor.sobremi = request.POST.get('sobremi')
-                tutor.save()
-                logger.debug(f"[editar_perfil] Tutor actualizado: {tutor}")
-                return JsonResponse({'ok': True, 'msg': 'Perfil de tutor actualizado'})
-            else:
-                logger.warning(f"[editar_perfil] Usuario {usuario.email} no tiene perfil de tutor")
-                return JsonResponse({'ok': False, 'msg': 'No tienes perfil de tutor'})
+        region_id = request.POST.get("region")
+        if region_id:
+            try:
+                usuario.region = Region.objects.get(id=region_id)
+            except Region.DoesNotExist:
+                logger.warning(f"[home.views] Region con id {region_id} no existe")
 
-        # --- ÁREAS DE INTERÉS (UsuarioArea) ---
-        elif tipo == 'usuario_area':
-            areas_ids = request.POST.getlist('areas[]')
-            logger.debug(f"[editar_perfil] Áreas de interés seleccionadas: {areas_ids}")
-            UsuarioArea.objects.filter(usuario=usuario).update(activo=False)
-            for area_id in areas_ids:
-                ua, created = UsuarioArea.objects.update_or_create(
-                    usuario=usuario,
-                    area_id=area_id,
+        comuna_id = request.POST.get("comuna")
+        if comuna_id:
+            try:
+                usuario.comuna = Comuna.objects.get(id=comuna_id)
+            except Comuna.DoesNotExist:
+                logger.warning(f"[home.views] Comuna con id {comuna_id} no existe")
+
+        ocupacion_id = request.POST.get("ocupacion")
+        if ocupacion_id:
+            try:
+                usuario.ocupacion = Ocupacion.objects.get(id=ocupacion_id)
+            except Ocupacion.DoesNotExist:
+                logger.warning(f"[home.views] Ocupacion con id {ocupacion_id} no existe")
+
+        n_educacion_id = request.POST.get("n_educacion")
+        if n_educacion_id:
+            try:
+                usuario.n_educacion = Nivel_educacional.objects.get(id=n_educacion_id)
+            except Nivel_educacional.DoesNotExist:
+                logger.warning(f"[home.views] Nivel educacional con id {n_educacion_id} no existe")
+
+        institucion_id = request.POST.get("institucion")
+        if institucion_id:
+            try:
+                usuario.institucion = Institucion.objects.get(id=institucion_id)
+            except Institucion.DoesNotExist:
+                logger.warning(f"[home.views] Institucion con id {institucion_id} no existe")
+
+        usuario.save()
+        logger.info(f"Usuario actualizado: {usuario.nombre} {usuario.p_apellido} {usuario.s_apellido}")
+
+        # Áreas de interés (ManyToMany)
+        areas_seleccionadas = request.POST.getlist("areas_interes")
+        logger.info(f"Áreas seleccionadas por el usuario: {areas_seleccionadas}")
+        if areas_seleccionadas:
+            usuario.areas_interes.set(areas_seleccionadas)
+        else:
+            logger.info("No se recibieron áreas de interés. No se modificarán las existentes.")
+        logger.info(f"Áreas de interés actuales: {[a.id for a in usuario.areas_interes.all()]}")
+
+        # Datos del tutor
+        if tutor:
+            tutor.sobremi = request.POST.get("Sobremi")
+            tutor.save()
+            logger.info(f"Tutor actualizado: {tutor.sobremi}")
+
+            nuevas_areas = request.POST.getlist("areas_conocimiento")
+            logger.info(f"Áreas de conocimiento enviadas: {nuevas_areas}")
+
+            # Desactivar las que no están en la selección
+            for area in TutorArea.objects.filter(tutor=tutor):
+                if str(area.area_id) not in nuevas_areas:
+                    area.activo = False
+                    area.save()
+                    logger.info(f"Área desactivada: {area.area_id}")
+                else:
+                    area.activo = True
+                    area.save()
+                    logger.info(f"Área activada: {area.area_id}")
+
+            # Agregar nuevas si no existían
+            for area_id in nuevas_areas:
+                obj, created = TutorArea.objects.get_or_create(
+                    tutor=tutor, area_id=area_id,
                     defaults={'activo': True}
                 )
-                logger.debug(f"[editar_perfil] UsuarioArea {'creada' if created else 'actualizada'}: {ua}")
-            return JsonResponse({'ok': True, 'msg': 'Áreas de interés actualizadas'})
+                if created:
+                    logger.info(f"Área nueva creada para tutor: {area_id}")
+                else:
+                    logger.info(f"Área ya existente, asegurando activo=True: {area_id}")
+                    if not obj.activo:
+                        obj.activo = True
+                        obj.save()
 
-        # --- ÁREAS DE CONOCIMIENTO (TutorArea) ---
-        elif tipo == 'tutor_area' and tutor:
-            areas_ids = request.POST.getlist('areas[]')
-            logger.debug(f"[editar_perfil] Áreas de conocimiento seleccionadas: {areas_ids}")
-            TutorArea.objects.filter(tutor=tutor).update(activo=False)
-            for area_id in areas_ids:
-                ta, created = TutorArea.objects.update_or_create(
-                    tutor=tutor,
-                    area_id=area_id,
-                    defaults={'activo': True}
-                )
-                logger.debug(f"[editar_perfil] TutorArea {'creada' if created else 'actualizada'}: {ta}")
-            return JsonResponse({'ok': True, 'msg': 'Áreas de conocimiento actualizadas'})
+            archivos_a_eliminar = request.POST.get('archivos_eliminar', '')
+            if archivos_a_eliminar:
+                archivos_a_eliminar = archivos_a_eliminar.split(',')
+                bucket = get_bucket()
+                for archivo_id in archivos_a_eliminar:
+                    try:
+                        archivo_obj = Archivo.objects.get(id=archivo_id, tutor=tutor)
+                        if archivo_obj.url:
+                            blob = bucket.blob(archivo_obj.url)
+                            blob.delete()
+                            logger.info(f"[home.views] Archivo eliminado en GCP: {archivo_obj.url}")
+                    except Archivo.DoesNotExist:
+                        logger.warning(f"[home.views] Archivo no encontrado para eliminar: {archivo_id}")
 
-        # --- ARCHIVOS (Archivo) ---
-        elif tipo == 'archivo' and tutor:
-            archivo = request.FILES.get('archivo')
-            nombre = request.POST.get('nombre')
-            logger.debug(f"[editar_perfil] Archivo recibido: nombre={nombre}, archivo={archivo}")
+            # --- SUBIR NUEVOS ARCHIVOS ---
+            if request.FILES.getlist('certificacion'):
+                for f in request.FILES.getlist('certificacion'):
+                    ruta_gcs = subir_archivo_gcp(f, nombre=f.name, tutor_id=tutor.id)
+                    if ruta_gcs:
+                        Archivo.objects.create(
+                            tutor=tutor,
+                            nombre=f.name,
+                            url=ruta_gcs,
+                            estado="Pendiente"
+                        )
+                        logger.info(f"[home.views] Nuevo archivo registrado: {f.name}")
 
-            Archivo.objects.create(
-                tutor=tutor,
-                nombre=nombre,
-                url='ruta/o/url/generada',
-                estado='Pendiente'
-            )
-            logger.debug(f"[editar_perfil] Archivo creado para tutor {tutor}")
-            return JsonResponse({'ok': True, 'msg': 'Archivo subido con éxito'})
+        messages.success(request, "Se ha editado tu perfil exitosamente.")
+        return redirect("perfilusuario")
 
-    # GET → Renderizar la página
-    context = {
-        'usuario': usuario,
-        'tutor': tutor,
-        'usuario_areas': usuario_areas,
-        'tutor_areas': tutor_areas,
-        'archivos': archivos,
+    contexto = {
+        "usuario": usuario,
+        "tutor": tutor,
+        "areas": areas,
+        'areas_usuario_ids': areas_usuario_ids,
+        "areastutor_ids": areastutor_ids,
+        "paises": Pais.objects.all(),
+        "regiones": Region.objects.all(),
+        "comunas": Comuna.objects.all(),
+        "ocupaciones": Ocupacion.objects.all(),
+        "niveles": Nivel_educacional.objects.all(),
+        "instituciones": Institucion.objects.all(),
+        "archivos_tutor": tutor.certificados.all() if tutor else None
     }
-    logger.debug(f"[editar_perfil] Renderizando modal con contexto: {context}")
-    return render(request, 'perfil/editar_perfil.html', context)
+
+    return render(request, 'home/editarperfil.html', contexto)
 
 @login_required
 def solicitudesusuario(request, user_id):
@@ -306,7 +370,7 @@ def aceptar_solicitud_tutoria(request, solicitud_id):
     # Solo crear tutoría si es de tipo "tutoria"
     if solicitud.tipo.nombre.lower() == "tutoria":
         dt_inicio = datetime.now()  # o tomar de request.POST si querés fecha personalizada
-        dt_fin = dt_inicio + timedelta(minutes=30)
+        dt_fin = dt_inicio + timedelta(seconds=10)
 
         tutoria = Tutoria.objects.create(
             solicitud=solicitud,

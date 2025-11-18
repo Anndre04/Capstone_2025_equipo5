@@ -22,7 +22,7 @@
                         <div class="position-relative me-4">
                             <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center"
                                 style="width: 70px; height: 70px;">
-                                <span class="text-white fw-bold fs-5">AG</span>
+                                <span class="text-white fw-bold fs-5">{{ anuncio.tutor.usuario.nombre |slice:":1"|upper}}{{ anuncio.tutor.usuario.p_apellido |slice:":1"|upper}}</span>
                             </div>
                             <div class="position-absolute bottom-0 end-0 bg-success rounded-circle border border-3 border-white"
                                 style="width: 16px; height: 16px;"></div>
@@ -33,15 +33,49 @@
                             
                             <!-- RATING -->
                             <div class="mb-3">
-                                <div class="d-flex align-items-center">
-                                    <span class="text-warning fs-5">
-                                        <i class="bi bi-star-fill"></i>
-                                        <i class="bi bi-star-fill"></i>
-                                        <i class="bi bi-star-fill"></i>
-                                        <i class="bi bi-star-fill"></i>
-                                        <i class="bi bi-star-half"></i>
-                                    </span>
-                                    <span class="text-muted ms-2">4.5 (128 reseñas)</span>
+                                <div class="tutoring-stats d-flex justify-content-between mb-2 pt-2 border-top">
+                                    <div class="stat-item text-center flex-grow-1">
+                                        {% if anuncio.cantidad_reseñas > 0 %}
+                                            
+                                            <div class="rating mb-1" title="Calificación: {{ anuncio.promedio_estrellas|floatformat:1 }}">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= anuncio.promedio_estrellas_redondeado %}
+                                                        <i class="bi bi-star-fill text-warning"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-star text-warning"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                            <div class="stat-value fw-bold text-dark small">
+                                                {{ anuncio.promedio_estrellas|floatformat:1 }}
+                                            </div>
+                                            
+                                        {% else %}
+                                            
+                                            <div class="d-flex align-items-center justify-content-center mb-1">
+                                                <div class="rating me-2">
+                                                    {% for i in "12345" %}<i class="bi bi-star text-secondary small"></i>{% endfor %}
+                                                </div>
+                                                <div class="stat-value text-muted small">
+                                                    Sin Calificar
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="stat-label text-muted x-small mt-0">
+                                                0 reseñas
+                                            </div>
+                                            
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="stat-item text-center flex-grow-1">
+                                        <div class="stat-value fw-bold text-dark small">
+                                            {{ anuncio.tutorias_completadas.count }}
+                                        </div>
+                                        <div class="stat-label text-muted x-small">
+                                            Tutorías Realizadas
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -52,47 +86,37 @@
                         <!-- EXPERIENCIA -->
                         <div class="col-12 col-md-6">
                             <h6 class="fw-bold text-dark mb-3 d-flex align-items-center">
-                                <i class="bi bi-briefcase me-2 text-primary"></i>Experiencia
+                                <i class="bi bi-briefcase me-2 text-primary"></i>Sobre Mi
                             </h6>
-                            <p class="text-muted mb-0 ps-4">5+ años enseñando matemáticas a nivel universitario y
-                                bachillerato</p>
+                            <p class="text-muted mb-0 ps-4">{{ anuncio.tutor.sobremi }}</p>
                         </div>
 
                         <!-- ESPECIALIZACIONES -->
                         <div class="col-12 col-md-6">
                             <h6 class="fw-bold text-dark mb-3 d-flex align-items-center">
-                                <i class="bi bi-award me-2 text-primary"></i>Especializaciones
+                                <i class="bi bi-award me-2 text-primary"></i>Areas que enseño
                             </h6>
                             <div class="d-flex flex-wrap gap-2 ps-4">
-                                <span
-                                    class="badge bg-primary bg-opacity-10 text-primary border-0 px-3 py-2">Álgebra</span>
-                                <span
-                                    class="badge bg-primary bg-opacity-10 text-primary border-0 px-3 py-2">Cálculo</span>
-                                <span
-                                    class="badge bg-primary bg-opacity-10 text-primary border-0 px-3 py-2">Geometría</span>
-                                <span
-                                    class="badge bg-primary bg-opacity-10 text-primary border-0 px-3 py-2">Estadística</span>
+                                {% for a in areas_activas_tutor %}
+                                <span class="badge bg-primary bg-opacity-10 text-primary border-0 px-3 py-2">
+                                    {{a}}
+                                </span>
+                                {% endfor %}
                             </div>
                         </div>
 
                         <!-- TÍTULOS Y FORMACIÓN -->
                         <div class="col-12 col-md-6">
                             <h6 class="fw-bold text-dark mb-3 d-flex align-items-center">
-                                <i class="bi bi-mortarboard me-2 text-primary"></i>Formación
+                                <i class="bi bi-mortarboard me-2 text-primary"></i>Certificados
                             </h6>
                             <ul class="list-unstyled text-muted ps-4">
+                                {% for c in certificados_aprobados %}
                                 <li class="mb-2">
                                     <i class="bi bi-check-circle text-success me-2"></i>
-                                    Magíster en Matemáticas Aplicadas
+                                    {{c}}
                                 </li>
-                                <li class="mb-2">
-                                    <i class="bi bi-check-circle text-success me-2"></i>
-                                    Licenciatura en Matemáticas
-                                </li>
-                                <li>
-                                    <i class="bi bi-check-circle text-success me-2"></i>
-                                    Certificación en Educación Online
-                                </li>
+                                {% endfor %}
                             </ul>
                         </div>
                     </div>

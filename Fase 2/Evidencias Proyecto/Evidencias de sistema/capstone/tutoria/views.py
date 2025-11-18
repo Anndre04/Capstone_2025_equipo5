@@ -22,7 +22,7 @@ from autenticacion.models import AreaInteres, Rol
 from notificaciones.services import NotificationService
 import uuid
 from google.cloud import storage
-from services.gcp import subir_archivo_gcp
+from services.gcp import subir_archivo_gcp, generar_url_firmada
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ def descargar_archivo(request, archivo_id):
     ruta_gcs = str(ruta_data['url'])
 
     # Llamada a la función de utilidad
-    url_descarga = generar_url_firmada_gcs(ruta_gcs, descargar=True)
+    url_descarga = generar_url_firmada(ruta_gcs, descargar=True)
     
     if url_descarga:
         return redirect(url_descarga)
@@ -175,15 +175,17 @@ def editaranuncio(request, anuncio_id):
         area_id = request.POST.get("area")
         dias_seleccionados = request.POST.getlist("dias[]")
 
-        if not titulo or not descripcion or not precio or not area_id:
+        logging.error(dias_seleccionados)
+
+        if not titulo or not precio or not area_id:
             messages.error(request, "Todos los campos son obligatorios.")
-            return redirect('tutoria:mis_tutorias_prof')
+            return redirect('tutoria:misanuncioprof')
 
         try:
             precio = int(precio)
         except ValueError:
             messages.error(request, "El precio debe ser un número.")
-            return redirect('tutoria:mis_tutorias_prof')
+            return redirect('tutoria:misanuncioprof')
 
         # Actualizar anuncio
         anuncio.titulo = titulo
@@ -204,7 +206,7 @@ def editaranuncio(request, anuncio_id):
                 noche="N" in turnos
             )
 
-        messages.success(request, "Anuncio y disponibilidad actualizados correctamente.")
+        messages.success(request, "Anuncio actualizado correctamente.")
         return redirect('tutoria:misanunciosprof', request.user.id)
 
 @login_required
@@ -264,11 +266,8 @@ def publicartutoria(request, user_id):
         messages.success(request, "Tutoría publicada correctamente")
         return redirect('tutoria:misanunciosprof', user_id=user_id)
 
-def anunciotutor(request, anuncio_id):
 
-    if not hasattr(request.user, 'tutor'):
-        logger.error("No tiene permisos correspondientes")
-        return redirect('home')
+def anunciotutor(request, anuncio_id):
 
     DIAS_SEMANA_ORDENADA = [
         ("Lunes", "Lunes"),
@@ -280,20 +279,32 @@ def anunciotutor(request, anuncio_id):
         ("Domingo", "Domingo"),
     ]
 
-    anuncio = get_object_or_404(Anuncio, id=anuncio_id)
-    # Obtener todas las disponibilidades asociadas al anuncio
+    # Usamos select_related para obtener el Tutor en la misma consulta.
+    anuncio = get_object_or_404(Anuncio.objects.select_related('tutor'), id=anuncio_id)
+    tutor = anuncio.tutor
+
+    areas_activas_tutor = TutorArea.objects.filter(
+        tutor=tutor, 
+        activo=True
+    ).select_related('area')
+    certificados_aprobados = tutor.certificados.filter(estado="Aprobado")
+
     disponibilidad = anuncio.disponibilidad_set.all()
 
-    # Opcional: Crear un mapa de disponibilidad para facilitar la visualización en la plantilla
     disponibilidad_map = {
         d.dia: {'mañana': d.mañana, 'tarde': d.tarde, 'noche': d.noche}
         for d in disponibilidad
     }
 
+    logging.error(certificados_aprobados)
+
     contexto = {
         "anuncio": anuncio,
+        "tutor": tutor,
+        "areas_activas_tutor": areas_activas_tutor, 
         "disponibilidad_map": disponibilidad_map,
         "dias_ordenados": DIAS_SEMANA_ORDENADA,
+        "certificados_aprobados": certificados_aprobados, # ⬅️ Variable filtrada
     }
     return render(request, 'tutoria/anunciotutor.html', contexto)
 
@@ -403,110 +414,115 @@ def rechazar_solicitud(request, solicitud_id):
 @login_required
 def gestortutorias(request):
     """
-    Obtiene los anuncios únicos asociados a solicitudes aceptadas
-    donde el usuario actual (tutor) es el receptor.
-    Permite filtrar tutorías por estudiante, anuncio y fecha.
+    Obtiene los anuncios, tutorías y alumnos asociados al usuario actual (tutor) 
+    a través de solicitudes aceptadas, y aplica filtros de búsqueda.
     """
 
+    # 1️⃣ Verificación de permisos y acceso al objeto Tutor
     if not hasattr(request.user, 'tutor'):
         logger.error("No tiene permisos correspondientes")
+        messages.error(request, "Acceso denegado. Se requiere perfil de tutor.")
         return redirect('home')
     
+    tutor_obj = request.user.tutor 
+    
     try:
-        # 1️⃣ Obtener IDs de anuncios únicos donde el usuario actual es tutor
-        anuncio_ids = Solicitud.objects.filter(
+        # --- CONSULTA BASE: Solicitudes Aceptadas para el Tutor Actual ---
+        
+        # Filtra las solicitudes donde el usuario es el receptor (Tutor), el solicitante es el Alumno,
+        # y el estado es 'Aceptada'.
+        solicitudes_aceptadas = Solicitud.objects.filter(
             usuarioreceive=request.user,
             tipo__nombre='Alumno',
             estado='Aceptada',
             anuncio__isnull=False
-        ).values_list('anuncio__id', flat=True).distinct()
+        )
 
-        # 2️⃣ Obtener los anuncios activos basados en esos IDs
-        anuncios = Anuncio.objects.filter(
+        # 1.1 Extracción de IDs para filtros posteriores
+        anuncio_ids = solicitudes_aceptadas.values_list('anuncio__id', flat=True).distinct()
+        alumno_ids = solicitudes_aceptadas.values_list('usuarioenvia__id', flat=True).distinct()
+        
+        # 2️⃣ Obtener los anuncios activos (para la vista principal y el filtro)
+        anuncios_activos = Anuncio.objects.filter(
             id__in=anuncio_ids,
             estado="Activo"
         ).order_by('titulo')
-
-        # 3️⃣ Obtener alumnos con sus tutorías, evaluaciones y archivos
-        alumnos = Usuario.objects.filter(
-            solicitudes__estado="Aceptada",
-            solicitudes__tipo__nombre="Alumno"
-        ).prefetch_related(
-            "tutorias_recibidas",  # Tutorías del alumno
-            "realizaciones",       # Evaluaciones realizadas por el alumno
-            "tutorias_recibidas__archivos"  # Archivos de las tutorías
+        
+        # --- 3️⃣ PREPARACIÓN DE INFO DE ALUMNOS (FILTRO CORREGIDO) ---
+        
+        # Filtramos la tabla Usuario usando los IDs obtenidos (solo alumnos aceptados por el tutor actual)
+        alumnos = Usuario.objects.filter(id__in=alumno_ids).prefetch_related(
+            "tutorias_recibidas", 
+            "realizaciones"
         ).distinct()
-
+        
         alumnos_info = []
-
         for alumno in alumnos:
-            tutorias = alumno.tutorias_recibidas.all()
-            archivos_count = sum(t.archivos.count() for t in tutorias)
-            realizaciones_count = alumno.realizaciones.count()
+            # Filtramos las tutorias para que solo cuente las asociadas al tutor actual
+            tutorias_alumno = alumno.tutorias_recibidas.filter(tutor=tutor_obj) 
             
+            # Conteo específico para el tutor
+            archivos_count = sum(t.archivos.count() for t in tutorias_alumno)
+            # CÓDIGO CORREGIDO: (Filtra la Realización por el Tutor a través de Tutoria)
+            realizaciones_count = alumno.realizaciones.filter(
+                # Realizacion -> Evaluacion (FK) -> Tutoria (FK) -> Tutor (FK)
+                evaluacion__tutoria__tutor=tutor_obj 
+            ).count()            
             alumnos_info.append({
                 'alumno': alumno,
-                'tutorias_count': tutorias.count(),
+                'tutorias_count': tutorias_alumno.count(),
                 'archivos_count': archivos_count,
                 'realizaciones_count': realizaciones_count,
             })
-
-        # 3️⃣ Si el usuario es tutor, obtener sus tutorías
-        
-        tutorias = (
+            
+        # 4️⃣ Obtener TODAS las tutorías del tutor actual (Base para el filtro)
+        tutorias_qs = (
             Tutoria.objects
-            .filter(tutor=request.user.tutor)
+            .filter(tutor=tutor_obj)
             .select_related('anuncio', 'estudiante')
             .order_by('-fecha_creacion')
         )
-
-        # --- FILTROS DEL BUSCADOR ---
+        
+        # --- 5️⃣ FILTROS DEL BUSCADOR ---
+        
+        tutorias_filtradas = tutorias_qs 
+        
         estudiante_query = request.GET.get('estudiante', '').strip()
         anuncio_id = request.GET.get('anuncio', '').strip()
         fecha_query = request.GET.get('fecha', '').strip()
-
+        
         # 🔍 Filtro por nombre del estudiante
         if estudiante_query:
-            tutorias = tutorias.filter(
+            tutorias_filtradas = tutorias_filtradas.filter(
                 Q(estudiante__nombre__icontains=estudiante_query) |
                 Q(estudiante__p_apellido__icontains=estudiante_query)
             )
 
         # 🔍 Filtro por anuncio seleccionado
         if anuncio_id:
-            tutorias = tutorias.filter(anuncio_id=anuncio_id)
+            tutorias_filtradas = tutorias_filtradas.filter(anuncio_id=anuncio_id)
 
         # 🔍 Filtro por fecha exacta
         if fecha_query:
             try:
                 fecha_dt = datetime.strptime(fecha_query, '%Y-%m-%d').date()
-                tutorias = tutorias.filter(fecha_creacion__date=fecha_dt)
+                tutorias_filtradas = tutorias_filtradas.filter(fecha_creacion__date=fecha_dt)
             except ValueError:
-                messages.warning(request, "Formato de fecha inválido.")
-
-        # 🔹 Anuncios únicos (para select del filtro)
-        anuncios_unicos = (
-            Tutoria.objects
-            .filter(tutor=request.user.tutor)
-            .select_related('anuncio')
-            .order_by('anuncio_id')
-            .distinct('anuncio_id')
-        )
+                messages.warning(request, "Formato de fecha inválido. Usar YYYY-MM-DD.")
 
     except DatabaseError as e:
         logger.error(f"Error en gestor de tutorías: {e}")
-        messages.error(request, "Hubo un error al cargar tus tutorías.")
+        messages.error(request, "Hubo un error al cargar tus tutorías debido a un fallo en la base de datos.")
         return redirect('home')
 
     context = {
-        'anuncios': anuncios,
-        'tutorias': tutorias,
-        'anuncios_unicos': anuncios_unicos,
-        'alumnos_info': alumnos_info,
+        'anuncios': anuncios_activos,
+        'tutorias': tutorias_filtradas, # Tutorías finales filtradas por el buscador
+        'anuncios_unicos': anuncios_activos, # Se usa el mismo queryset para el select
+        'alumnos_info': alumnos_info, # Lista con la información de los alumnos
     }
 
     return render(request, 'tutoria/gestortutorias.html', context)
-
 
 @login_required
 def obtener_alumnos_anuncio(request, anuncio_id):
@@ -535,22 +551,6 @@ def obtener_alumnos_anuncio(request, anuncio_id):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=500)
     
-
-@login_required
-def perfiltutor(request, tutor_id):
-
-    if not hasattr(request.user, 'tutor'):
-        logger.error("No tiene permisos correspondientes")
-        return redirect('home')
-
-    tutor = get_object_or_404(Tutor, id=tutor_id)
-
-    contexto = {
-        'tutor' : tutor
-    }
-    
-    return render(request, 'tutoria/perfiltutor.html', contexto)
-
 
 @login_required
 def registrotutor(request):
@@ -659,7 +659,7 @@ def registrotutor(request):
                 if not user.roles.filter(id=rol_tutor.id).exists():
                     user.roles.add(rol_tutor)
 
-                messages.success(request, "Registro completado exitosamente. Está pendiente de aprobación.")
+                messages.success(request, "Registro completado exitosamente. Está pendiente de aprobación. Debe iniciar sesión nuevamente")
                 return redirect('home')
 
         except Exception as e:
@@ -767,10 +767,13 @@ def tutoria(request, tutoria_id):
     # Traer los mensajes del chat
     mensajes = Mensaje.objects.filter(chat=chat).order_by("timestamp")
 
+    tiempo_transcurrido = (timezone.now() - tutoria.hora_inicio).total_seconds()
+
     contexto = {
         "tutoria": tutoria,
         "chat_id": chat.id,
-        "mensajes": mensajes
+        "mensajes": mensajes,
+        "tiempo_transcurrido": int(tiempo_transcurrido)
     }
 
     return render(request, "tutoria/tutoria.html", contexto)

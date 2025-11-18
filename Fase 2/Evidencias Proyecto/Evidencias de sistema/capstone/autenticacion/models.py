@@ -174,7 +174,7 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
         try:
             # 2. Llamar a la utilidad de firma, usando la ruta guardada en el campo 'foto'.
             # La URL expira después de 3600 segundos (1 semana)
-            return generar_url_firmada(self.foto, expiracion=604800) 
+            return generar_url_firmada(self.foto, expiracion_segundos=604800) 
         
         except ConnectionError:
             # Captura si el bucket no se inicializó correctamente

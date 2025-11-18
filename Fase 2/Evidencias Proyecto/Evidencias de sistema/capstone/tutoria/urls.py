@@ -15,7 +15,6 @@ urlpatterns = [
     path('estado-anuncio/<uuid:anuncio_id>', views.estadoanuncio, name='estadoanuncio'),
     path('editaranuncio/<uuid:anuncio_id>', views.editaranuncio, name="editaranuncio"),
     path('eliminaranuncio/<uuid:anuncio_id>/', views.eliminar_anuncio, name='eliminar_anuncio'),
-    path('perfiltutor/<uuid:tutor_id>', views.perfiltutor, name='perfiltutor'),
     path('registrotutor', views.registrotutor, name='registrotutor'),
     path("obtener-alumnos/<uuid:anuncio_id>/", views.obtener_alumnos_anuncio, name="obtener_alumnos_por_anuncio"),
     path('crear-solicitud-tutoria/', views.crear_solicitud_tutoria, name='crear_solicitud_tutoria'),

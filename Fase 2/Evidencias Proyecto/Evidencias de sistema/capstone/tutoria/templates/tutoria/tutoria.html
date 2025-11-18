@@ -1,140 +1,134 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block title %}Tutoría{% endblock %}
 
 {% block content %}
 
 {% if tutoria and tutoria.estado == "En curso" %}
-<div class="container-fluid px-0">
-    <!-- Header de estado mejorado -->
-    <div class="bg-light border-bottom py-2 px-3">
-        <div class="d-flex justify-content-between align-items-center">
-            <p id="status" class="mb-0 fw-semibold text-warning d-flex align-items-center">
-                <i class="bi bi-circle-fill me-2 fs-6"></i>Iniciando...
-            </p>
-            <div class="text-muted small">
-                <i class="bi bi-clock me-1"></i>
-                <span id="callTimer">00:00</span>
+
+<div id="info" data-user="{{ request.user.id }}" data-tutoria-id="{{ tutoria.id }}" data-hora-inicio="{{ tutoria.hora_inicio|date:'c' }}"
+     data-hora-fin="{{ tutoria.hora_fin|date:'c' }}"></div>
+
+<div class="container-fluid">
+
+    <div class="px-0">
+        <!-- Header de estado mejorado -->
+        <div class="bg-light border-bottom py-2 px-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <p id="status" class="mb-0 fw-semibold text-warning d-flex align-items-center">
+                    <i class="bi bi-circle-fill me-2 fs-6"></i>Iniciando...
+                </p>
+                <div class="text-muted small"></div>
             </div>
         </div>
-    </div>
 
-    <div class="row g-0 g-lg-3" id="videocallSection">
-        <!-- Sección de video principal - Mejorada visualmente -->
-        <div class="col-12 col-lg-8">
-            <div class="card border-0 shadow-sm h-100 video-card">
-                <div class="card-header bg-primary bg-gradient text-white d-flex justify-content-between align-items-center py-2">
-                    <h5 class="mb-0 d-flex align-items-center">
-                        <i class="bi bi-camera-video me-2"></i>Videollamada
-                    </h5>
-                    <div class="d-flex align-items-center">
-                        <span class="badge bg-light text-dark me-2" id="participantCount">1 participante</span>
-                        <span class="badge bg-success" id="connectionStatus">Conectado</span>
-                    </div>
-                </div>
-                
-                <div class="card-body p-0 position-relative video-body-container bg-dark">
-                    <!-- Video remoto principal -->
-                    <div id="remoteVideoWrapper" class="w-100 h-100 d-flex align-items-center justify-content-center main-video-wrapper">
-                        <video id="remoteVideo" autoplay playsinline class="w-100 h-100 main-video" style="object-fit: contain;"></video>
-
-                        <!-- Controles de video mejorados -->
-                        <div id="videoControls" class="position-absolute bottom-0 start-50 translate-middle-x p-3 mb-3 rounded-3 shadow-lg bg-dark bg-opacity-85 d-flex gap-2 flex-wrap justify-content-center">
-                            <button class="btn btn-control rounded-circle" id="btnToggleMic" title="Silenciar">
-                                <i class="bi bi-mic-fill"></i>
-                            </button>
-                            <button class="btn btn-control rounded-circle" id="btnToggleCam" title="Cámara On/Off">
-                                <i class="bi bi-camera-video-fill"></i>
-                            </button>
-                            <button class="btn btn-control rounded-pill px-3" id="btnShareScreen" title="Compartir Pantalla">
-                                <i class="bi bi-display-fill me-1"></i> Compartir
-                            </button>
-                            <button class="btn btn-control rounded-pill px-3" id="btnRecord" title="Iniciar Grabación">
-                                <i class="bi bi-record-circle-fill me-1"></i> Grabar
-                            </button>
-                            <button class="btn btn-danger rounded-circle" id="btnEndCall" title="Finalizar llamada">
-                                <i class="bi bi-telephone-fill"></i>
-                            </button>
-                            <button class="btn btn-control rounded-circle" id="btnToggleFullscreen" title="Pantalla Completa">
-                                <i class="bi bi-arrows-fullscreen"></i>
-                            </button>
+        <div class="row g-0 g-lg-3" id="videocallSection">
+            <!-- Sección de video principal -->
+            <div class="col-12 col-lg-8">
+                <div class="card border-0 shadow-sm h-100 video-card">
+                    <div class="card-header bg-primary bg-gradient text-white d-flex justify-content-between align-items-center py-2">
+                        <h5 class="mb-0 d-flex align-items-center">
+                            <i class="bi bi-camera-video me-2"></i>Videollamada
+                        </h5>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-success me-2" id="connectionStatus">Conectado</span>
+                            <i class="bi bi-clock me-2"></i>
+                            <span id="callTimer" data-elapsed="{{ tiempo_transcurrido|default:0 }}">00:00</span>
                         </div>
-                        
-                        <!-- Mensaje de espera mejorado -->
-                        <div id="waitingMessage" class="position-absolute top-50 start-50 translate-middle text-center text-light p-4">
-                            <div class="spinner-border text-primary mb-3" role="status">
-                                <span class="visually-hidden">Conectando...</span>
+                    </div>
+
+                    <div class="card-body p-0 position-relative video-body-container bg-dark">
+                        <div id="remoteVideoWrapper" class="w-100 h-100 d-flex align-items-center justify-content-center main-video-wrapper">
+                            <video id="remoteVideo" autoplay playsinline class="w-100 h-100 main-video" style="object-fit: contain;"></video>
+
+                            <div id="videoControls" class="position-absolute bottom-0 start-50 translate-middle-x p-3 mb-3 rounded-3 shadow-lg bg-dark bg-opacity-85 d-flex gap-2 flex-wrap justify-content-center">
+                                <button class="btn btn-control rounded-circle" id="btnToggleMic" title="Silenciar">
+                                    <i class="bi bi-mic-fill"></i>
+                                </button>
+                                <button class="btn btn-control rounded-circle" id="btnToggleCam" title="Cámara On/Off">
+                                    <i class="bi bi-camera-video-fill"></i>
+                                </button>
+                                <button class="btn btn-control rounded-pill px-3" id="btnShareScreen" title="Compartir Pantalla">
+                                    <i class="bi bi-display-fill me-1"></i> Compartir
+                                </button>
+                                <button class="btn btn-control rounded-circle" id="btnToggleFullscreen" title="Pantalla Completa">
+                                    <i class="bi bi-arrows-fullscreen"></i>
+                                </button>
                             </div>
-                            <h5 class="mb-2">Esperando conexión</h5>
-                            <p class="text-light opacity-75 mb-0">La videollamada se iniciará cuando el otro usuario se una</p>
-                        </div>
-                    </div>
 
-                    <!-- Video local mejorado -->
-                    <div id="localVideoContainer" class="position-absolute top-0 end-0 m-3 z-1 shadow border border-2 border-primary rounded-3 overflow-hidden" style="width: 180px; height: 120px; background: #000;">
-                        <video id="localVideo" autoplay muted playsinline class="w-100 h-100" style="object-fit: cover;"></video>
-                        <div class="position-absolute bottom-0 start-0 bg-dark bg-opacity-75 text-white px-2 py-1 small rounded-top-end d-flex align-items-center">
-                            <i class="bi bi-person-fill me-1"></i>Tú
+                            <div id="waitingMessage" class="position-absolute top-50 start-50 translate-middle text-center text-light p-4">
+                                <div class="spinner-border text-primary mb-3" role="status">
+                                    <span class="visually-hidden">Conectando...</span>
+                                </div>
+                                <h5 class="mb-2">Esperando conexión</h5>
+                                <p class="text-light opacity-75 mb-0">La videollamada se iniciará cuando el otro usuario se una</p>
+                            </div>
                         </div>
-                        <!-- Indicador de estado de micrófono/cámara -->
-                        <div class="position-absolute top-0 start-0 p-1">
-                            <i class="bi bi-mic-fill text-success" id="localMicIndicator"></i>
-                            <i class="bi bi-camera-video-fill text-success ms-1" id="localCamIndicator"></i>
+
+                        <div id="localVideoContainer" class="position-absolute top-0 end-0 m-3 z-1 shadow border border-2 border-primary rounded-3 overflow-hidden" style="width: 180px; height: 120px; background: #000;">
+                            <video id="localVideo" autoplay muted playsinline class="w-100 h-100" style="object-fit: cover;"></video>
+                            <div class="position-absolute bottom-0 start-0 bg-dark bg-opacity-75 text-white px-2 py-1 small rounded-top-end d-flex align-items-center">
+                                <i class="bi bi-person-fill me-1"></i>Tú
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Botones de acción mejorados -->
-            <div id="tutoriaActions" class="d-flex flex-column flex-sm-row gap-2 mt-3 px-2" style="display: none;">
-                <button 
-                    id="btnSubirDocumento"
-                    type="button"
-                    class="btn btn-success shadow-sm d-flex align-items-center justify-content-center flex-grow-1"
-                    data-bs-toggle="modal"
-                    data-bs-target="#uploadDocumentModal"
-                    style="display:none">
-                    <i class="bi bi-file-earmark-arrow-up-fill me-2"></i> Subir Documento
-                </button>
-                <button 
-                    id="btnRealizarEvaluacion"
-                    type="button"
-                    class="btn btn-primary shadow-sm d-flex align-items-center justify-content-center flex-grow-1"
-                    data-bs-toggle="modal"
-                    data-bs-target="#crearEvaluacionModal"
-                    style="display:none">
-                    <i class="bi bi-clipboard-check-fill me-2"></i> Realizar Evaluación
-                </button>
-            </div>
-        </div>
 
-        <!-- Chat mejorado -->
-        <div class="col-12 col-lg-4">
-            <div class="card border-0 shadow-sm h-100 chat-card">
-                <div class="card-header bg-secondary bg-gradient text-white py-2">
-                    <h5 class="mb-0 d-flex align-items-center">
-                        <i class="bi bi-chat-dots me-2"></i>Chat
-                        <span class="badge bg-light text-dark ms-2 small" id="messageCount">0</span>
-                    </h5>
+                <div id="botonestutor" class="d-flex flex-column flex-sm-row gap-2 mt-5 px-2 d-none">
+                    <button 
+                        id="btnSubirDocumento"
+                        type="button"
+                        class="btn btn-success shadow-sm d-flex align-items-center justify-content-center flex-grow-1 d-none"
+                        data-bs-toggle="modal"
+                        data-bs-target="#uploadDocumentModal">
+                        <i class="bi bi-file-earmark-arrow-up-fill me-2"></i> Subir Documento
+                    </button>
+                    <button 
+                        id="btnRealizarEvaluacion"
+                        type="button"
+                        class="btn btn-primary shadow-sm d-flex align-items-center justify-content-center flex-grow-1 d-none"
+                        data-bs-toggle="modal"
+                        data-bs-target="#crearEvaluacionModal">
+                        <i class="bi bi-clipboard-check-fill me-2"></i> Realizar Evaluación
+                    </button>
+                    <a 
+                        id="btnResponderEvaluacion"
+                        class="btn btn-primary btn-lg shadow-sm disabled"
+                        target="_blank">
+                        <i class="bi bi-file-earmark-text-fill me-2"></i> Responder Evaluación
+                    </a>
                 </div>
-                <div class="card-body p-0 d-flex flex-column">
-                    <div id="chatMessages" class="flex-grow-1 p-3" style="height: 300px; overflow-y: auto; background-color: #f8f9fa;">
-                        <div class="text-center text-muted py-5">
-                            <i class="bi bi-chat-square-text display-6 d-block mb-3 opacity-50"></i>
-                            <p class="mb-0">El chat está listo para usar</p>
-                            <small class="text-muted">Envía un mensaje para comenzar</small>
-                        </div>
-                    </div>
+            </div>
 
-                    <div class="border-top p-3 bg-white">
-                        <div class="input-group">
-                            <input type="text" id="chatInput" class="form-control rounded-start" placeholder="Escribe un mensaje..." disabled>
-                            <button class="btn btn-primary rounded-end d-flex align-items-center" id="btnSendMessage" disabled>
-                                <i class="bi bi-send-fill"></i>
-                            </button>
+            <div class="col-12 col-lg-4" id="chatdiv">
+                <div class="card border-0 shadow-sm h-100 chat-card">
+                    <div class="card-header bg-secondary bg-gradient text-white py-2">
+                        <h5 class="mb-0 d-flex align-items-center">
+                            <i class="bi bi-chat-dots me-2"></i>Chat
+                        </h5>
+                    </div>
+                    <div class="card-body p-0 d-flex flex-column">
+                        <div id="chat-container" data-user="{{ request.user.id }}" data-chat-id="{{ chat_id }}"></div>
+
+                        <div id="chat-messages" class="flex-grow-1 p-3" style="height: 300px; overflow-y: auto; background-color: #f8f9fa;">
+                            <div class="text-center text-muted py-5" id="chat-placeholder">
+                                <i class="bi bi-chat-square-text display-6 d-block mb-3 opacity-50"></i>
+                                <p class="mb-0">El chat está listo para usar</p>
+                                <small class="text-muted">Envía un mensaje para comenzar</small>
+                            </div>
                         </div>
-                        <div class="form-text text-end mt-1">
-                            <small>Presiona Enter para enviar</small>
+
+                        <div class="border-top p-3 bg-white">
+                            <div class="input-group">
+                                <input type="text" id="message-input" class="form-control rounded-start" placeholder="Escribe un mensaje...">
+                                <button class="btn btn-primary rounded-end d-flex align-items-center" id="btn-enviar">
+                                    <i class="bi bi-send-fill"></i>
+                                </button>
+                            </div>
+                            <div class="form-text text-end mt-1">
+                                <small>Presiona Enter para enviar</small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -142,14 +136,12 @@
         </div>
     </div>
 </div>
-
-<!-- Modales (mantenidos con mejoras visuales menores) -->
 <div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-3">
-            <div class="modal-header bg-success bg-gradient text-white rounded-top-3">
-                <h5 class="modal-title d-flex align-items-center" id="uploadDocumentModalLabel">
-                    <i class="bi bi-cloud-upload-fill me-2"></i>Subir documentos
+            <div class="modal-header bg-success text-white rounded-top-3">
+                <h5 class="modal-title" id="uploadDocumentModalLabel">
+                    Subir documentos, guias de estudios, etc.
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
@@ -158,11 +150,12 @@
                 <form method="POST" action="{% url "tutoria:archivostutoria" tutoria.id %}" enctype="multipart/form-data" id="uploadForm"> 
                     {% csrf_token %} 
                     
+                    {# Campo de ID de Tutoría Oculto (Asegúrate de llenarlo con JS si es necesario) #}
                     <input type="hidden" name="tutoria_id" id="tutoriaIdInput" value=""> 
 
                     <div class="mb-4 border p-3 rounded-3 bg-light">
-                        <label for="id_archivo" class="form-label fw-semibold d-flex align-items-center">
-                            <i class="bi bi-file-pdf me-2 text-danger"></i>Seleccionar Archivos (PDF)
+                        <label for="id_archivo" class="form-label fw-semibold">
+                            Seleccionar Archivos para la tutoria (PDF)
                         </label>
                         <input 
                             type="file" 
@@ -172,27 +165,20 @@
                             accept="application/pdf"
                             multiple 
                         >
-                        <div class="form-text text-muted mt-1">Puedes seleccionar múltiples archivos PDF</div>
+                        <div class="form-text text-muted">Sube uno o más archivos PDF. Puedes renombrarlos abajo.</div>
                     </div>
                         
                     <div id="archivos-seleccionados-container" class="mt-3">
-                        <p class="fw-semibold small mb-2 d-flex align-items-center">
-                            <i class="bi bi-list-check me-2"></i>Archivos seleccionados:
-                        </p>
-                        <div id="lista-archivos-seleccionados" class="border rounded-3 bg-white">
-                            <div class="text-muted p-3 text-center" id="initial-message">
-                                <i class="bi bi-inbox display-6 d-block mb-2 opacity-50"></i>
-                                Ningún archivo seleccionado
-                            </div>
-                        </div>
+                        <p class="fw-semibold small mb-1">Archivos adjuntos para nombrar:</p>
+                        <ul id="lista-archivos-seleccionados" class="list-group list-group-flush border rounded-3 small">
+                            <li class="list-group-item text-muted" id="initial-message">Ningún archivo seleccionado.</li>
+                        </ul>
                         <div id="file-error-message" class="text-danger small mt-2 d-none"></div>
                     </div>
 
                     <div class="modal-footer border-0 pt-4">
-                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success d-flex align-items-center" id="confirmUploadBtn">
-                            <i class="bi bi-cloud-check me-2"></i>Confirmar Subida
-                        </button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success" id="confirmUploadBtn">Confirmar Subida</button>
                     </div>
                 </form>
             </div>
@@ -203,14 +189,12 @@
 <!-- Modal Crear Evaluación -->
 <div class="modal fade" id="crearEvaluacionModal" tabindex="-1" aria-labelledby="crearEvaluacionLabel" aria-hidden="true">
   <div class="modal-dialog modal-lg">
-    <div class="modal-content border-0 shadow-lg">
+    <div class="modal-content">
 
       <form id="crearEvaluacionForm" action="{% url "crearevaluacion" tutoria.id %}" method="post">
         {% csrf_token %}
-        <div class="modal-header bg-primary bg-gradient text-white">
-          <h5 class="modal-title d-flex align-items-center" id="crearEvaluacionLabel">
-            <i class="bi bi-clipboard-plus-fill me-2"></i>Crear Evaluación
-          </h5>
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title" id="crearEvaluacionLabel">Crear Evaluación</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
 
@@ -218,37 +202,30 @@
           <!-- Título -->
           <div class="mb-3">
             <label for="titulo" class="form-label fw-semibold">Título de la Evaluación:</label>
-            <input type="text" class="form-control" name="titulo" id="tituloEvaluacion" placeholder="Ingresa el título de la evaluación">
+            <input type="text" class="form-control" name="titulo" id="tituloEvaluacion">
           </div>
 
           <!-- Contenedor de preguntas -->
           <div class="container-fluid px-0">
             <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="mb-0 fw-bold d-flex align-items-center">
-                <i class="bi bi-question-circle-fill me-2 text-primary"></i>Preguntas
-              </h5>
-              <button id="btnAgregarPregunta" type="button" class="btn btn-outline-primary btn-sm d-flex align-items-center">
+              <h5 class="mb-0 fw-bold">Preguntas</h5>
+              <button id="btnAgregarPregunta" type="button" class="btn btn-outline-primary btn-sm">
                 <i class="bi bi-plus-circle me-1"></i> Agregar Pregunta
               </button>
             </div>
             <div id="preguntasContainer"></div>
-            <small class="text-danger d-none mt-2 d-flex align-items-center" id="errorPreguntas">
-                <i class="bi bi-exclamation-circle-fill me-1"></i>Debe agregar al menos una pregunta.
-            </small>
+            <small class="text-danger d-none" id="errorPreguntas"><i class="bi bi-exclamation-circle-fill"></i>Debe agregar al menos una pregunta.</small>
           </div>
         </div>
 
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" id="btnenviarEvaluacion" class="btn btn-success d-flex align-items-center">
-            <i class="bi bi-check-circle-fill me-2"></i>Guardar Evaluación
-          </button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" id="btnenviarEvaluacion" class="btn btn-success">Guardar Evaluación</button>
         </div>
       </form>
     </div>
   </div>
 </div>
-
 <!-- Estilos CSS mejorados -->
 <style>
 /* Variables de colores para consistencia */
@@ -281,7 +258,7 @@ body {
 }
 
 .main-video {
-    object-fit: contain !important; 
+    object-fit: contain !important;
 }
 
 /* Controles de video mejorados */
@@ -372,13 +349,17 @@ body {
 
 /* Responsive mejorado */
 @media (max-width: 991.98px) {
-    .video-card, .chat-card {
-        max-height: 50vh;
-        margin-bottom: 1rem;
+    .video-card {
+        /* Redefinición para ser más estricto */
+        min-height: 250px; 
+        max-height: 40vh; /* LIMITE la altura a 40% del viewport */
+        margin-bottom: 0.5rem; 
     }
     
     .chat-card {
-        height: 40vh;
+        /* Permite que el chat se estire o tenga una altura decente */
+        height: 50vh; 
+        min-height: 300px;
     }
     
     #localVideoContainer {
@@ -404,8 +385,16 @@ body {
 }
 
 @media (max-width: 575.98px) {
-    .video-card, .chat-card {
-        max-height: 45vh;
+    .video-card {
+        /* Redefinición para ser más estricto */
+        min-height: 200px;
+        max-height: 35vh; /* LIMITE la altura a 35% del viewport */
+    }
+    
+    .chat-card {
+        /* Permite que el chat ocupe más espacio */
+        height: 60vh; 
+        min-height: 300px;
     }
     
     #localVideoContainer {
@@ -425,6 +414,14 @@ body {
         width: 36px;
         height: 36px;
         font-size: 0.8rem;
+    }
+
+    #tutoriaActions {
+        margin-top: 3rem;
+    }
+
+    #chatdiv {
+        margin-top: 5rem;
     }
 }
 
@@ -499,138 +496,8 @@ body {
 }
 </style>
 
-<!-- JavaScript para mejoras visuales (sin afectar funcionalidad) -->
-<script>
-// Timer para la llamada
-let callStartTime = Date.now();
-let callTimerInterval;
-
-function updateCallTimer() {
-    const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
-    const minutes = Math.floor(elapsed / 60);
-    const seconds = elapsed % 60;
-    document.getElementById('callTimer').textContent = 
-        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-}
-
-// Iniciar timer cuando la llamada se conecte
-function startCallTimer() {
-    callStartTime = Date.now();
-    callTimerInterval = setInterval(updateCallTimer, 1000);
-}
-
-// Detener timer cuando finalice la llamada
-function stopCallTimer() {
-    if (callTimerInterval) {
-        clearInterval(callTimerInterval);
-    }
-}
-
-// Actualizar contador de mensajes
-function updateMessageCount() {
-    const messages = document.querySelectorAll('#chatMessages .chat-message:not(.system)');
-    document.getElementById('messageCount').textContent = messages.length;
-}
-
-// Mejorar la función appendMessage para incluir contador
-const originalAppendMessage = window.appendMessage;
-window.appendMessage = function(message, sender) {
-    if (originalAppendMessage) {
-        originalAppendMessage(message, sender);
-    } else {
-        // Implementación de respaldo si la función original no existe
-        const isSystem = sender.startsWith("system");
-        const isRemote = sender === "remote";
-        const className = isSystem ? "chat-message system text-center text-muted p-2" : 
-                          (isRemote ? "chat-message remote p-3 mb-2" : "chat-message local p-3 mb-2");
-        
-        const messageHtml = `
-            <div class="${className} fade-in">
-                ${!isSystem ? `<small class="d-block mb-1 opacity-75">${isRemote ? 'Otro Usuario' : 'Tú'}</small>` : ''}
-                <div class="message-content">${message}</div>
-            </div>
-        `;
-        chatMessages.innerHTML += messageHtml;
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-    
-    // Actualizar contador de mensajes
-    updateMessageCount();
-};
-
-// Mejorar indicadores de micrófono y cámara locales
-function updateLocalIndicators() {
-    const micIndicator = document.getElementById('localMicIndicator');
-    const camIndicator = document.getElementById('localCamIndicator');
-    
-    if (micIndicator) {
-        micIndicator.className = currentAudioEnabled ? 
-            'bi bi-mic-fill text-success' : 'bi bi-mic-mute-fill text-danger';
-    }
-    
-    if (camIndicator) {
-        camIndicator.className = currentVideoEnabled ? 
-            'bi bi-camera-video-fill text-success' : 'bi bi-camera-video-off-fill text-danger';
-    }
-}
-
-// Sobrescribir funciones de toggle para actualizar indicadores
-const originalToggleMic = window.toggleMic;
-window.toggleMic = function() {
-    if (originalToggleMic) originalToggleMic();
-    updateLocalIndicators();
-};
-
-const originalToggleCam = window.toggleCam;
-window.toggleCam = function() {
-    if (originalToggleCam) originalToggleCam();
-    updateLocalIndicators();
-};
-
-// Inicializar cuando el DOM esté listo
-document.addEventListener("DOMContentLoaded", function() {
-
-    
-    // Actualizar indicadores iniciales
-    updateLocalIndicators();
-    
-    // Mejorar la lista de archivos en el modal
-    const fileCustomizer = new FileCustomizer('id_archivo', 'lista-archivos-seleccionados');
-    
-    // Añadir clase para elementos de archivo
-    const originalRenderFileList = fileCustomizer.renderFileList;
-    fileCustomizer.renderFileList = function() {
-        originalRenderFileList.call(this);
-        
-        // Añadir clases CSS a los elementos de archivo
-        const fileItems = this.listaArchivos.querySelectorAll('li');
-        fileItems.forEach(item => {
-            item.classList.add('file-item');
-        });
-    };
-    
-    // Forzar renderizado inicial
-    fileCustomizer.renderFileList();
-});
-
-
-function onCallConnected() {
-    startCallTimer();
-    document.getElementById('connectionStatus').textContent = 'Conectado';
-    document.getElementById('connectionStatus').className = 'badge bg-success';
-}
-
-function onCallDisconnected() {
-    stopCallTimer();
-    document.getElementById('connectionStatus').textContent = 'Desconectado';
-    document.getElementById('connectionStatus').className = 'badge bg-danger';
-}
-</script>
-
-<!-- El resto del JavaScript existente se mantiene igual -->
-<script>
-
-</script>
+<script src="{% static 'js/chat.js' %}"></script>
+<script src="{% static 'js/videollamada.js' %}"></script>
 
 {% else %}
 <div class="container mt-5">

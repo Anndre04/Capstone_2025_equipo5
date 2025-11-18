@@ -68,42 +68,30 @@ function marcarTodasNotificaciones() {
 // --------------------
 // Funciones de UI
 // --------------------
-function mostrarToastNotificacion(n) {
-    if (notiMostradas.has(n.id)) return;
-    notiMostradas.add(n.id);
-
-    const container = document.getElementById("noti-toast-container");
-
-    const toast = document.createElement("div");
-    toast.className = "toast align-items-center text-bg-primary border-0";
-    toast.setAttribute("role", "alert");
-    toast.setAttribute("aria-live", "assertive");
-    toast.setAttribute("aria-atomic", "true");
-
-    toast.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">
-                <strong>${n.titulo}</strong><br>
-                <small>${n.mensaje}</small>
-            </div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-    `;
-
-    container.appendChild(toast);
-    const bsToast = new bootstrap.Toast(toast, { autohide: false });
-    bsToast.show();
-
-    toast.addEventListener("hidden.bs.toast", () => toast.remove());
-}
 
 function agregarNotificacionAlDropdown(n) {
     const list = document.getElementById("notifications-list");
-    const item = document.createElement("li");
-    item.className = "dropdown-item fw-bold";
+    // 1. Cambiamos de <li> a <div> para replicar la estructura de renderizado
+    const item = document.createElement("div");
+
+    // 2. Aplicamos las clases exactas de la función de renderizado, 
+    //    incluida la lógica condicional para 'bg-light'
+    item.className = `notification-item p-2 border-bottom ${n.leida ? '' : 'bg-light'}`;
+
     item.innerHTML = `
-        <i class="${n.icono} text-${n.color} me-2"></i>
-        ${n.titulo} - <small>${n.mensaje}</small>`;
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="d-flex align-items-center">
+                <i class="${n.icono} me-2" style="color: ${n.color};"></i>
+                <div>
+                    <strong>${n.titulo}</strong>
+                    <p class="mb-0 small d-inline-block text-truncate" style="max-width: 200px;">${n.mensaje}</p>                
+                </div>
+            </div>
+            <small class="text-muted">${new Date(n.fecha_creacion).toLocaleString()}</small>
+        </div>
+    `;
+
+    console.log(n)
 
     item.addEventListener("click", () => {
         marcarNotificacionLeida(n.id, item);
@@ -112,6 +100,7 @@ function agregarNotificacionAlDropdown(n) {
         }
     });
 
+    // Usar prepend en la lista para que la nueva notificación aparezca al principio
     list.prepend(item);
     actualizarBadge();
 }
@@ -338,20 +327,24 @@ function conectarNotificaciones() {
 
     notiSocket.onopen = () => console.log("✅ Conectado al WebSocket de notificaciones");
 
+    actualizarBadge();
+
     notiSocket.onmessage = (e) => {
         const data = JSON.parse(e.data);
         console.log("📩 WS mensaje recibido:", data);
 
+        // =========================================================
+
         if (rolActual === "Estudiante" && data.tipo === "tutoria_finalizada") {
             const tutoriaId = data.datos_extra?.tutoria_id;
             const comentarios = data.datos_extra?.comentarios_predefinidos || [];
-            
+
             if (tutoriaId) {
                 mostrarModalReseña(tutoriaId, comentarios);
             } else {
                 console.error("❌ tutoriaId no definido en datos_extra", data);
             }
-        } else if((rolActual === "Tutor" && data.tipo === "tutoria_finalizada")) {
+        } else if ((rolActual === "Tutor" && data.tipo === "tutoria_finalizada")) {
             Swal.fire({
                 icon: "info",
                 title: "Tutoría finalizada",
@@ -361,10 +354,21 @@ function conectarNotificaciones() {
                 buttonsStyling: false
             });
         }
-        
+
 
         if (data.tipo === "Solicitud_tutoria") {
             mostrarModalNotificacion(data);
+        }
+
+        if (data.tipo === "nuevo_mensaje") {
+            if (window.BS5Helper && window.BS5Helper.Toast) {
+                window.BS5Helper.Toast.mostrar({
+                    mensaje: `<strong>${data.titulo}</strong>`,
+                    tipo: "primary",
+                    duracion: 8000,
+                    posicion: "top-end"
+                });
+            }
         }
 
         agregarNotificacionAlDropdown(data);
@@ -399,14 +403,14 @@ async function cargarNotificaciones() {
         // Renderizar cada notificación
         data.notificaciones.forEach(n => {
             const div = document.createElement('div');
-            div.className = `notification-item p-2 border-bottom ${n.leida ? '' : 'bg-light'}`;
+            div.className = `notification-item p-2 border-bottom ${n.leida ? '' : 'unread'}`;
             div.innerHTML = `
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="d-flex align-items-center">
                         <i class="${n.icono} me-2" style="color: ${n.color};"></i>
                         <div>
                             <strong>${n.titulo}</strong>
-                            <p class="mb-0 small">${n.mensaje}</p>
+                            <p class="mb-0 small d-inline-block text-truncate" style="max-width: 200px;">${n.mensaje}</p>                
                         </div>
                     </div>
                     <small class="text-muted">${new Date(n.fecha_creacion).toLocaleString()}</small>

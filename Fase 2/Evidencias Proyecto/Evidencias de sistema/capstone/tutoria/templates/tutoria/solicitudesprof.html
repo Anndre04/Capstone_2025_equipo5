@@ -4,6 +4,10 @@
 {% block title %}Solicitudes - Tutorías Online{% endblock %}
 
 {% block content %}
+
+  <link href="{% static "css/css_tutoria/tutoria.css" %}" rel="stylesheet">
+
+
 <div class="container-fluid px-3 px-md-4 px-lg-5 py-4">
     
     <!-- HEADER -->
@@ -40,7 +44,7 @@
                             <div class="d-flex align-items-start mb-3">
                                 <div class="rounded-circle bg-dark bg-opacity-10 d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
                                      style="width: 50px; height: 50px;">
-                                    <span class="text-dark fw-bold">CG</span>
+                                    <span class="text-dark fw-bold">{{ solicitud.usuarioenvia.nombre |slice:":1"|upper}}{{ solicitud.usuarioenvia.p_apellido |slice:":1"|upper}}</span>
                                 </div>
                                 <div class="flex-grow-1">
                                     <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-2">
@@ -51,7 +55,7 @@
                                     </div>
                                     
                                     <div class="mb-3">
-                                        <span class="badge bg-dark bg-opacity-10 text-dark border-0 me-2">
+                                        <span class="badge bg-dark bg-opacity-10 text-dark border-0 me-2 badge-fixed-width">
                                             <i class="bi bi-book me-1"></i>{{ solicitud.anuncio.titulo }}
                                         </span>
                                         <span class="badge bg-dark bg-opacity-10 text-dark border-0">
@@ -109,7 +113,7 @@
                             <div class="d-flex align-items-start mb-3">
                                 <div class="rounded-circle bg-dark bg-opacity-10 d-flex align-items-center justify-content-center me-3 flex-shrink-0" 
                                      style="width: 50px; height: 50px;">
-                                    <span class="text-dark fw-bold">CG</span>
+                                    <span class="text-dark fw-bold">{{ solicitud.usuarioenvia.nombre |slice:":1"|upper}}{{ solicitud.usuarioenvia.p_apellido |slice:":1"|upper}}</span>
                                 </div>
                                 <div class="flex-grow-1">
                                     <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center mb-2">
@@ -120,7 +124,7 @@
                                     </div>
                                     
                                     <div class="mb-3">
-                                        <span class="badge bg-dark bg-opacity-10 text-dark border-0 me-2">
+                                        <span class="badge bg-dark bg-opacity-10 text-dark border-0 me-2 d-inline-block badge-fixed-width">
                                             <i class="bi bi-book me-1"></i>{{ solicitud.anuncio.titulo }}
                                         </span>
                                         <span class="badge bg-dark bg-opacity-10 text-dark border-0">
@@ -149,7 +153,7 @@
             {% empty %}
             <div class="card border-0 shadow-sm text-center py-5">
                 <i class="bi bi-inbox display-4 text-muted mb-3"></i>
-                <p class="text-muted mb-0 fs-6">No hay solicitudes pendientes en este momento.</p>
+                <p class="text-muted mb-0 fs-6">No hay solicitudes procesadas en este momento.</p>
             </div>
             {% endfor %}
         </div>
@@ -157,6 +161,6 @@
 
 </div>
 
-<script src="{% static 'js/tutoria.js' %}"></script>
+<script src="{% static 'js/js_tutoria/tutoria.js' %}"></script>
 
 {% endblock %}

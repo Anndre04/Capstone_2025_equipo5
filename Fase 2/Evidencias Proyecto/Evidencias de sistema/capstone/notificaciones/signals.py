@@ -27,7 +27,7 @@ def notificacion_mensaje_chat(sender, instance, created, **kwargs):
         NotificationService.crear_notificacion(
             usuario=usuario_destino,
             codigo_tipo='nuevo_mensaje',
-            titulo=f'Nuevo mensaje de {usuario_remitente.nombre}',
+            titulo=f'Nuevo mensaje de {usuario_remitente.nombre} {usuario_remitente.p_apellido}',
             mensaje=instance.mensaje,
             datos_extra={
                 'chat_id': str(chat.id),

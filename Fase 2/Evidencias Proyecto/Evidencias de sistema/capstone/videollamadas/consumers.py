@@ -177,14 +177,22 @@ class TutoriaConsumer(AsyncWebsocketConsumer):
                 "user_id": str(event.get("user_id"))
             }))
 
+    # En videollamadas/consumers.py
+
     async def evaluacion_publicada(self, event):
         """Handler para la publicación de evaluaciones."""
-        content = event["content"]
-        if self.channel_name != content.get("sender_channel"):
+        
+        evaluacion_id = event.get('evaluacion_id')
+        sender_channel = event.get("sender_channel")
+
+        if self.channel_name != sender_channel and evaluacion_id:
             await self.send(text_data=json.dumps({
                 'type': 'evaluacion_publicada',
-                'evaluacion_id': content.get('evaluacion_id')
+                'evaluacion_id': evaluacion_id
             }))
+        else:
+            # Esto podría registrar un error si el evaluacion_id falta
+            logging.debug(f"DEBUG: Mensaje de evaluación ignorado. self.channel_name: {self.channel_name}, sender_channel: {sender_channel}, id: {evaluacion_id}")
             
     # --- Métodos de Base de Datos ---
     @database_sync_to_async

@@ -96,51 +96,45 @@
           <!-- NOTIFICACIONES -->
           <li class="nav-item dropdown position-relative">
             <a class="nav-link position-relative smooth-transition dropdown-toggle" 
-              href="#" 
-              id="notificationsDropdown" 
-              role="button" 
-              data-bs-toggle="dropdown" 
-              aria-expanded="false">
-              <i class="bi bi-bell"></i>
-              <span class="notification-badge" id="notification-count">0</span>
+                href="#" 
+                id="notificationsDropdown" 
+                role="button" 
+                data-bs-toggle="dropdown" 
+                aria-expanded="false">
+                <i class="bi bi-bell"></i>
+                <span class="notification-badge" id="notification-count">0</span>
             </a>
             
-            <!-- DROPDOWN MENU - SOBREPUESTO A TODO -->
             <ul class="dropdown-menu dropdown-menu-end shadow dropdown-menu-lg" 
                 aria-labelledby="notificationsDropdown"
-                style="width: 350px; max-height: 400px; overflow-y: auto; z-index: 9999;">
-              
-              <!-- HEADER -->
-              <li>
-                <div class="dropdown-header d-flex justify-content-between align-items-center">
-                  <span class="fw-bold">Notificaciones</span>
-                  <div>
-                    <button class="btn btn-sm btn-outline-secondary" id="mark-all-read">
-                      <small>Marcar todas</small>
-                    </button>
-                  </div>
+                id="notifications-dropdown-menu" 
+                style="max-height: 400px; overflow-y: auto; z-index: 9999;">
+                
+                <li>
+                    <div class="dropdown-header d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">Notificaciones</span>
+                        <div>
+                            <button class="btn btn-sm btn-outline-secondary" id="mark-all-read">
+                                <small>Marcar todas</small>
+                            </button>
+                        </div>
+                    </div>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+                
+                <div id="notifications-list">
+                    <div class="text-center py-3 text-muted">
+                        <i class="bi bi-bell-slash display-6"></i>
+                        <p class="mb-0 small">No hay notificaciones</p>
+                    </div>
                 </div>
-              </li>
-              <li><hr class="dropdown-divider"></li>
-              
-              <!-- LISTA DE NOTIFICACIONES -->
-              <div id="notifications-list">
-                <!-- Las notificaciones se cargarán aquí dinámicamente -->
-                <div class="text-center py-3 text-muted">
-                  <i class="bi bi-bell-slash display-6"></i>
-                  <p class="mb-0 small">No hay notificaciones</p>
-                </div>
-              </div>
-              
-              <!-- FOOTER -->
-              <li><hr class="dropdown-divider"></li>
-              <li>
-                {% comment %} <a class="dropdown-item text-center text-primary small" href="/notificaciones/">
-                  Ver todas las notificaciones
-                </a> {% endcomment %}
-              </li>
+                
+                <li><hr class="dropdown-divider"></li>
+                <li>
+                    {# Comentario omitido #}
+                </li>
             </ul>
-          </li>
+        </li>
         {% endif %}
 
           {% if user.is_authenticated %}
