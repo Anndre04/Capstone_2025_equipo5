@@ -10,4 +10,4 @@ def tutoriaEnCurso(request):
             estado="En curso"
         ).first()
         return {"tutoria_en_curso": tutoria}
-    return {"tutoria_en_curso": None}
+    return {"tutoria_en_curso": None} #agregado para evitar errores cuando no hay usuario autenticado
