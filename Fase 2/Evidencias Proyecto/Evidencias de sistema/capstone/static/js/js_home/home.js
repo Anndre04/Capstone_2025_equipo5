@@ -15,10 +15,10 @@ document.addEventListener('DOMContentLoaded', function () {
         // Esto es un truco común para asegurar que la transición CSS se dispara correctamente.
         setTimeout(() => {
             banner.style.opacity = '1'; // 👈 Esto activa la transición de 1 segundo
-            
+
             // OPCIONAL: Si quieres neutralizar cualquier otra animación, puedes dejar esto:
             banner.style.setProperty('transition', 'opacity 1s ease-in-out', 'important');
-            
+
             console.log("✅ Promo Banner activando fade-in.");
         }, 50); // 50ms es más que suficiente para disparar la transición.
     }
@@ -28,12 +28,12 @@ document.addEventListener('DOMContentLoaded', function () {
         // ha aplicado el CSS inicial (opacity: 0) antes de aplicar el CSS final (opacity: 1).
         setTimeout(() => {
             tutorBanner.style.opacity = '1'; // 👈 Esto activa la transición de 1 segundo
-            
+
             // Opcional: Para anular cualquier transición conflictiva de terceros
             tutorBanner.style.setProperty('transition', 'opacity 1s ease-in-out', 'important');
-            
+
             console.log("✅ Promo Banner de Tutor activando fade-in.");
-        }, 50); 
+        }, 50);
     }
 
     // ANIMACION
@@ -65,20 +65,33 @@ document.addEventListener('DOMContentLoaded', function () {
 
     console.log(btn_tutor)
 
-   if (btn_tutor) {
-    btn_tutor.addEventListener("click", async () => {
-      const confirmado = await BS5Helper.Modal.confirmacion({
-        titulo: "Confirmar acción",
-        mensaje: "¿Realmente quieres dejar de ser tutor?",
-        tipo: "danger",
-        textoSi: "Sí, dejar de ser tutor",
-        textoNo: "Cancelar",
-        eliminar: 1
-      });
+    if (btn_tutor) {
+        btn_tutor.addEventListener("click", async () => {
+            const confirmado = await BS5Helper.Modal.confirmacion({
+                titulo: "Confirmar acción",
+                mensaje: "¿Realmente quieres dejar de ser tutor?",
+                tipo: "danger",
+                textoSi: "Sí, dejar de ser tutor",
+                textoNo: "Cancelar",
+                eliminar: 1
+            });
 
-      if (confirmado) {
-        form_tutor.submit();
-      }
+            if (confirmado) {
+                form_tutor.submit();
+            }
+        });
+    }
+    document.querySelectorAll(".btn-ver-pdf").forEach(btn => {
+        btn.addEventListener("click", (e) => {
+            e.preventDefault();
+            const url = btn.dataset.url;
+            const titulo = btn.dataset.titulo || "Vista previa del archivo";
+
+            BS5Helper.Modal.PDFViewer({
+                url: url,
+                titulo: titulo,
+                descargar: true // si quieres permitir descarga
+            });
+        });
     });
-  }
 });

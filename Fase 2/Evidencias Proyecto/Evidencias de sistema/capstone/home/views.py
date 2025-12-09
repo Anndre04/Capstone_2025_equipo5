@@ -93,16 +93,11 @@ def home(request):
 def perfilusuario(request):
     usuario = request.user
 
-    # Log del perfil
-    logger.info(f"Usuario: {usuario.email}")
-
     contexto = {
         "usuario": usuario,
         "areas": AreaInteres.objects.all(),
         "areas_usuario": usuario.areas_interes,  # QuerySet por tu property
     }
-
-    logger.warning(usuario.areas_interes.values_list("nombre", flat=True))
 
     # Si NO es tutor activo → return inmediato
     if not usuario.es_tutor_activo():
@@ -370,7 +365,7 @@ def aceptar_solicitud_tutoria(request, solicitud_id):
     # Solo crear tutoría si es de tipo "tutoria"
     if solicitud.tipo.nombre.lower() == "tutoria":
         dt_inicio = datetime.now()  # o tomar de request.POST si querés fecha personalizada
-        dt_fin = dt_inicio + timedelta(seconds=10)
+        dt_fin = dt_inicio + timedelta(seconds=15)
 
         tutoria = Tutoria.objects.create(
             solicitud=solicitud,
@@ -413,7 +408,7 @@ def historial_tutoria(request, user_id):
     # Obtener tutorías completadas
     tutorias = Tutoria.objects.filter(
         estudiante=estudiante
-    ).select_related('tutor').prefetch_related('evaluaciones__realizaciones')
+    ).select_related('tutor').prefetch_related('evaluaciones__realizaciones').order_by('-hora_inicio')
 
     # Recorrer tutorías y evaluaciones para marcar si se puede realizar
     for tutoria in tutorias:
@@ -478,3 +473,20 @@ def dejar_de_ser_tutor(request):
             exc_info=True
         )
         return redirect("perfilusuario")
+    
+@login_required
+def estado_cancelado(request, solicitud_id):
+    """
+    Devuelve si la solicitud de tutoría ha sido cancelada por el tutor.
+    """
+    solicitud = get_object_or_404(Solicitud, id=solicitud_id)
+
+    # Solo el estudiante receptor puede consultar si fue cancelada
+    if solicitud.usuarioreceive != request.user:
+        return JsonResponse({"error": "No tienes permisos para ver esta solicitud."}, status=403)
+
+    data = {
+        "cancelada": solicitud.estado == "Cancelada"
+    }
+
+    return JsonResponse(data)

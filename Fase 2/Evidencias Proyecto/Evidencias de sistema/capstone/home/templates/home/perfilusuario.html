@@ -122,11 +122,12 @@
                                     </div>
                                     <div class="info-item mb-3">
                                         <label class="small text-muted fw-semibold">OCUPACIÓN</label>
-                                        {% if usuario.ocupacion.id != 4 %}
-                                            <p class="mb-0 fw-medium">{{ usuario.ocupacion }}</p>
+                                        {% if usuario.ocupacion.nombre == "Ambos" %}
+                                            Estudiante y Trabajador
                                         {% else %}
-                                            <p class="mb-0 fw-medium">Estudiante y Trabajador</p>
+                                            {{ usuario.ocupacion }}
                                         {% endif %}
+
                                     </div>
                                     <div class="info-item mb-3">
                                         <label class="small text-muted fw-semibold">UNIVERSIDAD/INSTITUTO</label>

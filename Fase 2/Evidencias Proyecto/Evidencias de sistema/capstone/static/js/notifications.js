@@ -110,13 +110,12 @@ async function mostrarModalNotificacion(n) {
     notiMostradas.add(n.id);
 
     const rolRequerido = n.datos_extra?.rol_requerido || "Estudiante";
-
     if (rolActual !== rolRequerido) {
         Swal.fire({
             title: n.titulo,
             html: `<p class="fs-5 text-center">${n.mensaje}</p>
                    <p class="text-danger text-center mt-3">
-                     ⚠️ Debes cambiarte al rol <strong>${rolRequerido}</strong> para aceptar esta tutoría.
+                        Debes cambiarte al rol <strong>${rolRequerido}</strong> para aceptar esta tutoría.
                    </p>`,
             icon: "warning",
             confirmButtonText: "Entendido",
@@ -126,40 +125,62 @@ async function mostrarModalNotificacion(n) {
         return;
     }
 
-    // Marcar como leída de inmediato
     marcarNotificacionLeida(n.id);
 
-    // Modal de acción si rol coincide
-    Swal.fire({
-        title: n.titulo,
-        html: `<p class="fs-5 text-center">${n.mensaje}</p>
-               <p class="text-muted text-center mt-2">¿Deseas aceptar esta tutoría?</p>`,
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Aceptar",
-        cancelButtonText: "Rechazar",
-        customClass: { confirmButton: "btn btn-success", cancelButton: "btn btn-danger" },
-        buttonsStyling: false
-    }).then((result) => {
-        const solicitud_id = n.datos_extra.solicitud_id;
-        if (result.isConfirmed) {
+    const solicitud_id = n.datos_extra.solicitud_id;
+
+    // Modal de confirmación
+    const modalConfirm = BS5Helper.Modal.confirmacion({
+        titulo: `<strong>${n.titulo}</strong>`,
+        mensaje: `<p class="fs-5 text-center">${n.mensaje}</p>
+                  <p class="text-muted text-center mt-2">¿Deseas aceptar esta tutoría?</p>`,
+        tipo: "info",
+        textoSi: "Aceptar",
+        textoNo: "Rechazar",
+        eliminar: 0
+    });
+
+    // Polling simple para verificar cancelación
+    const interval = setInterval(async () => {
+        try {
+            const res = await fetch(`/estado-cancelado/${solicitud_id}/`);
+            if (!res.ok) return; // si 404, no hacer nada
+            const data = await res.json();
+            if (data.cancelada) {
+                clearInterval(interval);
+                BS5Helper.Modal.close(id="bs5-helper-confirmacion");
+                BS5Helper.Modal.modalIcono({
+                    titulo: "Solicitud cancelada",
+                    mensaje: "El tutor ha cancelado la solicitud.",
+                    tipo: "danger"
+                });
+            }
+        } catch (e) {
+            console.error("Error verificando cancelación:", e);
+        }
+    }, 1000);
+
+    // Manejar respuesta del modal
+    modalConfirm.then(confirmado => {
+        clearInterval(interval); // detener polling al decidir
+        if (confirmado) {
             fetch(`/aceptar_tutoria/${solicitud_id}/`, {
                 method: "POST",
                 headers: { "X-CSRFToken": getCookie("csrftoken") }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.redirect_url) {
-                        window.location.href = data.redirect_url; // 🔥 redirección real
-                    } else if (data.error) {
-                        Swal.fire("Error", data.error, "error");
-                    } else {
-                        location.reload(); // fallback si no es tutoría
-                    }
-                })
-                .catch(() => Swal.fire("Error", "Ocurrió un problema al aceptar la tutoría", "error"));
-
-        } else if (result.dismiss === Swal.DismissReason.cancel) {
+            }).then(res => res.json())
+              .then(data => {
+                  if (data.success && data.redirect_url) {
+                      BS5Helper.Modal.modalIcono({
+                          titulo: "Tutoría aceptada",
+                          mensaje: "Redirigiendo...",
+                          tipo: "success",
+                          cerrar: false,
+                          redirigiendo: 1
+                      });
+                      setTimeout(() => { window.location.href = data.redirect_url; }, 3000);
+                  } else location.reload();
+              });
+        } else {
             fetch(`/rechazar_tutoria/${solicitud_id}/`, {
                 method: "POST",
                 headers: { "X-CSRFToken": getCookie("csrftoken") }
@@ -211,94 +232,88 @@ async function cargarNotificacionesPendientes() {
 // 🔹 Modal para reseña
 // ================================
 async function mostrarModalReseña(tutoriaId, comentariosPredefinidos) {
-    const confirmacion = await Swal.fire({
-        icon: 'question',
-        title: 'La tutoría ha finalizado.',
-        text: '¿Deseas dejar una reseña de esta tutoría?',
-        showCancelButton: true,
-        confirmButtonText: 'Sí',
-        cancelButtonText: 'No',
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        customClass: { confirmButton: 'btn btn-primary', cancelButton: 'btn btn-secondary' },
-        buttonsStyling: false
+
+    const conf = await BS5Helper.Modal.confirmacion({
+        titulo: "La tutoría ha finalizado.",
+        mensaje: "¿Deseas dejar una reseña de esta tutoría?",
+        tipo: "info",
+        textoSi: "Sí",
+        textoNo: "No"
     });
 
-    if (!confirmacion.isConfirmed) return;
+    if (!conf) {
+        window.location.href = "/";
+        return;
+    }
 
-    let seleccion = 1; // 🔹 Declarada aquí para usarla en preConfirm
+    let seleccion = 1;
+    let modalActual = null; // ⬅️ Aquí guardaremos el modal
 
     const estrellasHtml = Array.from({ length: 5 }, (_, i) =>
-        `<span class="estrella" data-value="${i + 1}" style="font-size:2rem; cursor:pointer; color: ${i === 0 ? 'gold' : 'gray'};">
+        `<span class="estrella" data-value="${i + 1}"
+            style="font-size:2rem; cursor:pointer; color:${i === 0 ? 'gold' : 'gray'};">
             ${i === 0 ? '★' : '☆'}
         </span>`
     ).join('');
 
     const comentariosHtml = comentariosPredefinidos.map(c =>
-        `<label style="display:block; margin:5px 0;">
+        `<label class="d-block mt-1">
             <input type="checkbox" value="${c.id}"> ${c.comentario}
         </label>`
     ).join('');
 
-    try {
-        const { value: formValues } = await Swal.fire({
-            title: 'Deja tu reseña',
-            html: `
-                <div style="text-align:center; margin-bottom:10px;">
-                    ${estrellasHtml}
-                </div>
-                <div style="text-align:left; margin-top:10px;">
-                    ${comentariosHtml}
-                </div>
-            `,
-            focusConfirm: false,
-            showCancelButton: true,
-            confirmButtonText: 'Enviar',
-            cancelButtonText: 'Cancelar',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            customClass: { confirmButton: 'btn btn-primary', cancelButton: 'btn btn-secondary' },
-            buttonsStyling: false,
-            didOpen: () => {
-                const estrellas = Swal.getPopup().querySelectorAll('.estrella');
+    const resultado = await BS5Helper.Modal.custom({
+        titulo: "Deja tu reseña",
+        size: "modal-lg",
+        textoSi: "Enviar",
+        html: `
+            <div class="text-center mb-3">${estrellasHtml}</div>
+            <div>${comentariosHtml}</div>
+        `,
+        onOpen: (modal) => {
 
-                const pintarEstrellas = (hasta) => {
-                    estrellas.forEach((s, i) => {
-                        s.textContent = i < hasta ? '★' : '☆';
-                        s.style.color = i < hasta ? 'gold' : 'gray';
-                    });
-                };
+            modalActual = modal; // ⬅️ Guardamos el modal DOM real
 
-                pintarEstrellas(seleccion); // primera estrella marcada
+            const estrellas = modal.querySelectorAll(".estrella");
 
-                estrellas.forEach(star => {
-                    star.addEventListener('mouseover', () => {
-                        const val = parseInt(star.dataset.value);
-                        pintarEstrellas(val);
-                    });
-                    star.addEventListener('click', () => {
-                        seleccion = parseInt(star.dataset.value); // actualiza selección
-                        pintarEstrellas(seleccion);
-                    });
-                    star.addEventListener('mouseout', () => {
-                        pintarEstrellas(seleccion);
-                    });
+            const pintar = (hasta) => {
+                estrellas.forEach((s, i) => {
+                    s.textContent = i < hasta ? "★" : "☆";
+                    s.style.color = i < hasta ? "gold" : "gray";
                 });
-            },
-            preConfirm: () => {
-                const comentarios = Array.from(
-                    Swal.getPopup().querySelectorAll('input[type="checkbox"]:checked')
-                ).map(c => c.value);
-                return { estrellas: seleccion, comentarios };
-            }
-        });
+            };
 
-        if (!formValues) return;
+            pintar(seleccion);
 
-        const data = new URLSearchParams();
-        data.append("estrellas", formValues.estrellas);
-        formValues.comentarios.forEach(id => data.append("comentarios[]", id));
+            estrellas.forEach(star => {
+                star.addEventListener("mouseover", () => pintar(parseInt(star.dataset.value)));
+                star.addEventListener("click", () => {
+                    seleccion = parseInt(star.dataset.value);
+                    pintar(seleccion);
+                });
+                star.addEventListener("mouseout", () => pintar(seleccion));
+            });
+        }
+    });
 
+    if (!resultado) {
+        window.location.href = "/";
+        return;
+    }
+
+    // Recolectar checkboxes ✔ CORREGIDO
+    const comentarios = Array.from(
+        modalActual.querySelectorAll('input[type="checkbox"]:checked')
+    ).map(c => c.value);
+
+    console.log("Selección estrellas:", seleccion);
+    console.log("Comentarios seleccionados:", comentarios);
+
+    const data = new URLSearchParams();
+    data.append("estrellas", seleccion);
+    comentarios.forEach(id => data.append("comentarios[]", id));
+
+    try {
         const response = await fetch(`/tutoria/reseña/${tutoriaId}/`, {
             method: "POST",
             headers: {
@@ -309,14 +324,26 @@ async function mostrarModalReseña(tutoriaId, comentariosPredefinidos) {
         });
 
         const result = await response.json();
+
         if (result.success) {
-            Swal.fire('Gracias', 'Tu reseña ha sido enviada', 'success');
+            BS5Helper.Modal.modalIcono({
+                titulo: "Gracias",
+                mensaje: "Tu reseña ha sido enviada",
+                tipo: "success",
+                redirigiendo: 1
+            });
+            window.location.href = "/";
         }
     } catch (err) {
-        console.error("❌ Error enviando reseña:", err);
-        Swal.fire('Error', 'No se pudo enviar la reseña', 'error');
+        console.error(err);
+        BS5Helper.Modal.alerta({
+            titulo: "Error",
+            mensaje: "No se pudo enviar la reseña",
+            tipo: "danger"
+        });
     }
 }
+
 
 // --------------------
 // WebSocket
@@ -344,23 +371,24 @@ function conectarNotificaciones() {
             } else {
                 console.error("❌ tutoriaId no definido en datos_extra", data);
             }
-        } else if ((rolActual === "Tutor" && data.tipo === "tutoria_finalizada")) {
-            Swal.fire({
-                icon: "info",
-                title: "Tutoría finalizada",
-                text: "La tutoria ha finiquitado.",
-                confirmButtonText: "Aceptar",
-                customClass: { confirmButton: 'btn btn-primary' },
-                buttonsStyling: false
+        } else if (rolActual === "Tutor" && data.tipo === "tutoria_finalizada") {
+            window.BS5Helper.Modal.alerta({
+                titulo: `<strong>${data.titulo}</strong>`,
+                mensaje: data.mensaje,
+                texto: "OK"
+            }).then(() => {
+                if (typeof window.disableUnloadProtection === "function") {
+                    window.disableUnloadProtection();
+                }
+                window.location.href = "/tutoria/gestortutorias";
             });
         }
-
 
         if (data.tipo === "Solicitud_tutoria") {
             mostrarModalNotificacion(data);
         }
 
-        if (data.tipo === "nuevo_mensaje") {
+        if (data.tipo === "nuevo_mensaje" || data.tipo === "solicitud_alumno") {
             if (window.BS5Helper && window.BS5Helper.Toast) {
                 window.BS5Helper.Toast.mostrar({
                     mensaje: `<strong>${data.titulo}</strong>`,

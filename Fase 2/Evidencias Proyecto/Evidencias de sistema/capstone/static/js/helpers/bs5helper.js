@@ -49,9 +49,82 @@ window.BS5Helper = {
 
   // ────────── MODALS ──────────
   Modal: {
-    wait: function ({ mensaje = "Cargando...", id = "modal-espera" } = {}) {
+    alerta: function ({
+      titulo = "Aviso",
+      mensaje = "",
+      tipo = "info", // info, success, warning, danger
+      texto = "Aceptar",
+      url = null
+    } = {}) {
+
+      return new Promise((resolve) => {
+
+        // Crear modal si no existe
+        let modalEl = document.getElementById("bs5-helper-alerta");
+        if (!modalEl) {
+          modalEl = document.createElement("div");
+          modalEl.id = "bs5-helper-alerta";
+          modalEl.className = "modal fade";
+          modalEl.tabIndex = -1;
+          document.body.appendChild(modalEl);
+        }
+
+        modalEl.innerHTML = `
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content text-center">
+
+          <div class="modal-header justify-content-center border-0">
+            <h5 class="modal-title">${titulo}</h5>
+          </div>
+
+          <div class="modal-body">
+            <div class="fs-1 mb-3">
+              ${tipo === "success" ? '<i class="bi bi-check-circle-fill text-success"></i>' :
+            tipo === "danger" ? '<i class="bi bi-x-circle-fill text-danger"></i>' :
+              tipo === "warning" ? '<i class="bi bi-exclamation-triangle-fill text-warning"></i>' :
+                '<i class="bi bi-info-circle text-info"></i>'}
+            </div>
+            <p class="fs-5">${mensaje}</p>
+          </div>
+
+          <div class="modal-footer justify-content-center border-0">
+            <button id="btn-alerta-ok" type="button" class="btn btn-primary">${texto}</button>
+          </div>
+
+        </div>
+      </div>
+    `;
+
+        const bsModal = new bootstrap.Modal(modalEl, { backdrop: "static", keyboard: false });
+        bsModal.show();
+
+        // Acción botón aceptar
+        modalEl.querySelector("#btn-alerta-ok").addEventListener("click", () => {
+          bsModal.hide();
+          resolve(true);
+        });
+
+        // Si se cierra → redirigir si corresponde
+        modalEl.addEventListener("hidden.bs.modal", () => {
+          if (url) window.location.href = url;
+        }, { once: true });
+
+      });
+    },
+
+    wait: function ({
+      mensaje = "Cargando...",
+      id = "modal-espera",
+      cancelable = false,          // Nuevo: si true agrega botón Cancelar
+      onCancel = null              // Función que se ejecuta al cancelar
+    } = {}) {
       // Evitar duplicados
       if (document.getElementById(id)) return;
+
+      // Botón de cancelar opcional
+      const cancelButtonHtml = cancelable
+        ? `<button type="button" class="btn btn-danger mt-3" id="${id}-cancel-btn">Cancelar</button>`
+        : "";
 
       const modalHtml = `
         <div class="modal fade" id="${id}" tabindex="-1" aria-hidden="true">
@@ -62,27 +135,50 @@ window.BS5Helper = {
                 <div class="spinner-border text-primary mt-3" role="status">
                   <span class="visually-hidden">Cargando...</span>
                 </div>
+                <div class="mt-3">
+                  ${cancelButtonHtml}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      `;
+    `;
       document.body.insertAdjacentHTML("beforeend", modalHtml);
 
       const modalEl = document.getElementById(id);
       const modal = new bootstrap.Modal(modalEl, { backdrop: 'static', keyboard: false });
       modal.show();
 
+      // Si hay botón cancelar, agregar evento
+      if (cancelable && onCancel) {
+        const btn = document.getElementById(`${id}-cancel-btn`);
+        btn.addEventListener("click", () => {
+          onCancel();     // Ejecutar función de cancelación
+          modal.hide();   // Cerrar modal
+        });
+      }
+
       return modal; // Retorna la instancia para poder cerrarla más tarde
     },
+
 
     close: function (id = "modal-espera") {
       const modalEl = document.getElementById(id);
       if (!modalEl) return;
+
+      // Si algún elemento dentro del modal tiene focus, lo removemos
+      if (modalEl.contains(document.activeElement)) {
+        document.activeElement.blur(); // Quita focus del elemento activo
+        // O alternativamente mover focus al body
+        // document.body.focus();
+      }
+
       const modal = bootstrap.Modal.getInstance(modalEl);
       if (modal) modal.hide();
+
       modalEl.addEventListener("hidden.bs.modal", () => modalEl.remove());
     },
+
 
     modalIcono: function ({ titulo = "Aviso", mensaje = "", tipo = "info", duracion = 3000, redirigiendo = 0 } = {}) {
       return new Promise((resolve) => {
@@ -198,6 +294,74 @@ window.BS5Helper = {
 
         // Resolver en false si se cierra con ESC o clic fuera
         modalEl.addEventListener("hidden.bs.modal", () => resolve(false), { once: true });
+      });
+    },
+
+    custom: function ({
+      titulo = "",
+      html = "",
+      textoSi = "Aceptar",
+      textoNo = "Cancelar",
+      size = "modal-md",
+      onOpen = null
+    } = {}) {
+
+      return new Promise((resolve) => {
+
+        // Crear modal dinámico
+        const modalId = "modalCustom_" + Date.now();
+        const modalHtml = `
+            <div class="modal fade" id="${modalId}" tabindex="-1">
+                <div class="modal-dialog ${size}">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">${titulo}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            ${html}
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary btnCancel">${textoNo}</button>
+                            <button type="button" class="btn btn-primary btnOk">${textoSi}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML("beforeend", modalHtml);
+
+        const modalEl = document.getElementById(modalId);
+        const bsModal = new bootstrap.Modal(modalEl);
+
+        // Botones
+        const btnOk = modalEl.querySelector(".btnOk");
+        const btnCancel = modalEl.querySelector(".btnCancel");
+
+        btnCancel.addEventListener("click", () => {
+          bsModal.hide();
+          resolve(null);
+        });
+
+        btnOk.addEventListener("click", () => {
+          bsModal.hide();
+          resolve("ok");
+        });
+
+        // onOpen callback
+        if (typeof onOpen === "function") {
+          modalEl.addEventListener("shown.bs.modal", () => {
+            onOpen(modalEl);
+          });
+        }
+
+        // Eliminar el modal al cerrarse
+        modalEl.addEventListener("hidden.bs.modal", () => {
+          modalEl.remove();
+        });
+
+        bsModal.show();
       });
     },
 

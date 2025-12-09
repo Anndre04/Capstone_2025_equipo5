@@ -337,10 +337,44 @@
                 if (data.tipo === "success") {
                     // 1. Mostrar modal de espera usando BS5Helper.Modal.wait
                     modalEspera = BS5Helper.Modal.wait({ 
-                        titulo: "Solicitud enviada",
-                        mensaje: "Esperando que el alumno responda...",
-                        tipo: "info",
-                        id: "modal-polling-espera"
+                        mensaje: "Esperando que el alumno responda, por favor no recargue la página...",
+                        cancelable: true,
+                        onCancel: () => {
+                            cancelarSolicitud();
+                        }
+                    });
+
+                    // Función para cancelar la solicitud
+                    function cancelarSolicitud() {
+                        fetch(`/tutoria/cancelar-solicitud-tutoria/${data.solicitud_id}/`)
+                            .then(res => res.json())
+                            .then(resp => {
+                                if(resp.success) {
+                                    modalEspera.hide();
+                                    BS5Helper.Modal.modalIcono({
+                                        titulo: "Solicitud cancelada",
+                                        mensaje: "Has cancelado la solicitud.",
+                                        tipo: "danger"
+                                    });
+                                    setTimeout(() => window.location.reload(), 3000);
+                                } else {
+                                    console.error(resp.error);
+                                }
+                            })
+                            .catch(err => console.error(err));
+                    }
+                    // Cancelar la solicitud usando sendBeacon
+                    function enviarCancelacion() {
+                        const url = `/tutoria/cancelar-solicitud-tutoria/${data.solicitud_id}/`;
+                        const formData = new FormData();
+                        formData.append('csrfmiddlewaretoken', getCookie('csrftoken')); // agrega token
+                        navigator.sendBeacon(url, formData);
+                    }
+
+                    // Detectar cierre o recarga de pestaña
+                    window.addEventListener("beforeunload", (e) => {
+                        enviarCancelacion();
+                        // No se necesita preventDefault, solo enviar la señal
                     });
                     
                     // 2. Lógica de Polling (similar a tu implementación original)
@@ -351,7 +385,7 @@
 
                             if (estadoData.estado === "Aceptada") {
                                 clearInterval(interval);
-                                BS5Helper.Modal.close("modal-polling-espera"); // Cerrar modal antes de redirección
+                                BS5Helper.Modal.close("modal-espera"); // Cerrar modal antes de redirección
                                 
                                 // Mostrar Toast de éxito (opcional, si quieres confirmación visual)
                                 BS5Helper.Modal.modalIcono({
@@ -365,7 +399,7 @@
                                 });
                             } else if (estadoData.estado === "Rechazada") {
                                 clearInterval(interval);
-                                BS5Helper.Modal.close("modal-polling-espera"); // Cerrar el modal de espera
+                                BS5Helper.Modal.close("modal-espera"); // Cerrar el modal de espera
                                 
                                 // 3. Mostrar notificación de rechazo usando BS5Helper.Toast
                                 BS5Helper.Modal.modalIcono({
@@ -373,12 +407,26 @@
                                     mensaje: "El alumno ha rechazado la solicitud.",
                                     tipo: "danger"
                                 });
+                            } else if (estadoData.estado === "Cancelada") {
+                                clearInterval(interval);
+                                BS5Helper.Modal.close("modal-espera"); // Cerrar el modal de espera
+                                
+                                // 3. Mostrar notificación de rechazo usando BS5Helper.Toast
+                                BS5Helper.Modal.modalIcono({
+                                    titulo: "Solicitud cancelada",
+                                    mensaje: "Has cancelado la solicitud.",
+                                    tipo: "danger"
+                                });
+
+                                setTimeout(() => {
+                                            window.location.reload();
+                                        }, 3000); // 3000 ms = 3 segundos
                             }
                         } catch (e) {
                             console.error("Error consultando estado:", e);
                             // Si falla el polling, cerrar el modal para no bloquear al usuario
                             clearInterval(interval);
-                            BS5Helper.Modal.close("modal-polling-espera");
+                            BS5Helper.Modal.close("modal-espera");
                             BS5Helper.Toast.mostrar({
                                 mensaje: "Error de conexión al verificar el estado.",
                                 tipo: "danger"

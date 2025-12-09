@@ -10,6 +10,7 @@ from django.db import DatabaseError, transaction
 from django.db.models import Prefetch
 from django.forms import ValidationError
 from django.http import HttpRequest, JsonResponse
+from django.views.decorators.cache import never_cache
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -744,6 +745,7 @@ def estado_solicitud_tutoria(request, solicitud_id):
     return JsonResponse(data)
 
 
+@never_cache
 @login_required
 def tutoria(request, tutoria_id):
     tutoria = get_object_or_404(Tutoria, id=tutoria_id)
@@ -893,12 +895,10 @@ def archivos_tutoria(request, tutoria_id):
                     # 📞 LLAMADA A LA FUNCIÓN DE GCS con tutoria_id
                     ruta_relativa = subir_archivo_gcp(
                         archivo=archivo_subido,
+                        nombre=nombre_personalizado,
                         tutoria_id=tutoria.id, # Usamos el ID de la tutoría para la ruta GCS
                         tutor_id=None          
                     )
-
-                    logger.error(ruta_relativa)
-
                     if ruta_relativa:
                         # 💾 Crear el objeto Archivo en la base de datos
                         Archivo.objects.create(
@@ -954,3 +954,30 @@ def detalle_tutoria(request, tutoria_id):
     }
 
     return render(request, 'tutoria/detalle_tutoria.html', contexto)
+
+@login_required
+def cancelar_solicitud(request, solicitud_id):
+    """
+    Permite al tutor cancelar una solicitud pendiente.
+    """
+    # Solo permitir GET o POST según tu preferencia
+    if request.method not in ["GET", "POST"]:
+        return JsonResponse({"error": "Método no permitido"}, status=405)
+
+    # Obtener la solicitud o 404 si no existe
+    solicitud = get_object_or_404(Solicitud, id=solicitud_id)
+
+    # Verificar que el usuario actual sea el tutor receptor de la solicitud
+    if solicitud.usuarioenvia != request.user:
+        return JsonResponse({"error": "No tienes permiso para cancelar esta solicitud"}, status=403)
+
+    # Solo se puede cancelar si está pendiente
+    if solicitud.estado != "Pendiente":
+        return JsonResponse({"error": "Solo se pueden cancelar solicitudes pendientes"}, status=400)
+
+    # Cambiar estado a Cancelada
+    solicitud.estado = "Cancelada"
+    solicitud.save()
+
+    # Retornar éxito
+    return JsonResponse({"success": True, "mensaje": "Solicitud cancelada correctamente"})

@@ -9,12 +9,13 @@ from tutoria.models import Tutoria
 # Configuración de Logging
 logger = logging.getLogger(__name__)
 
+active_users = {}
 class TutoriaConsumer(AsyncWebsocketConsumer):
-    pc = None 
+    pc = None
 
     # --- Conexión y desconexión ---
     async def connect(self):
-        # 1. Validación segura de UUID y gestión de errores
+        # --- Validar ID de tutoría ---
         try:
             self.tutoria_id = uuid.UUID(self.scope['url_route']['kwargs']['tutoria_id'])
         except ValueError:
@@ -22,35 +23,62 @@ class TutoriaConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
 
+        # --- Validar usuario ---
         self.user = self.scope['user']
-
-        # 2. Validación de la tutoría y usuarios (Manejo de Tutoria.DoesNotExist)
         self.tutoria = await self.get_tutoria()
         if not self.tutoria:
-             logger.warning(f"Tutoria ID {self.tutoria_id} no encontrada. Cerrando conexión.")
-             await self.close()
-             return
-
-        tutor_user = await self.get_tutor_user()
-        estudiante_user = await self.get_estudiante_user()
-
-        # 3. Control de acceso
-        if self.user != tutor_user and self.user != estudiante_user:
-            logger.warning(f"Usuario {self.user.id} intentó acceder a tutoria {self.tutoria_id} sin permiso.")
             await self.close()
             return
 
-        # 4. Setup de Grupo y Aceptación
+        tutor_user = await self.get_tutor_user()
+        estudiante_user = await self.get_estudiante_user()
+        if self.user != tutor_user and self.user != estudiante_user:
+            await self.close()
+            return
+
+        # --- Unirse al grupo ---
         self.room_group_name = f"tutoria_{self.tutoria_id}"
         await self.channel_layer.group_add(self.room_group_name, self.channel_name)
         await self.accept()
-        logger.info(f"Usuario {self.user.id} conectado a {self.room_group_name}.")
 
-        # Notificar conexión (Incluye sender_channel para evitar eco)
+        # --- Inicializar lista de usuarios si no existe ---
+        if self.room_group_name not in active_users:
+            active_users[self.room_group_name] = []
+
+        # --- Agregar usuario al room sin duplicados ---
+        existing_channels = [u["channel"] for u in active_users[self.room_group_name]]
+        if self.channel_name not in existing_channels:
+            active_users[self.room_group_name].append({
+                "email": self.user.email,
+                "nombre": self.user.nombre,
+                "p_apellido": self.user.p_apellido,
+                "channel": self.channel_name
+            })
+
+        # --- Notificar a todos los demás que este usuario se unió ---
         await self.channel_layer.group_send(
             self.room_group_name,
-            {"type": "user.joined", "email": self.user.email, "sender_channel": self.channel_name}
+            {
+                "type": "user.joined",
+                "email": self.user.email,
+                "nombre": self.user.nombre,
+                "p_apellido": self.user.p_apellido,
+                "sender_channel": self.channel_name
+            }
         )
+
+        # --- Enviar al usuario recién conectado la lista de usuarios existentes ---
+        for u in active_users[self.room_group_name]:
+            if u["channel"] != self.channel_name:  # No enviarse a sí mismo
+                await self.send(text_data=json.dumps({
+                    "type": "user_joined",
+                    "email": u["email"],
+                    "nombre": u["nombre"],
+                    "p_apellido": u["p_apellido"]
+                }))
+
+        # --- Debug: imprimir lista de usuarios ---
+        print(active_users)
 
     async def disconnect(self, close_code):
         user_id_str = str(self.user.id)
@@ -162,11 +190,12 @@ class TutoriaConsumer(AsyncWebsocketConsumer):
             await self.send(text_data=json.dumps(content)) 
 
     async def user_joined(self, event):
-        """Notifica que un usuario se unió, con prevención de eco."""
         if self.channel_name != event.get("sender_channel"):
             await self.send(text_data=json.dumps({
                 "type": "user_joined",
-                "email": event.get("email", "Usuario")
+                "email": event.get("email", "Usuario"),
+                "nombre": event.get("nombre", ""),
+                "p_apellido": event.get("p_apellido", "")
             }))
 
     async def user_left(self, event):

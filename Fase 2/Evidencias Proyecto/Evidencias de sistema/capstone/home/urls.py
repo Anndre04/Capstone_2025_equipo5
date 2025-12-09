@@ -11,4 +11,5 @@ urlpatterns = [
     path('historial_tutoria/<uuid:user_id>/', views.historial_tutoria, name="historial_tutoria"),
     path('dejar_de_ser_tutor', views.dejar_de_ser_tutor, name="dejar_de_ser_tutor"),
     path('editar_perfil', views.editarperfil, name="editar_perfil"),
+    path('estado-cancelado/<uuid:solicitud_id>/', views.estado_cancelado, name="estado_cancelado"),
 ]

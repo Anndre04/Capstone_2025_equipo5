@@ -26,4 +26,5 @@ urlpatterns = [
     path('archivostutoria/<uuid:tutoria_id>', views.archivos_tutoria, name='archivostutoria'),
     path('archivo/descargar/<uuid:archivo_id>/', views.descargar_archivo, name='descargar_archivo'),
     path('detalle_tutoria/<uuid:tutoria_id>/', views.detalle_tutoria, name='detalle_tutoria'),
+    path('cancelar-solicitud-tutoria/<uuid:solicitud_id>/', views.cancelar_solicitud, name='cancelar_solicitud_tutoria'),
 ]

@@ -40,6 +40,12 @@ def subir_archivo_gcp(archivo, nombre, tutor_id=None, tutoria_id=None):
         logger.warning("No se proporcionó archivo para subir a GCS.")
         return None
 
+    # Validar que el archivo sea PDF
+    extension = os.path.splitext(archivo.name)[1].lower()
+    if extension != '.pdf':
+        logger.error(f"Intento de subir archivo no PDF: {archivo.name}")
+        return None
+
     # Validar que no se pasen ambos IDs
     if tutor_id and tutoria_id:
         logger.error("Se recibió tutor_id y tutoria_id juntos. Solo uno debe estar presente.")
@@ -60,10 +66,12 @@ def subir_archivo_gcp(archivo, nombre, tutor_id=None, tutoria_id=None):
         nombre_seguro = os.path.basename(nombre)
         ruta_destino_gcs = f'{directorio_base}/{nombre_seguro}'
         blob = bucket.blob(ruta_destino_gcs)
-        content_type = mimetypes.guess_type(archivo.name)[0] or 'application/octet-stream'
+
+        # Forzar tipo MIME a PDF
+        content_type = 'application/pdf'
 
         blob.upload_from_file(archivo, content_type=content_type)
-        logger.info(f"Archivo subido a GCS: {ruta_destino_gcs} (MIME: {content_type})")
+        logger.info(f"Archivo PDF subido a GCS: {ruta_destino_gcs}")
         archivo.seek(0)
         return ruta_destino_gcs
     except Exception as e:

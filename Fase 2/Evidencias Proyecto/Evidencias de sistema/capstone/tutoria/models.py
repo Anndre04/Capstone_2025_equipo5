@@ -250,7 +250,7 @@ class Tutoria(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Tutoria id :{self.id}"
+        return f"Tutoria id: {self.id}"
 
     
 class Archivo(models.Model):

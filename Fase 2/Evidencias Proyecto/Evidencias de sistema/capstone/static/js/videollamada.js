@@ -1,18 +1,3 @@
-const callTimer = document.getElementById('callTimer');
-let elapsedTime = Number(callTimer.dataset.elapsed) || 0;
-
-function updateCallTimer() {
-    const minutes = Math.floor(elapsedTime / 60);
-    const seconds = elapsedTime % 60;
-    document.getElementById('callTimer').textContent =
-        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    elapsedTime++;
-}
-
-// Llamamos cada segundo
-updateCallTimer(); // Actualiza inmediatamente
-setInterval(updateCallTimer, 1000);
-
 let currentAudioEnabled = false;   // micrófono activado
 let currentVideoEnabled = true;
 
@@ -224,22 +209,17 @@ async function handleFormSubmit(event) {
         const data = await response.json(); // Asumimos que Django devuelve JSON
 
         if (response.ok) {
-            // Éxito: Mostrar mensaje y recargar la lista de archivos (si aplica)
-
-            // 💡 NOTA: messages.success de Django no funciona en AJAX.
-            // Usamos un alert o una librería como Toastr/SweetAlert.
-            alert(`✅ Éxito: ${data.message || 'Archivos subidos correctamente.'}`);
-
             // Cerrar modal y posiblemente recargar la sección de la página
             const modal = bootstrap.Modal.getInstance(uploadDocumentModal);
             modal.hide();
-
-            // 🔄 Recargar la ventana o el componente de lista de archivos de la tutoría
-            window.location.reload();
-
+            BS5Helper.Toast.mostrar({
+                mensaje: "Archivos subidos correctamente."
+            });
         } else {
-            // Fallo del servidor (4xx, 5xx)
-            alert(`❌ Error al subir: ${data.error || 'Ocurrió un error inesperado en el servidor.'}`);
+            BS5Helper.Toast.mostrar({
+                mensaje: "Hubo un error al subir los archivos",
+                tipo: "danger"
+            });
             console.error('Server error data:', data);
         }
 
@@ -379,7 +359,7 @@ function enviarEvaluacion() {
             console.log("📦 Respuesta del servidor:", data);
 
             if (data.status === 'success') {
-                window.showAlert(data.message, 'success');
+                //window.showAlert(data.message, 'success');
 
                 // Reset formulario y modal
                 form.reset();
@@ -389,6 +369,9 @@ function enviarEvaluacion() {
                 const modalEl = document.getElementById("crearEvaluacionModal");
                 const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
                 modal.hide();
+                BS5Helper.Toast.mostrar({
+                    mensaje: "Se ha creado la evaluación exitosamente."
+                });
             } else {
                 window.showAlert(data.message || 'Ocurrió un error', 'error');
             }
@@ -651,9 +634,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Intervalo cada 5 segundos
     const intervalId = setInterval(() => {
         const ahora = new Date();
-        console.log("⏱️ Revisando hora actual:", ahora);
         if (ahora >= horaFin) {
-            console.log("⌛ La hora de fin ya pasó. Llamando a completarTutoria()");
             completarTutoria();
         }
     }, 5000);
@@ -682,6 +663,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let isRemoteSharing = false;
     let p2pReconnectTimeout;
     let dataChannel; // DataChannel se mantiene: hook para futuras integraciones
+    let remoteUserName; // Default si no llega nombre real desde WS
 
     // --- Referencias al DOM ---
     // Nota: pueden ser null si el script se ejecuta antes de renderizar el DOM.
@@ -867,6 +849,35 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
+    function showRemoteAvatar(name = "") {
+        if (!waitingMessage) return;
+        waitingMessage.classList.remove("d-none");
+        waitingMessage.innerHTML = `
+        <div class="avatar-circle d-flex justify-content-center align-items-center bg-secondary text-white rounded-circle" 
+             style="width: 60px; height: 60px; font-size: 1.5rem; margin: auto;">
+            ${getInitials(name)}
+        </div>
+        <p class="mt-2 text-center text-light">${name}</p>
+    `;
+        console.log("LOG: waitingMessage usado como avatar para", name);
+    }
+
+    function hideRemoteAvatar() {
+        if (!waitingMessage) return;
+        waitingMessage.classList.add("d-none");
+        console.log("LOG: waitingMessage oculto porque llegó video");
+    }
+
+    function getInitials(name) {
+        if (!name) return "?";
+        return name
+            .split(" ")
+            .map(n => n[0].toUpperCase())
+            .slice(0, 2)
+            .join("");
+    }
+
+
     // =========================================================
     // 1. INICIALIZACIÓN DE DISPOSITIVOS
     // =========================================================
@@ -1037,67 +1048,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // 3. Recibir tracks remotos (código existente)
         peerConnection.ontrack = e => {
-            console.log("LOG: Track remoto recibido:", e.track.kind);
+            const incomingStream = e.streams[0] || remoteStream;
 
-            // 1. Usa el stream que viene del evento (el método preferido)
-            const incomingStream = e.streams ? e.streams[0] : remoteStream;
-
-            // 2. Asigna el srcObject SÓLO UNA VEZ al elemento video remoto
             if (remoteVideo && remoteVideo.srcObject !== incomingStream) {
                 remoteVideo.srcObject = incomingStream;
-                console.log("LOG: srcObject remoto asignado o reasignado.");
-                // OPTIONAL: Añadir un .play() catch para asegurar la reproducción.
-                remoteVideo.play().catch(e => console.warn("Error al intentar auto-reproducir video remoto:", e));
+                remoteVideo.play().catch(err => console.warn(err));
             }
 
-            // 3. Agrega el track al stream si el navegador no lo hizo
-            if (!remoteVideo.srcObject.getTrackById(e.track.id)) {
-                remoteStream.addTrack(e.track);
-                console.log(`LOG: Track de ${e.track.kind} agregado al remoteStream.`);
-            }
-
-            // **********************************************
-            // 4. ALMACENA REFERENCIAS
-            // **********************************************
-            if (e.track.kind === 'audio') {
-                remoteAudioTrack = e.track;
-            } else if (e.track.kind === 'video') {
+            if (e.track.kind === 'audio') remoteAudioTrack = e.track;
+            else if (e.track.kind === 'video') {
                 remoteVideoTrack = e.track;
+                hideRemoteAvatar(); // video llegó, ocultamos avatar
             }
 
             e.track.onended = () => {
-                console.log(`LOG: Track remoto de ${e.track.kind} finalizado.`);
-
                 if (e.track.kind === 'video') {
                     remoteVideoTrack = null;
-                    // Si el video se detiene, volvemos a mostrar el mensaje de espera
-                    if (waitingMessage) {
-                        waitingMessage.classList.remove("d-none");
-                    }
-                    // Importante: Si el audio sigue activo, debemos crear un nuevo MediaStream 
-                    // solo con el audio para que el video player no se quede colgado.
-                    if (remoteVideo && remoteAudioTrack) {
-                        remoteVideo.srcObject = new MediaStream([remoteAudioTrack]);
-                    } else if (remoteVideo) {
-                        // Si no hay nada, limpiar el srcObject
-                        remoteVideo.srcObject = null;
-                    }
-                } else if (e.track.kind === 'audio') {
-                    remoteAudioTrack = null;
-                }
-
-                // Recomendación: Forzar renegociación para limpiar las m-lines inactivas
-                if (peerConnection.connectionState === 'connected' && ROLE === 'Tutor') {
-                    console.log("LOG: Track remoto finalizado. Forzando renegociación.");
-                    peerConnection.dispatchEvent(new Event('negotiationneeded'));
+                    console.log(remoteUserName)
+                    showRemoteAvatar(remoteUserName); // video terminado, mostramos avatar
                 }
             };
 
-            // 5. Oculta el mensaje de espera solo cuando llegue el VIDEO.
-            if (remoteVideoTrack && waitingMessage) {
-                waitingMessage.classList.add("d-none");
+            // Mostrar avatar si no hay video desde inicio
+            if (!remoteVideoTrack && (!incomingStream.getVideoTracks() || incomingStream.getVideoTracks().length === 0)) {
+                console.log(remoteUserName)
+                showRemoteAvatar(remoteUserName);
             }
         };
+
 
         // 4. ICE y Negociación (código existente)
         peerConnection.onicecandidate = event => {
@@ -1240,7 +1218,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // =========================================================
 
     async function handleWebsocketMessage(data) {
-        console.log("LOG: Mensaje WS recibido:", data.type);
+        console.log("LOG: Mensaje WS recibido:", data);
+        const remoteUsers = {}; // key: email, value: {name, pc, etc.}
 
         try {
             switch (data.type) {
@@ -1271,19 +1250,27 @@ document.addEventListener("DOMContentLoaded", function () {
                     if (statusEl) { statusEl.textContent = "Error: Conexión perdida permanentemente. 🛑"; statusEl.style.color = "red"; }
                     break;
 
+
                 case "user_joined":
+                    if (data.email === null) {
+                        remoteUsers[data.email] = {
+                            nombre: data.nombre,
+                            p_apellido: data.p_apellido
+                        };
+                    }
+                    // Construir el nombre completo
+                    const remoteNameFull = (data.nombre || "") + " " + (data.p_apellido || "");
+
+                    console.log("LOG: Usuario remoto se unió:", remoteNameFull);
+
+                    // Solo asignar si aún no hay valor en remoteUserName
+                    if (!remoteUserName) {
+                        remoteUserName = remoteNameFull;
+                    }
+
+                    // Crear la conexión si no existe
                     if (!peerConnection || peerConnection.connectionState === "closed") {
                         createPeerConnection();
-                        if (ROLE === "Tutor") {
-                            console.log("LOG: Tutor enviando Offer inicial.");
-                            try {
-                                const offer = await peerConnection.createOffer();
-                                await peerConnection.setLocalDescription(offer);
-                                if (wsManager && wsManager.isConnected) wsManager.send({ type: "offer", sdp: offer.sdp });
-                            } catch (err) {
-                                console.error("Error creando offer al unirse usuario:", err);
-                            }
-                        }
                     }
                     break;
 
@@ -1365,16 +1352,22 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    function enableUnloadProtection() {
-        window.onbeforeunload = (e) => {
+    // Crear variable global si no existe
+    window.protegerSalida ??= true;
+
+    // Registro del listener
+    window.addEventListener("beforeunload", function (e) {
+        if (window.protegerSalida) {
             e.preventDefault();
             e.returnValue = "";
-        };
-    }
+        }
+    });
 
-    function disableUnloadProtection() {
-        window.onbeforeunload = null;
-    }
+    // Registrar función global de forma segura
+    window.disableUnloadProtection = function () {
+        window.protegerSalida = false;
+    };
+
 
     // Activar / desactivar según estado real del WebRTC
     function attachP2PUnloadGuard(pc) {
